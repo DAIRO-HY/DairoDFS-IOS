@@ -8,6 +8,7 @@
 import SwiftUICore
 import SwiftUI
 import Photos
+//import MyLibrary123
 
 struct PhotoGridView: View {
     @StateObject private var viewModel = PhotoLibraryViewModel()
@@ -27,6 +28,7 @@ struct PhotoGridView: View {
                                 .scaledToFill()
                                 .frame(width: 100, height: 100)
                                 .clipped()
+//                            Text("\(index)-\(getAssetFileExtension(imageInfo.asset)!)-\(Costom.getCostom())")
                             Text("\(index)-\(getAssetFileExtension(imageInfo.asset)!)")
                         }
                     }

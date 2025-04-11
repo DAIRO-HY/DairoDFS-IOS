@@ -1,10 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-<dict>
-    <key>CFBundleName</key>
-    <string>$(PRODUCT_NAME)</string>
-    <key>NSPhotoLibraryUsageDescription</key>
-    <string>App需要访问您的照片用于展示相册内容</string>
-</dict>
+<dict/>
 </plist>

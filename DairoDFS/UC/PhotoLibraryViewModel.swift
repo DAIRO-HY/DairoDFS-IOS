@@ -45,7 +45,9 @@ class PhotoLibraryViewModel: ObservableObject {
                                               options: options) { image, _ in
                         if let image = image {
                             DispatchQueue.main.async {
-                                uiImages.append(ImageInfo(image: image, asset: asset))
+                                uiImages.append(ImageInfo(
+                                    image: image,
+                                    asset: asset))
                                 self.images = uiImages
                             }
                         }
