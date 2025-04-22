@@ -90,20 +90,12 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		5BBB6A252DA9301C00879EDD /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = Frameworks;
-			sourceTree = "<group>";
-		};
 		5BED0B1F2DA654D000CCB9F9 = {
 			isa = PBXGroup;
 			children = (
 				5BED0B2A2DA654D000CCB9F9 /* DairoDFS */,
 				5BED0B3B2DA654D400CCB9F9 /* DairoDFSTests */,
 				5BED0B452DA654D400CCB9F9 /* DairoDFSUITests */,
-				5BBB6A252DA9301C00879EDD /* Frameworks */,
 				5BED0B292DA654D000CCB9F9 /* Products */,
 			);
 			sourceTree = "<group>";

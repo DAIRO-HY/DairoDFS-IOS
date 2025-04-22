@@ -11,7 +11,7 @@ import SwiftUI
 struct DairoDFSApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            LoginPage()
         }
     }
 }
