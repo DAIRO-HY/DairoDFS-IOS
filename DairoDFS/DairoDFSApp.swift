@@ -6,12 +6,15 @@
 //
 
 import SwiftUI
+import DairoUI_IOS
 
 @main
 struct DairoDFSApp: App {
     var body: some Scene {
         WindowGroup {
-            LoginPage()
+            RootView{
+                LoginPage()
+            }
         }
     }
 }
