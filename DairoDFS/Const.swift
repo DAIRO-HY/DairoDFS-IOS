@@ -8,7 +8,7 @@
 import UIKit
 
 ///静态变量配置
-struct Const {
+enum Const {
 //  ///标题字体
 //  static const TITLE = 22.0;
 //

@@ -1,5 +1,5 @@
 
-struct FileUploadApi {
+enum FileUploadApi {
 
   //文件上传Controller
   //浏览器文件上传

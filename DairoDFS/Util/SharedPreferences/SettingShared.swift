@@ -9,7 +9,7 @@ import Foundation
 import DairoUI_IOS
 
 /// 用户设置
-struct SettingShared {
+enum SettingShared {
     /*----------------------------------------------------------------------------------*/
     
     /// 会员信息
@@ -48,16 +48,16 @@ struct SettingShared {
     /// <summary>
     /// 登录Token
     /// </summary>
-    static var token: String? {
+    static var token: String {
         get{
             if SettingShared.mToken == nil{
                 SettingShared.mToken = UserDefaults.standard.string(forKey: KEY_TOKEN)
             }
-            return SettingShared.mToken
+            return SettingShared.mToken ?? ""
         }
         set{
             SettingShared.mToken = newValue;
-            if newValue == nil {
+            if newValue.isEmpty {
                 UserDefaults.standard.removeObject(forKey: KEY_TOKEN)
                 return;
             }
@@ -274,9 +274,7 @@ struct SettingShared {
     /*----------------------------------------------------------------------------------*/
     
     /// 是否登录
-    static var isLogin: Bool{
-        return SettingShared.token != nil;
-    }
+    static var isLogin: Bool{ !SettingShared.token.isEmpty }
     
     /// 退出登录
     static func logout() {
@@ -285,7 +283,7 @@ struct SettingShared {
             logined[i].isLogining = false
         }
         SettingShared.loggedUserList = logined
-        SettingShared.token = nil
+        SettingShared.token = ""
     }
     
     /// 登录

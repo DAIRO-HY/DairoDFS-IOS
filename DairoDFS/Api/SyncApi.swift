@@ -1,5 +1,5 @@
 
-struct SyncApi {
+enum SyncApi {
 
   //数据同步状态
   static func html() -> ApiHttp<EmptyModel>{

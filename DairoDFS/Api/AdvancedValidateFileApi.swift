@@ -1,5 +1,5 @@
 
-struct AdvancedValidateFileApi {
+enum AdvancedValidateFileApi {
 
   //高级功能：文件验证
   //文件验证同步锁

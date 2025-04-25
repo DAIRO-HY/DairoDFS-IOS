@@ -1,5 +1,5 @@
 
-struct MagickInstallApi {
+enum MagickInstallApi {
 
   static func html() -> ApiHttp<EmptyModel>{
     return ApiHttp<EmptyModel>(ApiConst.APP_INSTALL_MAGICK)

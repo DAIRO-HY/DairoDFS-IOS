@@ -1,5 +1,5 @@
 
-struct FilesApi {
+enum FilesApi {
 
   //文件列表页面
   static func html() -> ApiHttp<EmptyModel>{

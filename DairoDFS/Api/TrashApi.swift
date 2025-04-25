@@ -1,5 +1,5 @@
 
-struct TrashApi {
+enum TrashApi {
 
   static func html() -> ApiHttp<EmptyModel>{
     return ApiHttp<EmptyModel>(ApiConst.APP_TRASH_HTML)

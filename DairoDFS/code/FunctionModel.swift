@@ -6,7 +6,7 @@
 //
 
 ///功能模式
-struct FunctionModel{
+enum FunctionModel{
 
   ///文件模式
   static let FILE = 0

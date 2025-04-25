@@ -1,5 +1,5 @@
 
-struct AdvancedApi {
+enum AdvancedApi {
 
   //高级功能
   static func html() -> ApiHttp<EmptyModel>{

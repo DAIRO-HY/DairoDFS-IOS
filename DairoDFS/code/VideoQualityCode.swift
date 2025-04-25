@@ -6,7 +6,7 @@
 //
 
 ///视频画质值
-struct VideoQualityCode {
+enum VideoQualityCode {
     ///原画
     static let NORMAL = 0
     

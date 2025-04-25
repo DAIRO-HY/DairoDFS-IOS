@@ -1,5 +1,5 @@
 
-struct FolderSelectorApi {
+enum FolderSelectorApi {
 
   //获取文件夹结构
   static func getList(folder: String) -> ApiHttp<[FolderModel]>{

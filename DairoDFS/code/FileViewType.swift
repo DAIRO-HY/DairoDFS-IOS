@@ -6,7 +6,7 @@
 //
 
 ///文件列表或表格显示类型
-struct FileViewType{
+enum FileViewType{
 
   ///列表
   static let LIST = 0

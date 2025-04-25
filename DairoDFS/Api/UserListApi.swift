@@ -1,5 +1,5 @@
 
-struct UserListApi {
+enum UserListApi {
 
   //用户列表
   static func listHtml() -> ApiHttp<EmptyModel>{

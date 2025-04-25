@@ -1,5 +1,5 @@
 
-struct SetStorageInstallApi {
+enum SetStorageInstallApi {
 
   static func html() -> ApiHttp<EmptyModel>{
     return ApiHttp<EmptyModel>(ApiConst.APP_INSTALL_SET_STORAGE)

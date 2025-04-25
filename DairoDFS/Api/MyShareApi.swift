@@ -1,5 +1,5 @@
 
-struct MyShareApi {
+enum MyShareApi {
 
   static func html() -> ApiHttp<EmptyModel>{
     return ApiHttp<EmptyModel>(ApiConst.APP_MY_SHARE_HTML)

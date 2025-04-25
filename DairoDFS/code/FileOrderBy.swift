@@ -6,7 +6,7 @@
 //
 
 ///文件列表排列升降序方式
-struct FileOrderBy{
+enum FileOrderBy{
 
   ///升序
   static let UP = 0

@@ -7,7 +7,7 @@
 
 
 ///登录信息
-struct AccountInfo : Codable{
+struct AccountInfo : Codable,Hashable{
     
     /// 服务器名
     var domain: String

@@ -1,5 +1,5 @@
 
-struct UserEditApi {
+enum UserEditApi {
 
   //用户编辑
   static func editHtml() -> ApiHttp<EmptyModel>{

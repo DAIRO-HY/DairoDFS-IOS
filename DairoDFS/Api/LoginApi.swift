@@ -1,5 +1,5 @@
 
-struct LoginApi {
+enum LoginApi {
 
   //登录页面
   static func _init() -> ApiHttp<EmptyModel>{

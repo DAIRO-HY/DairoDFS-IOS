@@ -1,5 +1,5 @@
 
-struct CreateAdminApi {
+enum CreateAdminApi {
 
   //管理员账号初始化
   static func _init() -> ApiHttp<EmptyModel>{

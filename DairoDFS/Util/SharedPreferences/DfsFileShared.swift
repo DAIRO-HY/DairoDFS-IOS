@@ -8,7 +8,7 @@
 /// <summary>
 /// DFS文件列表缓存
 /// </summary>
-struct DfsFileShared {
+enum DfsFileShared {
     
     ///缓存目录
     static let CACHE_FOLDER = "dfs_file_list";

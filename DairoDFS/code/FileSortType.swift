@@ -6,7 +6,7 @@
 //
 
 ///文件列表排列方式
-struct FileSortType{
+enum FileSortType{
 
   ///名称
   static let NAME = 0

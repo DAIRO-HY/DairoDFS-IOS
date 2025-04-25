@@ -1,5 +1,5 @@
 
-struct MineApi {
+enum MineApi {
 
   //系统设置
   //页面初始化

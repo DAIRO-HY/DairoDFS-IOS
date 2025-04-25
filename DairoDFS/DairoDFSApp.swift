@@ -13,7 +13,11 @@ struct DairoDFSApp: App {
     var body: some Scene {
         WindowGroup {
             RootView{
-                LoginPage()
+                if SettingShared.isLogin{
+                    MinePage()
+                }else{
+                    LoginPage()
+                }
             }
         }
     }

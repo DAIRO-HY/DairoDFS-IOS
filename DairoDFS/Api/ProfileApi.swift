@@ -1,5 +1,5 @@
 
-struct ProfileApi {
+enum ProfileApi {
 
   //系统配置
   //页面初始化

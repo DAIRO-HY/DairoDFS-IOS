@@ -194,15 +194,22 @@ class ApiHttp<T: Codable> {
      * 发起请求
      */
     func request(_ method: String, _ successFunc: @escaping((_ data: T?) -> Void)) {
-        var request = URLRequest(url: URL(string: SettingShared.domainNotNull + self.url)!)
-        request.httpMethod = method
-        if !self.parameter.isEmpty{//需要上传参数
-            request.httpBody = self.parameter.filter{ entry in//过滤掉空字符串的参数
-                if let value = entry.value as? String{
-                    return !value.isEmpty
+        var request = URLRequest(url: URL(string: SettingShared.domainNotNull + self.url + "?_token=" + SettingShared.token)!)
+        request.httpMethod = method//请求方式
+        
+        //添加公共参数
+        var body = ""
+        for entry in self.parameter{
+                if let value = entry.value as? String{//过滤掉空字符串的参数
+                    if value.isEmpty{
+                        continue
+                    }
                 }
-                return true
-            }.map{"\($0)=\($1)"}.joined(separator: "&").data(using: .utf8)
+            body += "\(entry.key)=\(entry.value)&"
+        }
+        if !body.isEmpty{
+            body.removeLast()
+            request.httpBody = body.data(using: .utf8)
         }
         let httpTask = URLSessionManager.urlSession.dataTask(with: request){ data, response, error in
             Loading.hide()
@@ -216,7 +223,13 @@ class ApiHttp<T: Codable> {
                 return
             }
             let t = self.convert(data!)
-            successFunc(t)
+            if self.isShowWaiting{//显示等待框,表示当前回调需要运行在主线程上
+                Task{@MainActor in
+                    successFunc(t)
+                }
+            } else {
+                successFunc(t)
+            }
         }
         self.httpTask = httpTask
         

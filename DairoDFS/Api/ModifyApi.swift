@@ -1,5 +1,5 @@
 
-struct ModifyApi {
+enum ModifyApi {
 
   //密码修改
   static func html() -> ApiHttp<EmptyModel>{
