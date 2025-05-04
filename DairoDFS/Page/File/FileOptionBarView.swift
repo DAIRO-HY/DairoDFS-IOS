@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct FileOptionBarView: View {
+    @EnvironmentObject var fileVm: FileViewModel
     var body: some View {
             HStack{
                 Spacer().frame(width: 10)
@@ -18,17 +19,16 @@ struct FileOptionBarView: View {
                     
                 }
                 Text("sdfs").frame(maxWidth: .infinity)
-                self.optionBtn("ellipsis"){
-                    
+                self.optionBtn(self.fileVm.isSelectMode ? "xmark" : "ellipsis"){
+                        self.fileVm.isSelectMode = !self.fileVm.isSelectMode
                 }
                 Spacer().frame(width: 10)
             }
     }
     
-    private func optionBtn(_ icon: String, action: ()->Void) -> some View{
+    private func optionBtn(_ icon: String, action: @escaping () -> Void) -> some View{
         return HStack{
-            Button(action:{
-            }){
+            Button(action: action){
                 Image(systemName: icon).foregroundColor(Color.gl.white)
             }
             .frame(width: 36,height: 36)

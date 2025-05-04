@@ -4,7 +4,7 @@
 //
 //  Created by zhoulq on 2025/04/30.
 //
-struct DfsFileBean{
+class DfsFileBean{
     
 //    /// 文件id
 //    let id: Int

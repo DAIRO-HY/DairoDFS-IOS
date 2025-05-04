@@ -39,7 +39,10 @@ struct UCOptionMenuButton: View {
             VStack{
                 Image(systemName: self.icon)
                 Text(self.label)
-            }.opacity(self.disabled ? 0.6 : 1)
+                    .font(.subheadline)
+                    .padding(.top, 2)
+            }
+            .opacity(self.disabled ? 0.6 : 1)
         }
         .buttonStyle(.row)
         .disabled(self.disabled)

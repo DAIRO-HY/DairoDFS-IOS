@@ -8,6 +8,12 @@
 import Foundation
 import SwiftUI
 
+///选择模式
+enum SelectModeEnum{
+    case on
+    case off
+}
+
 class FileViewModel : ObservableObject{
     
     /// 当前请求的文件夹
@@ -18,8 +24,21 @@ class FileViewModel : ObservableObject{
     
     @Published var dfsFileList = [DfsFileBean]()
     
+    ///  剪切板模式
+    @Published var clipboardType = 0
+    
+    ///选择模式
+    @Published var isSelectMode = false
+    
     init(){
         self.loadSubFile("")
+    }
+    
+    /**
+     重新加载
+     */
+    func reload(){
+        self.loadSubFile(self.currentFolder)
     }
     
     ///获取文件列表

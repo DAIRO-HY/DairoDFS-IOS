@@ -13,10 +13,13 @@ struct FileListViewItem: View {
     ///文件信息
     private let dfsFile: DfsFileBean
     
+    private let isSelectMode: Bool
+    
     ///点击回调函数
     private let action: () -> Void
-    init(_ dfsFile: DfsFileBean, action: @escaping () -> Void) {
+    init(_ dfsFile: DfsFileBean, isSelectMode: Bool, action: @escaping () -> Void) {
         self.dfsFile = dfsFile
+        self.isSelectMode = isSelectMode
         self.action = action
     }
     var body: some View {
@@ -34,12 +37,14 @@ struct FileListViewItem: View {
                         .foregroundColor(.secondary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                if self.dfsFile.isSelected{
-                    Image(systemName: "checkmark.circle")
-                        .font(.title2)
-                }else{
-                    Image(systemName: "circle")
-                        .font(.title2)
+                if self.isSelectMode{//如果是选择模式
+                    if self.dfsFile.isSelected{//当前为选中状态
+                        Image(systemName: "checkmark.circle")
+                            .font(.title2)
+                    } else {
+                        Image(systemName: "circle")
+                            .font(.title2)
+                    }
                 }
             }
             .padding(.horizontal)
@@ -47,6 +52,7 @@ struct FileListViewItem: View {
         .buttonStyle(.row)
     }
     
+    ///缩略图
     private var thumb: some View{
         Section{
             if self.dfsFile.isFile{
@@ -71,7 +77,7 @@ struct FileListViewItem: View {
 }
 
 #Preview {
-    FileListViewItem(getDfsFileBean()){
+    FileListViewItem(getDfsFileBean(), isSelectMode: false){
         
     }
 }

@@ -15,7 +15,7 @@ struct FilePage: View {
     var body: some View {
         NavigationView{
             VStack{
-                FileOptionBarView()
+                FileOptionBarView().environmentObject(self.fileVm)
                 FilesView().environmentObject(self.fileVm)
                 FileOptionView().environmentObject(self.fileVm)
                 TabView(.FILE_PAGE)

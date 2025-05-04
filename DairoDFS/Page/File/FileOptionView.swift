@@ -12,32 +12,55 @@ struct FileOptionView: View {
     @EnvironmentObject var fileVm: FileViewModel
     
     var body: some View {
-        
-        //当前被选中的文件数量
-        //        int selectedCount = this.filePageState.selectedCount;
-        
-        VStack{
-            HStack{
-                UCOptionMenuButton("全选", icon: "document.fill", action: self.onCheckAllClick)
-                //UCOptionMenuButton("全取消", icon: Icons.indeterminate_check_box_outlined, disabled: selectedCount == 0, action: self.onUncheckAllClick),
-                UCOptionMenuButton("复制", icon: "document.on.document", disabled: self.fileVm.selectedCount == 0, action: {
-                    self.toClipboard(2)
-                })
-                UCOptionMenuButton("剪切", icon: "scissors", disabled: self.fileVm.selectedCount == 0, action: {
-                    self.toClipboard(1)
-                })
-                //                  UCOptionMenuButton("粘贴", icon: "document.on.clipboard", disabled: FileOptionView.clipboardType == null, action: self.onClipboardClick)
-                UCOptionMenuButton("分享", icon: "square.and.arrow.up", disabled: self.fileVm.selectedCount == 0, action: self.onShareClick)
+        if !self.fileVm.isSelectMode{
+            EmptyView()
+        } else {
+            VStack(spacing: 8){
+                Divider()
+                HStack{
+                    Text("排序:").foregroundColor(.secondary)
+                    self.sortBtn("名称")
+                    self.sortBtn("时间")
+                    self.sortBtn("大小")
+                    self.sortBtn("类型")
+                    Spacer()
+                    Button(action:{}){
+                        Image(systemName: "square.grid.2x2")
+                    }.buttonStyle(.row)
+                }.padding(.horizontal, 5)
+                Divider()
+                HStack{
+                    UCOptionMenuButton("全选", icon: "document.fill", action: self.onCheckAllClick)
+                    UCOptionMenuButton("复制", icon: "document.on.document", disabled: self.fileVm.selectedCount == 0, action: {
+                        self.toClipboard(2)
+                    })
+                    UCOptionMenuButton("剪切", icon: "scissors", disabled: self.fileVm.selectedCount == 0, action: {
+                        self.toClipboard(1)
+                    })
+                    UCOptionMenuButton("粘贴", icon: "document.on.clipboard", disabled: self.fileVm.clipboardType == 0, action: self.onClipboardClick)
+                    UCOptionMenuButton("分享", icon: "square.and.arrow.up", disabled: self.fileVm.selectedCount == 0, action: self.onShareClick)
+                }
+                HStack{
+                    UCOptionMenuButton("删除", icon: "trash", disabled: self.fileVm.selectedCount == 0, action: self.onDeleteClick)
+                    UCOptionMenuButton("下载", icon: "square.and.arrow.down", disabled: self.fileVm.selectedCount == 0, action: self.onDownloadClick)
+                    UCOptionMenuButton("刷新", icon: "repeat", action: self.fileVm.reload)
+                    UCOptionMenuButton("重命名", icon: "pencil", disabled: self.fileVm.selectedCount != 1, action: self.onRenameClick)
+                    UCOptionMenuButton("属性", icon: "info", disabled: self.fileVm.selectedCount == 0, action: self.onPropertyClick)
+                }
             }
-            HStack{
-                UCOptionMenuButton("删除", icon: "trash", disabled: self.fileVm.selectedCount == 0, action: self.onDeleteClick)
-                UCOptionMenuButton("下载", icon: "square.and.arrow.down", disabled: self.fileVm.selectedCount == 0, action: self.onDownloadClick)
-                //                  UCOptionMenuButton("刷新", icon: "repeat", action: self.filePageState.filesView.reload)
-                UCOptionMenuButton("重命名", icon: "pencil", disabled: self.fileVm.selectedCount != 1, action: self.onRenameClick)
-                UCOptionMenuButton("属性", icon: "info", disabled: self.fileVm.selectedCount == 0, action: self.onPropertyClick)
-            }
+            //        this.redrawVN.value++;
         }
-        //        this.redrawVN.value++;
+    }
+    
+    /**
+     排序按钮
+     */
+    private func sortBtn(_ label: String) -> some View{
+        return Button(action:{
+            
+        }){
+            Text(label)
+        }.buttonStyle(.row)
     }
     
     
