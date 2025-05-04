@@ -30,7 +30,7 @@ struct FileOptionView: View {
                 }.padding(.horizontal, 5)
                 Divider()
                 HStack{
-                    UCOptionMenuButton("全选", icon: "document.fill", action: self.onCheckAllClick)
+                    UCOptionMenuButton("全选", icon: "checklist.checked", action: self.fileVm.selectAll)
                     UCOptionMenuButton("复制", icon: "document.on.document", disabled: self.fileVm.selectedCount == 0, action: {
                         self.toClipboard(2)
                     })

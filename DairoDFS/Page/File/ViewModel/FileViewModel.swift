@@ -8,12 +8,6 @@
 import Foundation
 import SwiftUI
 
-///选择模式
-enum SelectModeEnum{
-    case on
-    case off
-}
-
 class FileViewModel : ObservableObject{
     
     /// 当前请求的文件夹
@@ -22,7 +16,7 @@ class FileViewModel : ObservableObject{
     ///记录当前选中的文件数
     @Published var selectedCount = 0
     
-    @Published var dfsFileList = [DfsFileBean]()
+    @Published var dfsFileList = [DfsFileEntity]()
     
     ///  剪切板模式
     @Published var clipboardType = 0
@@ -50,9 +44,9 @@ class FileViewModel : ObservableObject{
 //        }
 //        this.sortFile(list);
           
-          var dfsFileList = [DfsFileBean]()
+          var dfsFileList = [DfsFileEntity]()
           for item in list{
-              dfsFileList.append(DfsFileBean(item))
+              dfsFileList.append(DfsFileEntity(item))
           }
           self.dfsFileList = dfsFileList
 //        this.dfsFileList = list.map((it) => DfsFileVM(folderPath, it)).toList();
@@ -113,5 +107,29 @@ class FileViewModel : ObservableObject{
 //          return 0;
 //        }
 //      });
+    }
+    
+    /**
+     清空已经选择的文件
+     */
+    func clearSelected(){
+        for item in self.dfsFileList{
+            item.isSelected = false
+        }
+        self.selectedCount = 0
+    }
+    
+    /**
+     全选
+     */
+    func selectAll(){
+        for item in self.dfsFileList{
+            item.isSelected = true
+        }
+        self.selectedCount = self.dfsFileList.count
+    }
+    
+    deinit{
+        debugPrint("-->FileViewModel.deinit")
     }
 }

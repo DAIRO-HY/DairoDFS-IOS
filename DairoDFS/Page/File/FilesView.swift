@@ -25,9 +25,10 @@ struct FilesView: View {
     /**
      文件点击事件
      */
-    private func onFileClick(_ item: DfsFileBean){
+    private func onFileClick(_ item: DfsFileEntity){
         if self.fileVm.isSelectMode{
             item.isSelected = !item.isSelected
+            self.fileVm.selectedCount += (item.isSelected ? 1 : -1)
             return
         }
         if item.isFolder{//如果这是一个文件夹
@@ -35,7 +36,7 @@ struct FilesView: View {
         }
     }
 }
-
-#Preview {
-    FilesView()
-}
+//
+//#Preview {
+//    FilesView()
+//}

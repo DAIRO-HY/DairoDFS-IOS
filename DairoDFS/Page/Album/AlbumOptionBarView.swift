@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct FileOptionBarView: View {
+struct AlbumOptionBarView: View {
     @EnvironmentObject var fileVm: FileViewModel
     var body: some View {
         HStack{

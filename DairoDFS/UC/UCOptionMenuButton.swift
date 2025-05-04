@@ -42,7 +42,8 @@ struct UCOptionMenuButton: View {
                     .font(.subheadline)
                     .padding(.top, 2)
             }
-            .opacity(self.disabled ? 0.6 : 1)
+            .frame(maxWidth: .infinity)
+            .opacity(self.disabled ? 0.5 : 1)
         }
         .buttonStyle(.row)
         .disabled(self.disabled)

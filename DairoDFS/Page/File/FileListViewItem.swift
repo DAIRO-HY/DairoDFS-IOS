@@ -11,13 +11,13 @@ import DairoUI_IOS
 struct FileListViewItem: View {
     
     ///文件信息
-    private let dfsFile: DfsFileBean
+    private let dfsFile: DfsFileEntity
     
     private let isSelectMode: Bool
     
     ///点击回调函数
     private let action: () -> Void
-    init(_ dfsFile: DfsFileBean, isSelectMode: Bool, action: @escaping () -> Void) {
+    init(_ dfsFile: DfsFileEntity, isSelectMode: Bool, action: @escaping () -> Void) {
         self.dfsFile = dfsFile
         self.isSelectMode = isSelectMode
         self.action = action
@@ -82,8 +82,8 @@ struct FileListViewItem: View {
     }
 }
 
-private func getDfsFileBean() -> DfsFileBean{
-    var dfb = DfsFileBean(
+private func getDfsFileBean() -> DfsFileEntity{
+    var dfb = DfsFileEntity(
         FileModel(
             id: 1,
             name: "文件名",

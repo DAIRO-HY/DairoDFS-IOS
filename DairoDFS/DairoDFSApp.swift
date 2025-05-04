@@ -11,6 +11,9 @@ import DairoUI_IOS
 @main
 struct DairoDFSApp: App {
     
+    //功能模式
+    @AppStorage("functionType") private var functionType = 0
+    
     /**
      一些初始化操作,比如:创建文件夹等
      */
@@ -23,7 +26,14 @@ struct DairoDFSApp: App {
         WindowGroup {
             RootView{
                 if SettingShared.isLogin{
-                    FilePage()
+//                    FilePage()
+                    if functionType == FunctionModel.FILE{
+                        FilePage()
+                    } else if functionType == FunctionModel.ALBUM{
+                        AlbumPage()
+                    } else {
+                        
+                    }
                 }else{
                     LoginPage()
                 }
