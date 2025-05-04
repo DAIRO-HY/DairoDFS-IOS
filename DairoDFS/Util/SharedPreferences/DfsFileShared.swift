@@ -5,6 +5,8 @@
 //  Created by zhoulq on 2025/04/24.
 //
 
+import DairoUI_IOS
+
 /// <summary>
 /// DFS文件列表缓存
 /// </summary>
@@ -16,39 +18,54 @@ enum DfsFileShared {
     ///存储文件夹目录路径
     //  static String get cacheFolderPath => paths.normalize("${SyncVariable.supportPath}/$CACHE_FOLDER");
     
-    //  ///请求文件列表的http请求
-    //  static ApiHttp? _apiHttp;
+    ///请求文件列表的http请求
+    private static var _apiHttp: ApiHttp<[FileModel]>?
+    
+    /**
+     创建文件列表缓存目录
+     */
+    static func makeDir(){
+        let folderPath = LocalObjectUtil.mFolder + "/" + DfsFileShared.CACHE_FOLDER
+        let isOk = FileUtil.mkdirs(folderPath)
+        if !isOk{
+            print("文件夹:\(folderPath) 创建失败")
+        }
+    }
     
     ///获取文件列表
-    static func getSubList( folder: String, callback: (_ files: [FileModel]) -> Void) {
+    static func getSubList(_ folder: String, callback: @escaping (_ files: [FileModel]) -> Void) {
+        var fileName = folder
+        if #available(iOS 16.0, *) {
+            fileName.replace("/",with: "_")
+        } else {
+            fileName = fileName.replacingOccurrences(of: "/", with: "_")
+        }
         
-        //    //缓存文件名
-        //    let fileName = "$CACHE_FOLDER/root_${folder.replaceAll("/", "_")}";
+        //缓存文件名
+        fileName = "\(CACHE_FOLDER)/root_\(fileName)";
         
-        //    //得到本地缓存的文件列表
-        //    List<FileModel>? cacheFileList = fileName.localObj(FileModel.fromJsonList);
-        //    if (cacheFileList == null) {
-        //      callback([]);
-        //    } else {
-        //      callback(cacheFileList);
-        //    }
-        //
-        //    //将上一次的请求关闭
-        //    DfsFileShared._apiHttp?.cancel();
-        //
-        //    //Api请求文件列表
-        //    final apiHttp = FilesApi.getList(folder: folder);
-        //    DfsFileShared._apiHttp = apiHttp;
-        //    apiHttp.finish(() async {
-        //      DfsFileShared._apiHttp = null;
-        //    });
-        //    apiHttp.post((data) async {
-        //      final isWrite = fileName.toLocalObj(data);
-        //      if (isWrite) {
-        //        //文件列表有更新
-        //        callback(data);
-        //      }
-        //    });
+        //得到本地缓存的文件列表
+        if let cacheFileList = LocalObjectUtil.read([FileModel].self, fileName){
+            callback(cacheFileList)
+        }
+        
+        //将上一次的请求关闭
+        DfsFileShared._apiHttp?.cancel()
+        
+        //Api请求文件列表
+        let apiHttp = FilesApi.getList(folder: folder)
+        DfsFileShared._apiHttp = apiHttp
+        _ = apiHttp.finish{
+            DfsFileShared._apiHttp = nil
+        }
+        apiHttp.post{
+            let isWrite = LocalObjectUtil.write($0, fileName)
+            if (isWrite) {
+                
+                //文件列表有更新
+                callback($0);
+            }
+        }
     }
     
     ///清空缓存的文件列表

@@ -9,61 +9,71 @@ import SwiftUI
 import DairoUI_IOS
 
 struct MinePage: View {
+    
+    ///主题选择数据
+    private let themeData = [SettingPickerData("跟随系统",0),SettingPickerData("明亮模式",1),SettingPickerData("黑暗模式",2)]
+    
+    ///功能模式数据
+    private let functionData = [SettingPickerData<Int>("文件模式",0),SettingPickerData<Int>("相册模式",1)]
+    
+    //主题设置值
+    @AppStorage("theme") private var theme = 0
+    
+    //功能模式
+    @AppStorage("functionType") private var functionType = 0
+    
     var body: some View {
-        SettingStack(embedInNavigationStack: true){
-            SettingPage(title:"我的"){
-                SettingGroup{
-                    SettingButton(iconSize:60,iconRadius: 30, title: "用户名",tip: "这里是提示内容",isVertical: true) {
-                        LoggedPage().relaunch()
-                    }
-                    .icon(icon: .system(icon: "sparkles", backgroundColor: Color.pink))
-                }
-                SettingGroup{
-                    SettingButton(
-                        icon: .system(icon: "paperplane.fill", foregroundColor: Color.white, backgroundColor: Color.blue),
-                        title: "我的分享", tip:"点击查看"){
-                    }
-                    SettingButton(
-                        icon: .system(icon: "trash.fill", foregroundColor: Color.white, backgroundColor: Color.green),
-                        title: "回收站"){
-                        
-                    }
-                    SettingButton(
-                        icon: .system(icon: "arrow.trianglehead.2.clockwise.rotate.90.circle.fill", foregroundColor: Color.white, backgroundColor: Color.pink),
-                        title: "传输列表"){
-                        
-                    }
-                }
-                SettingGroup{
-                    SettingButton(
-                        icon: .system(icon: "opticaldiscdrive.fill", foregroundColor: Color.white, backgroundColor: Color.cyan),
-                        title: "缓存管理"){
-                        
-                    }
-                    SettingButton(
-                        icon: .system(icon: "lock.open.rotation", foregroundColor: Color.white, backgroundColor: Color.orange),
-                        title: "修改密码"){
-                        
-                    }
-                }
-                SettingGroup{
-                    SettingButton(
-                        icon: .system(icon: "paintbrush.fill", foregroundColor: Color.white, backgroundColor: Color.red),
-                        title: "切换主题", tip: "跟随系统"){
-                        
-                    }
-                    SettingButton(
-                        icon: .system(icon: "die.face.4.fill", foregroundColor: Color.white, backgroundColor: Color.purple),
-                        title: "功能模式", tip: "文件模式"){
-                        
-                    }
-                }
-                SettingGroup{
-                    SettingButtonSingle(title: "退出登录"){
-                        SettingShared.logout()
-                        LoginPage().relaunch()
+        NavigationView{
+            VStack{
+                SettingStack(embedInNavigationStack: false){
+                    SettingPage(title:"我的"){
+                        SettingGroup{
+                            SettingNavigationLink("用户名",tip: "这里是提示内容") {
+                                LoggedPage().anyView
+                            }
+                            .iconSize(60)
+                            .iconRadius(30)
+                            .icon("sparkles", backgroundColor: Color.pink)
+                            .isVertical(true)
+                        }
+                        SettingGroup{
+                            SettingButton("我的分享", tip:"点击查看"){
+                            }
+                            .icon("paperplane.fill", backgroundColor: Color.blue)
+                            
+                            SettingButton("回收站"){
+                            }
+                            .icon("trash.fill", backgroundColor: Color.green)
+                            SettingButton("传输列表"){
+                                
+                            }
+                            .icon("arrow.trianglehead.2.clockwise.rotate.90.circle.fill", backgroundColor: Color.pink)
+                        }
+                        SettingGroup{
+                            SettingButton("缓存管理"){
+                                
+                            }.icon("opticaldiscdrive.fill", backgroundColor: Color.cyan)
+                            
+                            SettingButton("修改密码"){
+                                
+                            }.icon("lock.open.rotation", backgroundColor: Color.orange)
+                        }
+                        SettingGroup{
+                            SettingPicker("切换主题",data: self.themeData, value: self.$theme)
+                                .icon("paintbrush.fill", backgroundColor: Color.red)
+                            
+                            SettingPicker("功能模式",data: self.functionData, value: self.$functionType)
+                                .icon("die.face.4.fill", backgroundColor: Color.purple)
+                        }
+                        SettingGroup{
+                            SettingButtonSingle("退出登录"){
+                                SettingShared.logout()
+                                LoginPage().relaunch()
+                            }
+                        }
                     }
                 }
+                TabView(.MINE_PAGE)
             }
         }
     }

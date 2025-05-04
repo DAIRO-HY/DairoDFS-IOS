@@ -1,0 +1,44 @@
+//
+//  FileOptionBarView.swift
+//  DairoDFS
+//
+//  Created by zhoulq on 2025/04/30.
+//
+
+import SwiftUI
+
+struct FileOptionBarView: View {
+    var body: some View {
+            HStack{
+                Spacer().frame(width: 10)
+                self.optionBtn("arrow.left"){
+                    
+                }
+                self.optionBtn("house.fill"){
+                    
+                }
+                Text("sdfs").frame(maxWidth: .infinity)
+                self.optionBtn("ellipsis"){
+                    
+                }
+                Spacer().frame(width: 10)
+            }
+    }
+    
+    private func optionBtn(_ icon: String, action: ()->Void) -> some View{
+        return HStack{
+            Button(action:{
+            }){
+                Image(systemName: icon).foregroundColor(Color.gl.white)
+            }
+            .frame(width: 36,height: 36)
+            .background(Color.primary)
+            .clipShape(.circle)
+            .buttonStyle(.row)
+        }
+    }
+}
+
+#Preview {
+    FileOptionBarView()
+}

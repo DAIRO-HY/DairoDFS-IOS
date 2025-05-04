@@ -14,8 +14,6 @@ struct ContentView: View {
                     ForEach(["按钮","分组按钮","相册"], id: \.self) { label in
                         NavigationLink(destination: {
                             switch label{
-                            case "按钮":
-                                ButtonsPage()
                             default:
                                 EmptyView()
                             }

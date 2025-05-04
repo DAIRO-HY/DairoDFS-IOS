@@ -10,11 +10,20 @@ import DairoUI_IOS
 
 @main
 struct DairoDFSApp: App {
+    
+    /**
+     一些初始化操作,比如:创建文件夹等
+     */
+    init(){
+        
+        //创建文件列表缓存目录
+        DfsFileShared.makeDir()
+    }
     var body: some Scene {
         WindowGroup {
             RootView{
                 if SettingShared.isLogin{
-                    MinePage()
+                    FilePage()
                 }else{
                     LoginPage()
                 }

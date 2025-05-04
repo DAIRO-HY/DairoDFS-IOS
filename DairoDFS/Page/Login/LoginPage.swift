@@ -32,9 +32,9 @@ struct LoginPage: View {
                 }
                 SettingGroup{
                     if self.loginInfo.editLoggedIndex == nil{
-                        SettingButtonSingle(title: "登录",action: self.onLoginClick)
+                        SettingButtonSingle("登录",action: self.onLoginClick)
                     }else{
-                        SettingButtonSingle(title: "保存",action: self.onSaveClick)
+                        SettingButtonSingle("保存",action: self.onSaveClick)
                     }
                 }
                 SettingCustomView {

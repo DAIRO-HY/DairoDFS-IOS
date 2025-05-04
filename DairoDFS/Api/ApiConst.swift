@@ -1,4 +1,4 @@
-struct ApiConst{
+enum ApiConst{
 
   //页面初始化
   static let INDEX_HTML = "/index.html"

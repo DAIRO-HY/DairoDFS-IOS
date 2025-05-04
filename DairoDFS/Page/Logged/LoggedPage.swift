@@ -27,7 +27,7 @@ struct LoggedPage: View {
                     listView
                 }
                 SettingGroup{
-                    SettingButtonSingle(title: "添加账号"){
+                    SettingButtonSingle("添加账号"){
                         LoginPage().relaunch()
                     }
                 }
@@ -41,14 +41,14 @@ struct LoggedPage: View {
             let logged = SettingShared.loggedUserList
             for i in 0..<logged.count{
                 let item = logged[i]
-                SettingButton(id: i, title: item.name, tip: item.domain, isVertical: true){
+                SettingButton(id: i, item.name, tip: item.domain){
                     
                     //点击登录
                     SettingShared.login(item, success:{
                         Toast.show("登录成功")
-                        File().relaunch()
+                        FilePage().relaunch()
                     })
-                }
+                }.isVertical(true)
             }
         }
     }
@@ -59,16 +59,16 @@ struct LoggedPage: View {
             let logged = SettingShared.loggedUserList
             for i in 0..<logged.count{
                 let item = logged[i]
-                SettingButton(
-                    id: i,
-                    icon: .system(icon: "trash.fill", foregroundColor: Color.white, backgroundColor: Color.red),
-                    iconRadius: 14,
-                    title: item.name, indicator: "pencil.line", tip: item.domain, isVertical: true){
+                SettingButton(id: i, item.name, tip: item.domain){
                         
                         //跳转到登录页面
                         let loginVm = LoginViewModel(domain: item.domain, name: item.name, pwd: item.pwd, editLoggedIndex: i)
                         LoginPage(loginVm).relaunch()
                     }
+                    .icon("trash.fill",  backgroundColor: Color.red)
+                    .iconRadius(14)
+                    .indicator("pencil.line")
+                    .isVertical(true)
             }
         }
     }
