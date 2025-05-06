@@ -118,7 +118,7 @@ class ImageViewerDragViewModel: ObservableObject{
         let offsetMinWidth = (self.displayW1 * self.zoomAmount - self.screenWidth) / 2
         if offset.width < -offsetMinWidth{//X轴右边越界
             self.pageVM.hStackOffset = -CGFloat(self.pageVM.index) * self.screenWidth + (offset.width - offsetMinWidth)
-            print("-->X轴左边越界")
+//            print("-->X轴左边越界")
             
             //X轴左边越界之后,禁止仅需拖拽,此时应该响应父控件的拖拽
             offset.width = -offsetMinWidth

@@ -11,6 +11,8 @@ import DairoUI_IOS
 struct ImageViewerPage: View {
     
     @GestureState private var dragOffset: CGFloat = 0
+    
+    @State private var isDraging = false
     @ObservedObject private var vm: ImageViewerViewModel
     
     private let dragVM1: ImageViewerDragViewModel
@@ -47,38 +49,68 @@ struct ImageViewerPage: View {
         }
         .frame(width: self.vm.screenWidth, alignment: .leading)
         .offset(x: self.vm.hStackOffset)
-        .clipped()
-        .animation(.linear(duration: 0.2), value: dragOffset == 0)
+//        .clipped()
+        .animation(.linear(duration: ImageViewerViewModel.ANIMATION_TIME), value: dragOffset == 0)
         
         .gesture(
-            MagnificationGesture()
-                .onChanged { amount in
-                    //两手指放到屏幕上没有开始缩放时,amount的值是1,代表当前大小的1倍缩放
-                    self.dragVM2.zoomingAmount = amount
+            DragGesture()
+                .updating($dragOffset){ value, state, _ in
+                    state = value.translation.width
+                    self.isDraging = true
+                    print("-->updating")
+                    print("-->$dragOffset:\(dragOffset)")
                 }
-                .onEnded { amount in
-                    self.dragVM2.zoomAmount *= self.dragVM2.zoomingAmount
-                    if self.dragVM2.zoomAmount > 8.0 {//放大倍数不能大于4倍
-                        withAnimation {
-                            self.dragVM2.zoomAmount = 8.0
-                        }
-                    }
-                    self.dragVM2.zoomingAmount = 1
-                    withAnimation {
+                .onChanged { value in
+                    print("-->onChanged")
+                    self.dragVM2.currentOffsetPosition = self.dragVM2.computeDragPosition(value)
+                }
+                .onEnded { value in
+                    self.isDraging = false
+                    print("-->onEnded")
+                    print("-->$dragOffset:\(dragOffset)")
+                    self.dragVM2.currentOffsetPosition = self.dragVM2.computeDragPosition(value)
+                    self.dragVM2.preOffsetPosition = self.dragVM2.currentOffsetPosition
+//                    withAnimation {
                         self.dragVM2.fixCropImage()
-                    }
-                }.simultaneously(with: DragGesture()
-                    .onChanged { value in
-                        self.dragVM2.currentOffsetPosition = self.dragVM2.computeDragPosition(value)
-                    }
-                    .onEnded { value in
-                        self.dragVM2.currentOffsetPosition = self.dragVM2.computeDragPosition(value)
-                        self.dragVM2.preOffsetPosition = self.dragVM2.currentOffsetPosition
-                        withAnimation {
-                            self.dragVM2.fixCropImage()
-                        }
-                    }
-                )
+//                    }
+                }
+//            MagnificationGesture()
+//                .onChanged { amount in
+//                    //两手指放到屏幕上没有开始缩放时,amount的值是1,代表当前大小的1倍缩放
+//                    self.dragVM2.zoomingAmount = amount
+//                }
+//                .onEnded { amount in
+//                    self.dragVM2.zoomAmount *= self.dragVM2.zoomingAmount
+//                    if self.dragVM2.zoomAmount > 8.0 {//放大倍数不能大于4倍
+//                        withAnimation {
+//                            self.dragVM2.zoomAmount = 8.0
+//                        }
+//                    }
+//                    self.dragVM2.zoomingAmount = 1
+//                    withAnimation {
+//                        self.dragVM2.fixCropImage()
+//                    }
+//                }.simultaneously(with: DragGesture()
+//                    .updating($dragOffset){ value, state, _ in
+//                        self.isDraging = true
+//                        print("-->updating")
+//                        print("-->$dragOffset:\(dragOffset)")
+//                    }
+//                    .onChanged { value in
+//                        print("-->onChanged")
+//                        self.dragVM2.currentOffsetPosition = self.dragVM2.computeDragPosition(value)
+//                    }
+//                    .onEnded { value in
+//                        self.isDraging = false
+//                        print("-->onEnded")
+//                        print("-->$dragOffset:\(dragOffset)")
+//                        self.dragVM2.currentOffsetPosition = self.dragVM2.computeDragPosition(value)
+//                        self.dragVM2.preOffsetPosition = self.dragVM2.currentOffsetPosition
+//                        withAnimation {
+//                            self.dragVM2.fixCropImage()
+//                        }
+//                    }
+//                )
         )
         
         //            .gesture(

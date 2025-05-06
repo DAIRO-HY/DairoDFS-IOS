@@ -10,6 +10,9 @@ import UIKit
 
 class ImageViewerViewModel: ObservableObject{
     
+    ///页面切换动画时间
+    static let ANIMATION_TIME: Double = 3
+    
     //当前视图区域的尺寸
     let screenWidth = UIScreen.main.bounds.width
     
@@ -47,7 +50,7 @@ class ImageViewerViewModel: ObservableObject{
     
     func fixPageViewPosition(){
         
-        let threshold = self.screenWidth / 2
+        let threshold = self.screenWidth / 3
         
         //本次拖拽的距离 = 当前页偏移位置 - 上页偏移位置
         let dragDistance = (-CGFloat(self.index) * self.screenWidth) - self.hStackOffset
@@ -60,12 +63,11 @@ class ImageViewerViewModel: ObservableObject{
         }
         if currentPage != self.index{//如果页面要切换
             self.hStackOffset = -CGFloat(currentPage) * self.screenWidth
-            Task{
-                await Task.sleep(200_000_000)
-                await MainActor.run{
-                    self.index = currentPage
-                    //                                        self.updateVm()
-                }
+            
+            //等待动画结束之后再切换页面,防止页面跳闪
+            Task{@MainActor in
+                await Task.sleep(UInt64(1_000_000_000.0 * ImageViewerViewModel.ANIMATION_TIME))
+                self.index = currentPage
             }
         } else if dragDistance != 0{//拖拽距离达不到页面迁移的标准,则回弹
             self.hStackOffset = -CGFloat(currentPage) * self.screenWidth
