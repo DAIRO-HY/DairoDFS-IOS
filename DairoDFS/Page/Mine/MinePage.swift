@@ -64,6 +64,11 @@ struct MinePage: View {
                             
                             SettingPicker("功能模式",data: self.functionData, value: self.$functionType)
                                 .icon("die.face.4.fill", backgroundColor: Color.purple)
+                            
+                            SettingNavigationLink("相册"){
+                                AlbumPage().anyView
+                            }
+                            .icon("die.face.4.fill", backgroundColor: Color.purple)
                         }
                         SettingGroup{
                             SettingButtonSingle("退出登录"){

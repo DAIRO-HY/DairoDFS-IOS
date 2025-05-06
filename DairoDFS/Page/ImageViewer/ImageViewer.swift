@@ -30,7 +30,6 @@ class ImageViewerDragViewModel: ObservableObject{
      */
     @Published var preOffsetPosition: CGSize = .zero
     
-    
     /**
      * 当前图片
      */
@@ -117,13 +116,13 @@ class ImageViewerDragViewModel: ObservableObject{
         
         let offsetMinWidth = (self.displayW1 * self.zoomAmount - self.screenWidth) / 2
         if offset.width < -offsetMinWidth{//X轴右边越界
-            self.pageVM.hStackOffset = -CGFloat(self.pageVM.index) * self.screenWidth + (offset.width - offsetMinWidth)
+            self.pageVM.hStackOffset = -CGFloat(self.pageVM.currentIndex) * self.screenWidth + (offset.width - offsetMinWidth)
 //            print("-->X轴左边越界")
             
             //X轴左边越界之后,禁止仅需拖拽,此时应该响应父控件的拖拽
             offset.width = -offsetMinWidth
         } else if offset.width > offsetMinWidth{//X轴左边越界
-            self.pageVM.hStackOffset = -CGFloat(self.pageVM.index) * self.screenWidth + (offset.width - offsetMinWidth)
+            self.pageVM.hStackOffset = -CGFloat(self.pageVM.currentIndex) * self.screenWidth + (offset.width - offsetMinWidth)
 //            print("-->X轴右边越界:\(offset.width - offsetMinWidth)")
             
             //X轴左边越界之后,禁止仅需拖拽,此时应该响应父控件的拖拽
@@ -173,6 +172,10 @@ class ImageViewerDragViewModel: ObservableObject{
         self.pageVM.fixPageViewPosition()
     }
     
+    func recycle(){
+        self.uiImage = nil
+    }
+    
     deinit{
         print("-->ImageViewerDragViewModel.deinit")
     }
@@ -190,16 +193,21 @@ struct ImageViewer: View {
     public var body: some View {
         ZStack {
             Color.black
-            Image(uiImage: self.dragVM.uiImage!)
-                .resizable()
-                .scaleEffect(self.dragVM.zoomAmount * self.dragVM.zoomingAmount)
-                .scaledToFill()
-                .aspectRatio(contentMode: .fit)
-                .offset(x: self.dragVM.currentOffsetPosition.width, y: self.dragVM.currentOffsetPosition.height)
-                .frame(width: self.dragVM.screenWidth, height: self.dragVM.screenHeight)
-                .clipped()
+            if let uiImage = self.dragVM.uiImage{
+                Image(uiImage: uiImage)
+                    .resizable()
+                    .scaleEffect(self.dragVM.zoomAmount * self.dragVM.zoomingAmount)
+                    .scaledToFill()
+                    .aspectRatio(contentMode: .fit)
+                    .offset(x: self.dragVM.currentOffsetPosition.width, y: self.dragVM.currentOffsetPosition.height)
+                    .frame(width: self.dragVM.screenWidth, height: self.dragVM.screenHeight)
+                    .clipped()
+            }
         }
         .onAppear(perform: self.dragVM.fixCropImage )
+        .onDisappear{
+            self.dragVM.recycle()
+        }
         .edgesIgnoringSafeArea(.all)//忽略安全区域
     }
 }

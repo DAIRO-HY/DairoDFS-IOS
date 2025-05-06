@@ -10,9 +10,9 @@ import DairoUI_IOS
 
 struct ImageViewerPage: View {
     
-    @GestureState private var dragOffset: CGFloat = 0
+    ///正在拖拽中的偏移量
+    @GestureState private var dragingOffset: CGFloat = 0
     
-    @State private var isDraging = false
     @ObservedObject private var vm: ImageViewerViewModel
     
     private let dragVM1: ImageViewerDragViewModel
@@ -27,90 +27,72 @@ struct ImageViewerPage: View {
     }
     
     private func updateVm(){
-        dragVM1.setUrl(self.vm.preview(self.vm.index - 1))
-        dragVM2.setUrl(self.vm.preview(self.vm.index))
-        dragVM3.setUrl(self.vm.preview(self.vm.index + 1))
+        dragVM1.setUrl(self.vm.preview(self.vm.currentIndex - 1))
+        dragVM2.setUrl(self.vm.preview(self.vm.currentIndex))
+        dragVM3.setUrl(self.vm.preview(self.vm.currentIndex + 1))
     }
     
     var body: some View {
         
         //        GeometryReader { geometry in
+        
+        //为了实现懒加载,这里始终只显示上一张,本张,下一张共3张图片
         HStack(spacing: 0) {
-            Spacer().frame(width: self.vm.screenWidth * CGFloat(self.vm.index - 1))
-            ImageViewerPagerItem(self.vm.preview(self.vm.index - 1), dragVM1)
+            
+            //当前图片上一张之前的图片全部不显示,这些不显示的图片总宽度用这个占位
+            Spacer().frame(width: self.vm.screenWidth * CGFloat(self.vm.currentIndex - 1))
+            ImageViewerPagerItem(self.vm.preview(self.vm.currentIndex - 1), dragVM1)
                 .frame(width: self.vm.screenWidth)
-                .id(self.vm.preview(self.vm.index - 1))
-            ImageViewerPagerItem(self.vm.preview(self.vm.index), dragVM2)
+                .id(self.vm.preview(self.vm.currentIndex - 1))
+            ImageViewerPagerItem(self.vm.preview(self.vm.currentIndex), dragVM2)
                 .frame(width: self.vm.screenWidth)
-                .id(self.vm.preview(self.vm.index))
-            ImageViewerPagerItem(self.vm.preview(self.vm.index + 1), dragVM3)
+                .id(self.vm.preview(self.vm.currentIndex))
+            ImageViewerPagerItem(self.vm.preview(self.vm.currentIndex + 1), dragVM3)
                 .frame(width: self.vm.screenWidth)
-                .id(self.vm.preview(self.vm.index + 1))
+                .id(self.vm.preview(self.vm.currentIndex + 1))
         }
         .frame(width: self.vm.screenWidth, alignment: .leading)
         .offset(x: self.vm.hStackOffset)
 //        .clipped()
-        .animation(.linear(duration: ImageViewerViewModel.ANIMATION_TIME), value: dragOffset == 0)
-        
+        .animation(.linear(duration: ImageViewerViewModel.ANIMATION_TIME), value: dragingOffset == 0)
         .gesture(
-            DragGesture()
-                .updating($dragOffset){ value, state, _ in
-                    state = value.translation.width
-                    self.isDraging = true
-                    print("-->updating")
-                    print("-->$dragOffset:\(dragOffset)")
-                }
-                .onChanged { value in
-                    print("-->onChanged")
-                    self.dragVM2.currentOffsetPosition = self.dragVM2.computeDragPosition(value)
-                }
-                .onEnded { value in
-                    self.isDraging = false
-                    print("-->onEnded")
-                    print("-->$dragOffset:\(dragOffset)")
-                    self.dragVM2.currentOffsetPosition = self.dragVM2.computeDragPosition(value)
-                    self.dragVM2.preOffsetPosition = self.dragVM2.currentOffsetPosition
-//                    withAnimation {
-                        self.dragVM2.fixCropImage()
-//                    }
-                }
-//            MagnificationGesture()
-//                .onChanged { amount in
-//                    //两手指放到屏幕上没有开始缩放时,amount的值是1,代表当前大小的1倍缩放
-//                    self.dragVM2.zoomingAmount = amount
+//            DragGesture()
+//                .updating($dragingOffset){ value, state, _ in
+//                    state = value.translation.width
+//                    self.dragVM2.currentOffsetPosition = self.dragVM2.computeDragPosition(value)
 //                }
-//                .onEnded { amount in
-//                    self.dragVM2.zoomAmount *= self.dragVM2.zoomingAmount
-//                    if self.dragVM2.zoomAmount > 8.0 {//放大倍数不能大于4倍
-//                        withAnimation {
-//                            self.dragVM2.zoomAmount = 8.0
-//                        }
-//                    }
-//                    self.dragVM2.zoomingAmount = 1
-//                    withAnimation {
-//                        self.dragVM2.fixCropImage()
-//                    }
-//                }.simultaneously(with: DragGesture()
-//                    .updating($dragOffset){ value, state, _ in
-//                        self.isDraging = true
-//                        print("-->updating")
-//                        print("-->$dragOffset:\(dragOffset)")
-//                    }
-//                    .onChanged { value in
-//                        print("-->onChanged")
-//                        self.dragVM2.currentOffsetPosition = self.dragVM2.computeDragPosition(value)
-//                    }
-//                    .onEnded { value in
-//                        self.isDraging = false
-//                        print("-->onEnded")
-//                        print("-->$dragOffset:\(dragOffset)")
-//                        self.dragVM2.currentOffsetPosition = self.dragVM2.computeDragPosition(value)
-//                        self.dragVM2.preOffsetPosition = self.dragVM2.currentOffsetPosition
-//                        withAnimation {
-//                            self.dragVM2.fixCropImage()
-//                        }
-//                    }
-//                )
+//                .onEnded { value in
+//                    self.dragVM2.currentOffsetPosition = self.dragVM2.computeDragPosition(value)
+//                    self.dragVM2.preOffsetPosition = self.dragVM2.currentOffsetPosition
+//                    self.dragVM2.fixCropImage()
+//                }
+            MagnificationGesture()
+                .onChanged { amount in
+                    //两手指放到屏幕上没有开始缩放时,amount的值是1,代表当前大小的1倍缩放
+                    self.dragVM2.zoomingAmount = amount
+                }
+                .onEnded { amount in
+                    self.dragVM2.zoomAmount *= self.dragVM2.zoomingAmount
+                    if self.dragVM2.zoomAmount > 8.0 {//放大倍数不能大于4倍
+                        withAnimation {
+                            self.dragVM2.zoomAmount = 8.0
+                        }
+                    }
+                    self.dragVM2.zoomingAmount = 1
+                    withAnimation {
+                        self.dragVM2.fixCropImage()
+                    }
+                }.simultaneously(with: DragGesture()
+                     .updating($dragingOffset){ value, state, _ in
+                         state = value.translation.width
+                         self.dragVM2.currentOffsetPosition = self.dragVM2.computeDragPosition(value)
+                     }
+                    .onEnded { value in
+                        self.dragVM2.currentOffsetPosition = self.dragVM2.computeDragPosition(value)
+                        self.dragVM2.preOffsetPosition = self.dragVM2.currentOffsetPosition
+                        self.dragVM2.fixCropImage()
+                    }
+                )
         )
         
         //            .gesture(
@@ -142,7 +124,7 @@ struct ImageViewerPage: View {
         .onAppear{
             self.updateVm()
         }
-        .onChange(of: self.vm.index){ _ in
+        .onChange(of: self.vm.currentIndex){ _ in
             self.updateVm()
         }
         //        }

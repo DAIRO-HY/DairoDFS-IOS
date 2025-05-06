@@ -26,14 +26,14 @@ struct DairoDFSApp: App {
         WindowGroup {
             RootView{
                 if SettingShared.isLogin{
-//                    FilePage()
-                    if functionType == FunctionModel.FILE{
-                        FilePage()
-                    } else if functionType == FunctionModel.ALBUM{
-                        AlbumPage()
-                    } else {
-                        
-                    }
+                    FilePage()
+//                    if functionType == FunctionModel.FILE{
+//                        FilePage()
+//                    } else if functionType == FunctionModel.ALBUM{
+//                        AlbumPage()
+//                    } else {
+//                        
+//                    }
                 }else{
                     LoginPage()
                 }
