@@ -31,8 +31,9 @@ struct FileOptionBarView: View {
         return HStack{
             Button(action: action){
                 Image(systemName: icon).foregroundColor(Color.gl.white)
+                    .frame(width: 36,height: 36)
+                    .animation(nil, value: self.fileVm.isSelectMode)//禁止过渡动画
             }
-            .frame(width: 36,height: 36)
             .background(Color.primary)
             .clipShape(.circle)
             .buttonStyle(.row)

@@ -27,8 +27,10 @@ struct AlbumGridViewItem: View {
             self.thumb
             if !self.entity.model.duration.isEmpty{
                 Text(self.entity.model.duration)
-                    .offset(x: -10, y: -10)
-                    .shadow(color: Color.gl.white,radius: 3, x: 2, y: 2)
+                    .font(.subheadline)
+                    .foregroundColor(.white)
+                    .offset(x: -5, y: -5)
+                    .shadow(color: .black,radius: 3, x: 2, y: 2)
             }
             
             if self.isSelectMode{//如果是选择模式
@@ -42,7 +44,7 @@ struct AlbumGridViewItem: View {
                 .font(.title2)
                 .foregroundStyle(Color.gl.bgPrimary)
                 .shadow(color: .white,radius: 3, x: 2, y: 2)
-                .offset(x: -10, y: -10)
+                .offset(x: -5, y: -5)
             }
         }
     }

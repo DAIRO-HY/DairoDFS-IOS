@@ -13,7 +13,7 @@ enum TabPage{
     case MINE_PAGE//我的页面
 }
 
-struct TabView: View {
+struct HomeTabView: View {
     
     ///非选中状态透明度
     private static let DISABLED_OPACITY = 0.6
@@ -32,13 +32,13 @@ struct TabView: View {
                 self.tabBtn("文件", "folder.fill", .white){
                     FilePage().relaunch()
                 }
-                .opacity(self.pageTag == .FILE_PAGE ? 1 : TabView.DISABLED_OPACITY)
+                .opacity(self.pageTag == .FILE_PAGE ? 1 : HomeTabView.DISABLED_OPACITY)
                 .disabled(self.pageTag == .FILE_PAGE)
                 Spacer().frame(width: 60)
                 self.tabBtn("我的", "person.fill", .white){
                     MinePage().relaunch()
                 }
-                .opacity(self.pageTag == .MINE_PAGE ? 1 : TabView.DISABLED_OPACITY)
+                .opacity(self.pageTag == .MINE_PAGE ? 1 : HomeTabView.DISABLED_OPACITY)
                 .disabled(self.pageTag == .MINE_PAGE)
             }
 //            .background(Color.yellow)
@@ -79,6 +79,6 @@ struct TabView: View {
 #Preview {
     VStack{
         Spacer()
-        TabView(.FILE_PAGE)
+        HomeTabView(.FILE_PAGE)
     }
 }

@@ -73,7 +73,7 @@ struct MinePage: View {
                         }
                     }
                 }
-                TabView(.MINE_PAGE)
+                HomeTabView(.MINE_PAGE)
             }
         }
     }

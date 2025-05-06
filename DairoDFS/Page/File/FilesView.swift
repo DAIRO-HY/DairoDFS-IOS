@@ -13,9 +13,10 @@ struct FilesView: View {
         ScrollView{
             LazyVStack{
                 ForEach(self.fileVm.dfsFileList, id: \.self.dfsModel.id) { item in
-                    FileListViewItem(item, isSelectMode: self.fileVm.isSelectMode){
-                        self.onFileClick(item)
+                    Button(action: { self.onFileClick(item) }){
+                        FileListViewItem(item, isSelectMode: self.fileVm.isSelectMode)
                     }
+                    .buttonStyle(.row)
                 }
             }
         }

@@ -14,16 +14,11 @@ struct FileListViewItem: View {
     private let dfsFile: DfsFileEntity
     
     private let isSelectMode: Bool
-    
-    ///点击回调函数
-    private let action: () -> Void
-    init(_ dfsFile: DfsFileEntity, isSelectMode: Bool, action: @escaping () -> Void) {
+    init(_ dfsFile: DfsFileEntity, isSelectMode: Bool) {
         self.dfsFile = dfsFile
         self.isSelectMode = isSelectMode
-        self.action = action
     }
     var body: some View {
-        Button(action: self.action){
             HStack{
                 
                 //缩略图
@@ -48,8 +43,6 @@ struct FileListViewItem: View {
                 }
             }
             .padding(.horizontal)
-        }
-        .buttonStyle(.row)
     }
     
     ///缩略图
@@ -77,13 +70,11 @@ struct FileListViewItem: View {
 }
 
 #Preview {
-    FileListViewItem(getDfsFileBean(), isSelectMode: false){
-        
-    }
+    FileListViewItem(getDfsFileBean(), isSelectMode: false)
 }
 
 private func getDfsFileBean() -> DfsFileEntity{
-    var dfb = DfsFileEntity(
+    let dfb = DfsFileEntity(
         FileModel(
             id: 1,
             name: "文件名",

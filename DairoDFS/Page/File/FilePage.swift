@@ -18,14 +18,10 @@ struct FilePage: View {
                 FileOptionBarView().environmentObject(self.fileVm)
                 FilesView().environmentObject(self.fileVm)
                 FileOptionView().environmentObject(self.fileVm)
-                TabView(.FILE_PAGE)
+                HomeTabView(.FILE_PAGE)
             }
             .navigationTitle("文件列表")
             .navigationBarHidden(true)
-        }.onAppear{
-            debugPrint("-->File.onAppear")
-        }.onDisappear{
-            debugPrint("-->File.onDisappear")
         }
     }
 }

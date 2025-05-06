@@ -1,0 +1,197 @@
+//
+//  ImageViewerPage.swift
+//  DairoDFS
+//
+//  Created by zhoulq on 2025/05/05.
+//
+
+import SwiftUI
+import DairoUI_IOS
+
+struct ImageViewerPage: View {
+    
+    @GestureState private var dragOffset: CGFloat = 0
+    @ObservedObject private var vm: ImageViewerViewModel
+    
+    private var dragVM1 = ImageViewerDragViewModel()
+    private var dragVM2 = ImageViewerDragViewModel()
+    private var dragVM3 = ImageViewerDragViewModel()
+    let COUNT = 10000
+    
+    init(_ vm: ImageViewerViewModel) {
+        self.vm = vm
+    }
+    
+    
+    private func updateVm(){
+        dragVM1.setUrl(self.vm.preview(self.vm.index - 1))
+        dragVM2.setUrl(self.vm.preview(self.vm.index))
+        dragVM3.setUrl(self.vm.preview(self.vm.index + 1))
+    }
+    
+    var body: some View {
+
+                HStack(spacing: 0) {
+                    Spacer().frame(width: self.vm.screenWidth * CGFloat(self.vm.index - 1), height: 1)
+
+                    ImageViewerPagerItem(self.vm.preview(self.vm.index - 1), dragVM1)
+                        .frame(width: self.vm.screenWidth, height: 700)
+                        .id(self.vm.preview(self.vm.index - 1))
+                    ImageViewerPagerItem(self.vm.preview(self.vm.index), dragVM2)
+                        .frame(width: self.vm.screenWidth, height: 700)
+                        .id(self.vm.preview(self.vm.index))
+                    ImageViewerPagerItem(self.vm.preview(self.vm.index + 1), dragVM3)
+                        .frame(width: self.vm.screenWidth, height: 700)
+                        .id(self.vm.preview(self.vm.index + 1))
+                }
+                .offset(x: self.vm.hStackOffset)
+                .animation(.linear(duration: 0.2), value: dragOffset == 0)
+                
+//                        .gesture(
+//                            MagnificationGesture()
+//                                .onChanged { amount in
+//                                    //两手指放到屏幕上没有开始缩放时,amount的值是1,代表当前大小的1倍缩放
+//                                    self.dragVM2.zoomingAmount = amount
+//                                }
+//                                .onEnded { amount in
+//                                    self.dragVM2.zoomAmount *= self.dragVM2.zoomingAmount
+//                                    if self.dragVM2.zoomAmount > 8.0 {//放大倍数不能大于4倍
+//                                        withAnimation {
+//                                            self.dragVM2.zoomAmount = 8.0
+//                                        }
+//                                    }
+//                                    self.dragVM2.zoomingAmount = 1
+//                                    withAnimation {
+//                                        self.dragVM2.fixCropImage()
+//                                    }
+//                                }.simultaneously(with: DragGesture()
+//                                    .onChanged { value in
+//                                        self.dragVM2.currentOffsetPosition = self.dragVM2.computeDragPosition(value)
+//                                    }
+//                                    .onEnded { value in
+//                                        self.dragVM2.currentOffsetPosition = self.dragVM2.computeDragPosition(value)
+//                                        self.dragVM2.preOffsetPosition = self.dragVM2.currentOffsetPosition
+//                                        withAnimation {
+//                                            self.dragVM2.fixCropImage()
+//                                        }
+//                                    }
+//                                )
+//                        )
+                
+                .gesture(
+                    DragGesture()
+                        .updating($dragOffset, body: { value, state, _ in
+                            state = value.translation.width
+                            self.vm.hStackOffset = -CGFloat(self.vm.index) * self.vm.screenWidth + dragOffset
+                        })
+                        .onEnded { value in
+                            let threshold = self.vm.screenWidth / 2
+                            let dragDistance = value.translation.width
+                            
+                            var currentPage = self.vm.index
+                            if dragDistance < -threshold, currentPage < self.vm.entitys.count - 1 {
+                                currentPage += 1
+                            } else if dragDistance > threshold, currentPage > 0 {
+                                currentPage -= 1
+                            }
+                            self.vm.hStackOffset = -CGFloat(currentPage) * self.vm.screenWidth + dragOffset
+                            Task{
+                                await Task.sleep(200_000_000)
+                                await MainActor.run{
+                                    self.vm.index = currentPage
+                                    self.updateVm()
+                                }
+                            }
+                        }
+                )
+                .onAppear{
+                    self.vm.hStackOffset = -CGFloat(self.vm.index) * self.vm.screenWidth + dragOffset
+                    self.updateVm()
+                }
+        
+        
+        
+//            GeometryReader { geometry in
+//                LazyHStack(spacing: 0) {
+//                    ForEach(self.vm.entitys.indices, id: \.self) { index in
+//                        ZStack{
+////                            Text("123")
+//                            
+//                                Text("\(index)")
+//                                    .background(Color.red)
+//                                    .frame(width: geometry.size.width, height: geometry.size.height)
+////                            ImageViewerPagerItem(self.vm.preview(self.vm.index), dragVM).opacity(0.6)
+//                        }
+////                        .frame(width: geometry.size.width, height: geometry.size.height)
+//                        .frame(width: 300, height: geometry.size.height)
+////                        .frame(maxHeight: .infinity)
+//                        .background(Color.green)
+//                        .onAppear{
+//                            print("-->:\(index)")
+//                        }
+//                    }
+//                }
+//                .background(Color.cyan)
+//                .offset(x: -CGFloat(currentPage) * geometry.size.width + dragOffset)
+//                .animation(.easeInOut, value: dragOffset == 0)
+//                .gesture(
+//                    DragGesture()
+//                        .updating($dragOffset, body: { value, state, _ in
+//                            state = value.translation.width
+//                        })
+//                        .onEnded { value in
+//                            let threshold = geometry.size.width / 2
+//                            let dragDistance = value.translation.width
+//                            if dragDistance < -threshold, currentPage < self.vm.entitys.count - 1 {
+//                                currentPage += 1
+//                            } else if dragDistance > threshold, currentPage > 0 {
+//                                currentPage -= 1
+//                            }
+//                        }
+//                )
+//            }
+//            .clipped()
+        
+//        ZStack {
+//            ImageViewerPagerItem(self.vm.preview(self.vm.index), dragVM).opacity(0.6)
+//        }
+//        .background(Color.cyan)
+//        .frame(maxWidth: .infinity,maxHeight: .infinity)
+//        
+//        //MARK: - Gestures
+//        .gesture(
+//            MagnificationGesture()
+//                .onChanged { amount in
+//                    //两手指放到屏幕上没有开始缩放时,amount的值是1,代表当前大小的1倍缩放
+//                    self.dragVM.zoomingAmount = amount
+//                }
+//                .onEnded { amount in
+//                    self.dragVM.zoomAmount *= self.dragVM.zoomingAmount
+//                    if self.dragVM.zoomAmount > 8.0 {//放大倍数不能大于4倍
+//                        withAnimation {
+//                            self.dragVM.zoomAmount = 8.0
+//                        }
+//                    }
+//                    self.dragVM.zoomingAmount = 1
+//                    withAnimation {
+//                        self.dragVM.fixCropImage()
+//                    }
+//                }.simultaneously(with: DragGesture()
+//                    .onChanged { value in
+//                        self.dragVM.currentOffsetPosition = self.dragVM.computeDragPosition(value)
+//                    }
+//                    .onEnded { value in
+//                        self.dragVM.currentOffsetPosition = self.dragVM.computeDragPosition(value)
+//                        self.dragVM.preOffsetPosition = self.dragVM.currentOffsetPosition
+//                        withAnimation {
+//                            self.dragVM.fixCropImage()
+//                        }
+//                    }
+//                )
+//        )
+    }
+}
+
+#Preview {
+    ImageViewerPage(ImageViewerViewModel())
+}

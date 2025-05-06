@@ -38,16 +38,28 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
+				Page/ImageViewer/ImageViewerPage.bk.txt,
 			);
 			target = 5BED0B272DA654D000CCB9F9 /* DairoDFS */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+		5BA5635C2DC9E012000ACCAB /* Exceptions for "DairoDFS" folder in "Compile Sources" phase from "DairoDFS" target */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			buildPhase = 5BED0B242DA654D000CCB9F9 /* Sources */;
+			membershipExceptions = (
+				Page/ImageViewer/ImageViewerPage.bk.txt,
+			);
+		};
+/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		5BED0B2A2DA654D000CCB9F9 /* DairoDFS */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				5BED0B602DA6596900CCB9F9 /* Exceptions for "DairoDFS" folder in "DairoDFS" target */,
+				5BA5635C2DC9E012000ACCAB /* Exceptions for "DairoDFS" folder in "Compile Sources" phase from "DairoDFS" target */,
 			);
 			path = DairoDFS;
 			sourceTree = "<group>";
@@ -194,6 +206,7 @@
 				TargetAttributes = {
 					5BED0B272DA654D000CCB9F9 = {
 						CreatedOnToolsVersion = 16.2;
+						LastSwiftMigration = 1620;
 					};
 					5BED0B372DA654D400CCB9F9 = {
 						CreatedOnToolsVersion = 16.2;
@@ -415,6 +428,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"DairoDFS/Preview Content\"";
@@ -442,6 +456,7 @@
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
 			};
@@ -452,6 +467,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"DairoDFS/Preview Content\"";
