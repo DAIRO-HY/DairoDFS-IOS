@@ -7,6 +7,8 @@
 
 import Foundation
 import SwiftUI
+import DairoUI_IOS
+
 
 class AlbumViewModel : ObservableObject{
     
@@ -37,15 +39,29 @@ class AlbumViewModel : ObservableObject{
     
     ///获取文件列表
     func loadSubFile() {
-        FilesApi.getAlbumList().post(){albumList in
-            var entityList = [AlbumEntity]()
-            for model in albumList{
-                entityList.append(AlbumEntity(model))
+        
+        //从本地缓存读取数据
+        if let modelList = LocalObjectUtil.read([AlbumModel].self, "albums"){
+            self.toEntity(modelList)
+        }
+        FilesApi.getAlbumList().hide().post(){ modelList in
+            if LocalObjectUtil.write(modelList, "albums"){
+                Task{@MainActor in
+                    self.toEntity(modelList)
+                }
             }
-            self.entityList = entityList
         }
     }
-
+    
+    private func toEntity(_ modelList: [AlbumModel]){
+        var entityList = [AlbumEntity]()
+        for model in modelList{
+            entityList.append(AlbumEntity(model))
+        }
+        
+        self.entityList = entityList
+    }
+    
     /**
      清空已经选择的文件
      */

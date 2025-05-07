@@ -91,6 +91,14 @@ class ApiHttp<T: Codable> {
     }
     
     /**
+     * 不显示等待框
+     */
+    func hide() -> ApiHttp {
+        self.isShowWaiting = false
+        return self
+    }
+    
+    /**
      * 调用失败函数
      */
     private func callFail(_ failModel: ApiFailModel) {
@@ -212,7 +220,9 @@ class ApiHttp<T: Codable> {
             request.httpBody = body.data(using: .utf8)
         }
         let httpTask = URLSessionManager.urlSession.dataTask(with: request){ data, response, error in
-            Loading.hide()
+            if self.isShowWaiting{
+                Loading.hide()
+            }
             if let error = error {
                 self.callError("\(error)")
                 return
@@ -233,7 +243,10 @@ class ApiHttp<T: Codable> {
         }
         self.httpTask = httpTask
         
-        Loading.show()
+        //如果需要显示等待框
+        if self.isShowWaiting{
+            Loading.show()
+        }
         httpTask.resume()
 //        self.httpUtil.success{data in
 //            DispatchQueue.main.async{

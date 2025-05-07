@@ -34,26 +34,23 @@ struct ImageViewerPage: View {
     
     var body: some View {
         
-        //        GeometryReader { geometry in
-        
         //为了实现懒加载,这里始终只显示上一张,本张,下一张共3张图片
         HStack(spacing: 0) {
             
             //当前图片上一张之前的图片全部不显示,这些不显示的图片总宽度用这个占位
             Spacer().frame(width: self.vm.screenWidth * CGFloat(self.vm.currentIndex - 1))
-            ImageViewerPagerItem(self.vm.preview(self.vm.currentIndex - 1), dragVM1)
+            ImageViewer(self.vm.preview(self.vm.currentIndex - 1), dragVM1)
                 .frame(width: self.vm.screenWidth)
                 .id(self.vm.preview(self.vm.currentIndex - 1))
-            ImageViewerPagerItem(self.vm.preview(self.vm.currentIndex), dragVM2)
+            ImageViewer(self.vm.preview(self.vm.currentIndex), dragVM2)
                 .frame(width: self.vm.screenWidth)
                 .id(self.vm.preview(self.vm.currentIndex))
-            ImageViewerPagerItem(self.vm.preview(self.vm.currentIndex + 1), dragVM3)
+            ImageViewer(self.vm.preview(self.vm.currentIndex + 1), dragVM3)
                 .frame(width: self.vm.screenWidth)
                 .id(self.vm.preview(self.vm.currentIndex + 1))
         }
         .frame(width: self.vm.screenWidth, alignment: .leading)
         .offset(x: self.vm.hStackOffset)
-//        .clipped()
         .animation(.linear(duration: ImageViewerViewModel.ANIMATION_TIME), value: dragingOffset == 0)
         .gesture(
 //            DragGesture()
