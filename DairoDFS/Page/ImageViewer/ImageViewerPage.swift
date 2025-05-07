@@ -52,6 +52,9 @@ struct ImageViewerPage: View {
         .frame(width: self.vm.screenWidth, alignment: .leading)
         .offset(x: self.vm.hStackOffset)
         .animation(.linear(duration: ImageViewerViewModel.ANIMATION_TIME), value: dragingOffset == 0)
+        .onTapGesture(count: 2) {//双击事件
+            self.dragVM2.doubleClick()
+        }
         .gesture(
 //            DragGesture()
 //                .updating($dragingOffset){ value, state, _ in

@@ -75,6 +75,21 @@ class ImageViewerDragViewModel: ObservableObject{
         self.zoomAmount = 1.0
     }
     
+    /**
+     双击事件
+     */
+    func doubleClick(){
+        if self.zoomAmount > 1{
+            withAnimation{
+                self.zoomAmount = 1
+            }
+        } else {
+            withAnimation{
+                self.zoomAmount = self.screenHeight / self.displayH1
+            }
+        }
+    }
+    
     func setImage(_ uiImage: UIImage){
         self.uiImage = uiImage
         
