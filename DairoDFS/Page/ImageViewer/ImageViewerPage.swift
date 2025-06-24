@@ -10,6 +10,39 @@ import DairoUI_IOS
 
 struct ImageViewerPage: View {
     
+    private var vm: ImageViewerViewModel
+    
+    @State var isShow = true
+    
+    @Environment(\.dismiss) var dismiss
+    
+    init(_ vm: ImageViewerViewModel) {
+        self.vm = vm
+    }
+    
+    private func getImageViewerViewModel()->ImageViewerViewModel{
+        let vvm = ImageViewerViewModel()
+        vvm.setEntitys(self.vm.entitys, index: self.vm.currentIndex)
+        return vvm
+    }
+    
+    var body: some View {
+        VStack{
+            
+            //由于图片浏览需要消耗大量内存,如果不通过中间页面中转一下,图片浏览页面返回时,内存不会被自动回收
+            //@TODO:暂时无解
+            NavigationLink(destination: ImageViewerPage123(getImageViewerViewModel()), isActive: self.$isShow){
+                EmptyView()
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: Notification.Name("BACK_IMAGE_VIEW"))){ _ in
+            self.dismiss()
+        }
+    }
+}
+
+struct ImageViewerPage123: View {
+    
     ///正在拖拽中的偏移量
     @GestureState private var dragingOffset: CGFloat = 0
     
@@ -56,16 +89,16 @@ struct ImageViewerPage: View {
             self.dragVM2.doubleClick()
         }
         .gesture(
-//            DragGesture()
-//                .updating($dragingOffset){ value, state, _ in
-//                    state = value.translation.width
-//                    self.dragVM2.currentOffsetPosition = self.dragVM2.computeDragPosition(value)
-//                }
-//                .onEnded { value in
-//                    self.dragVM2.currentOffsetPosition = self.dragVM2.computeDragPosition(value)
-//                    self.dragVM2.preOffsetPosition = self.dragVM2.currentOffsetPosition
-//                    self.dragVM2.fixCropImage()
-//                }
+            //            DragGesture()
+            //                .updating($dragingOffset){ value, state, _ in
+            //                    state = value.translation.width
+            //                    self.dragVM2.currentOffsetPosition = self.dragVM2.computeDragPosition(value)
+            //                }
+            //                .onEnded { value in
+            //                    self.dragVM2.currentOffsetPosition = self.dragVM2.computeDragPosition(value)
+            //                    self.dragVM2.preOffsetPosition = self.dragVM2.currentOffsetPosition
+            //                    self.dragVM2.fixCropImage()
+            //                }
             MagnificationGesture()
                 .onChanged { amount in
                     //两手指放到屏幕上没有开始缩放时,amount的值是1,代表当前大小的1倍缩放
@@ -83,10 +116,10 @@ struct ImageViewerPage: View {
                         self.dragVM2.fixCropImage()
                     }
                 }.simultaneously(with: DragGesture()
-                     .updating($dragingOffset){ value, state, _ in
-                         state = value.translation.width
-                         self.dragVM2.currentOffsetPosition = self.dragVM2.computeDragPosition(value)
-                     }
+                    .updating($dragingOffset){ value, state, _ in
+                        state = value.translation.width
+                        self.dragVM2.currentOffsetPosition = self.dragVM2.computeDragPosition(value)
+                    }
                     .onEnded { value in
                         self.dragVM2.currentOffsetPosition = self.dragVM2.computeDragPosition(value)
                         self.dragVM2.preOffsetPosition = self.dragVM2.currentOffsetPosition
@@ -126,6 +159,9 @@ struct ImageViewerPage: View {
         }
         .onChange(of: self.vm.currentIndex){ _ in
             self.updateVm()
+        }
+        .onDisappear{
+            NotificationCenter.default.post(name: Notification.Name("BACK_IMAGE_VIEW"), object: nil)
         }
         //        }
         

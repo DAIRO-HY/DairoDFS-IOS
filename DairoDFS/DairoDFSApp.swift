@@ -24,6 +24,9 @@ struct DairoDFSApp: App {
     }
     var body: some Scene {
         WindowGroup {
+//            NavigationView{
+//                TestImage1()
+//            }
             RootView{
                 if SettingShared.isLogin{
                     FilePage()

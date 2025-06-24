@@ -84,8 +84,21 @@ class ImageViewerDragViewModel: ObservableObject{
                 self.zoomAmount = 1
             }
         } else {
-            withAnimation{
-                self.zoomAmount = self.screenHeight / self.displayH1
+            
+            // 适合屏幕宽度的倍率
+            let screenWidthZoom = self.screenWidth / self.displayW1
+            
+            // 适合屏幕高度的倍率
+            let screenHeightZoom = self.screenHeight / self.displayH1
+            
+            if screenWidthZoom == screenHeightZoom && screenWidthZoom == 1{//当前照片本身就是屏幕大小的比例
+                withAnimation{
+                    self.zoomAmount = 2
+                }
+            }else{//否则
+                withAnimation{
+                    self.zoomAmount = screenWidthZoom > screenHeightZoom ? screenWidthZoom : screenHeightZoom
+                }
             }
         }
     }

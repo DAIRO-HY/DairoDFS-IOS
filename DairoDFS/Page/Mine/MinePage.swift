@@ -65,11 +65,33 @@ struct MinePage: View {
                             SettingPicker("功能模式",data: self.functionData, value: self.$functionType)
                                 .icon("die.face.4.fill", backgroundColor: Color.purple)
                             
-                            SettingNavigationLink("相册"){
-                                AlbumPage().anyView
+                            SettingButton("相册"){
+                                AlbumPage().relaunch()
                             }
                             .icon("die.face.4.fill", backgroundColor: Color.purple)
                         }
+                        
+                        SettingCustomView(id: "123"){
+                            VStack{
+                                
+                                NavigationLink(destination: TestImage()){
+                                    Text("图片显示")
+                                }
+                                
+                                Spacer().frame(height: 20)
+                                
+                                NavigationLink(destination: TestImage1()){
+                                    Text("第一个页面")
+                                }
+                                
+                                Spacer().frame(height: 20)
+                                
+                                NavigationLink(destination: TestImageJump()){
+                                    Text("中转")
+                                }
+                            }
+                        }
+                        
                         SettingGroup{
                             SettingButtonSingle("退出登录"){
                                 SettingShared.logout()
