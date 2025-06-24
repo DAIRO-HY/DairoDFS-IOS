@@ -33,7 +33,9 @@ struct AlbumGridView: View {
     var body: some View {
         
         //图片预览页面
-        NavigationLink(destination: ImageViewerPage(self.imageViewerVM), isActive: self.$imageViewerActive){EmptyView()}
+        NavigationLink(destination: ImageViewerPage(self.imageViewerVM), isActive: self.$imageViewerActive){
+            EmptyView()
+        }
         if self.fileVm.entityList.isEmpty{
             EmptyView()
         } else{
