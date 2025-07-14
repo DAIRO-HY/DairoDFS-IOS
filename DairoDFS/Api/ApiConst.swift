@@ -48,6 +48,10 @@ enum ApiConst{
   //path 文件路径
   static let APP_FILE_UPLOAD_BY_MD5 = "/app/file_upload/by_md5"
 
+  //检查文件是否已经存在
+  //- md5 文件的md5,多个以逗号分隔
+  static let APP_FILE_UPLOAD_CHECK_EXISTS_BY_MD5 = "/app/file_upload/check_exists_by_md5"
+
   //文件列表页面
   static let APP_FILES_HTML = "/app/files.html"
 

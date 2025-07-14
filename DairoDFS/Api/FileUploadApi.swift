@@ -24,4 +24,10 @@ enum FileUploadApi {
   static func byMd5(md5: String,path: String,contentType: String) -> ApiHttp<EmptyModel>{
     return ApiHttp<EmptyModel>(ApiConst.APP_FILE_UPLOAD_BY_MD5,parameter: ["md5":md5,"path":path,"contentType":contentType])
   }
+
+  //检查文件是否已经存在
+  //- md5 文件的md5,多个以逗号分隔
+  static func checkExistsByMd5(md5: String) -> ApiHttp<Bool>{
+    return ApiHttp<Bool>(ApiConst.APP_FILE_UPLOAD_CHECK_EXISTS_BY_MD5,parameter: ["md5":md5])
+  }
 }

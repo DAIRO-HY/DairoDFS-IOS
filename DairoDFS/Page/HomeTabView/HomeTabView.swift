@@ -33,7 +33,7 @@ struct HomeTabView: View {
         ZStack{
             
             //图片预览页面
-            NavigationLink(destination: AlbumSyncPage(), isActive: self.$showAlbunSyncPage){
+            NavigationLink(destination: SystemAlbumPage(), isActive: self.$showAlbunSyncPage){
                 EmptyView()
             }
             HStack{

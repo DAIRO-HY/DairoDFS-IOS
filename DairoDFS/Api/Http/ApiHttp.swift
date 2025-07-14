@@ -5,7 +5,7 @@ struct URLSessionManager{
     
     ///网络请求
     private static var mURLSession: URLSession? = nil
-
+    
     ///网络请求
     static var urlSession: URLSession{
         if URLSessionManager.mURLSession == nil{
@@ -50,20 +50,20 @@ class ApiHttp<T: Codable> {
         self.url = url
         self.parameter = parameter
         
-//        //超时设置
-//        self.httpUtil.connectTimeout = 15000
-//        self.httpUtil.readTimeout = 60000
-//        self.httpUtil.method = "POST"
-//        
-//        // 设置请求的Content-Type为application/x-www-form-urlencoded
-//        self.httpUtil.setHeader("Content-Type","application/x-www-form-urlencoded")
-//        
-//        self.httpUtil.addParam("_client",5)//IOS标识
-//        self.httpUtil.addParam("_versionCode",Bundle.main.infoDictionary?["CFBundleVersion"] as! String)//版本号
-//        self.httpUtil.addParam("_versionName",Bundle.main.infoDictionary?["CFBundleShortVersionString"] as! String)//版本名
-//        if let token = UserShared.token {//携带登录信息
-//            self.httpUtil.addParam("_token",token)
-//        }
+        //        //超时设置
+        //        self.httpUtil.connectTimeout = 15000
+        //        self.httpUtil.readTimeout = 60000
+        //        self.httpUtil.method = "POST"
+        //
+        //        // 设置请求的Content-Type为application/x-www-form-urlencoded
+        //        self.httpUtil.setHeader("Content-Type","application/x-www-form-urlencoded")
+        //
+        //        self.httpUtil.addParam("_client",5)//IOS标识
+        //        self.httpUtil.addParam("_versionCode",Bundle.main.infoDictionary?["CFBundleVersion"] as! String)//版本号
+        //        self.httpUtil.addParam("_versionName",Bundle.main.infoDictionary?["CFBundleShortVersionString"] as! String)//版本名
+        //        if let token = UserShared.token {//携带登录信息
+        //            self.httpUtil.addParam("_token",token)
+        //        }
     }
     
     /**
@@ -102,13 +102,13 @@ class ApiHttp<T: Codable> {
      * 调用失败函数
      */
     private func callFail(_ failModel: ApiFailModel) {
-//        if (self.failFunc != nil) {
-//                self.failFunc!(failModel)
-//        } else {
-//            if self.isShowWaiting{//有遮照层
-//                Toast.show(failModel.msg ?? "处理失败")
-//            }
-//        }
+        //        if (self.failFunc != nil) {
+        //                self.failFunc!(failModel)
+        //        } else {
+        //            if self.isShowWaiting{//有遮照层
+        //                Toast.show(failModel.msg ?? "处理失败")
+        //            }
+        //        }
     }
     
     /**
@@ -116,7 +116,7 @@ class ApiHttp<T: Codable> {
      */
     private func callError(_ msg: String) {
         if (self.errorFunc != nil) {
-                self.errorFunc!(msg)
+            self.errorFunc!(msg)
         } else {
             if self.isShowWaiting{//有遮照层
                 Toast.show(msg)
@@ -149,54 +149,54 @@ class ApiHttp<T: Codable> {
     /**
      * 调用成功函数
      */
-//    private func callRequestSuccess(_ data: Data){
-//        if self.httpUtil.statusCode != 200 {//服务器异常
-//            if let failModel = try? JSONDecoder().decode(ApiFailModel.self, from: data){
-//                self.callFail(failModel)
-//            }else{
-//                self.callError("服务器异常,状态码:\(self.httpUtil.statusCode)")
-//            }
-//            return
-//        }
-//        if data.count == 0 {//服务器没有返回任何数据
-//            if let f = self.voidSuccessFunc {//这是一个允许没有返回值的API
-//                f()
-//                return
-//            }
-//            if let f = self.nullSuccessFunc {//这是一个允返回null的API
-//                f(nil)
-//                return
-//            }
-//        }
-//        let model:T
-//        do{
-//            model = try self.toT(data)
-//        } catch {
-//            self.callError("数据解析失败:\(String(data: data, encoding: .utf8))")
-//            return
-//        }
-//        if let f = self.nullSuccessFunc {//这是一个允返回null的API
-//            f(model)
-//            return
-//        }
-//        if let f = self.notnullSuccessFunc {//这是一个不允返回null的API
-//            f(model)
-//            return
-//        }
-//    }
+    //    private func callRequestSuccess(_ data: Data){
+    //        if self.httpUtil.statusCode != 200 {//服务器异常
+    //            if let failModel = try? JSONDecoder().decode(ApiFailModel.self, from: data){
+    //                self.callFail(failModel)
+    //            }else{
+    //                self.callError("服务器异常,状态码:\(self.httpUtil.statusCode)")
+    //            }
+    //            return
+    //        }
+    //        if data.count == 0 {//服务器没有返回任何数据
+    //            if let f = self.voidSuccessFunc {//这是一个允许没有返回值的API
+    //                f()
+    //                return
+    //            }
+    //            if let f = self.nullSuccessFunc {//这是一个允返回null的API
+    //                f(nil)
+    //                return
+    //            }
+    //        }
+    //        let model:T
+    //        do{
+    //            model = try self.toT(data)
+    //        } catch {
+    //            self.callError("数据解析失败:\(String(data: data, encoding: .utf8))")
+    //            return
+    //        }
+    //        if let f = self.nullSuccessFunc {//这是一个允返回null的API
+    //            f(model)
+    //            return
+    //        }
+    //        if let f = self.notnullSuccessFunc {//这是一个不允返回null的API
+    //            f(model)
+    //            return
+    //        }
+    //    }
     
     /**
      * 调用最终函数
      */
-//    private func callRequestFinish(_ error:Error?){
-//            if error != nil{
-//                self.callError("网络连接失败")
-//            }
-//            self.finishFunc?()
-//            if self.isShowWaiting {
-//                Loading.hide()
-//            }
-//    }
+    //    private func callRequestFinish(_ error:Error?){
+    //            if error != nil{
+    //                self.callError("网络连接失败")
+    //            }
+    //            self.finishFunc?()
+    //            if self.isShowWaiting {
+    //                Loading.hide()
+    //            }
+    //    }
     
     /**
      * 发起请求
@@ -208,11 +208,11 @@ class ApiHttp<T: Codable> {
         //添加公共参数
         var body = ""
         for entry in self.parameter{
-                if let value = entry.value as? String{//过滤掉空字符串的参数
-                    if value.isEmpty{
-                        continue
-                    }
+            if let value = entry.value as? String{//过滤掉空字符串的参数
+                if value.isEmpty{
+                    continue
                 }
+            }
             body += "\(entry.key)=\(entry.value)&"
         }
         if !body.isEmpty{
@@ -233,11 +233,8 @@ class ApiHttp<T: Codable> {
                 return
             }
             let t = self.convert(data!)
-            if self.isShowWaiting{//显示等待框,表示当前回调需要运行在主线程上
-                Task{@MainActor in
-                    successFunc(t)
-                }
-            } else {
+            //使回调函数运行在主线程上
+            Task{@MainActor in
                 successFunc(t)
             }
         }
@@ -248,18 +245,18 @@ class ApiHttp<T: Codable> {
             Loading.show()
         }
         httpTask.resume()
-//        self.httpUtil.success{data in
-//            DispatchQueue.main.async{
-//                self.callRequestSuccess(data)
-//            }
-//        }.finish{error in
-//            DispatchQueue.main.async{
-//                self.callRequestFinish(error)
-//            }
-//        }.request()
-//        if self.isShowWaiting {
-//            Loading.show()
-//        }
+        //        self.httpUtil.success{data in
+        //            DispatchQueue.main.async{
+        //                self.callRequestSuccess(data)
+        //            }
+        //        }.finish{error in
+        //            DispatchQueue.main.async{
+        //                self.callRequestFinish(error)
+        //            }
+        //        }.request()
+        //        if self.isShowWaiting {
+        //            Loading.show()
+        //        }
     }
     
     /**
@@ -275,6 +272,8 @@ class ApiHttp<T: Codable> {
             return Int(String(data: data, encoding: .utf8)!) as! T
         case is Double.Type:
             return Double(String(data: data, encoding: .utf8)!) as! T
+        case is Bool.Type:
+            return (String(data: data, encoding: .utf8)!.lowercased() == "true") as! T
         case is EmptyModel.Type:
             return EmptyModel() as! T
         default:
