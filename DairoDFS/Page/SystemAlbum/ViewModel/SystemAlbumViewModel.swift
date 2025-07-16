@@ -16,6 +16,9 @@ class SystemAlbumViewModel : ObservableObject{
     //当前相册信息列表
     @Published var albumList = [SystemAlbumBean]()
     
+    //文件唯一ID对应所在序号
+    var identifier2index = [String:Int]()
+    
     /// 当前请求的文件夹
     var currentFolder = ""
     
@@ -33,6 +36,9 @@ class SystemAlbumViewModel : ObservableObject{
     ///记录当前选中的文件数
     @Published var status = ""
     
+    ///上传数量通知消息
+    @Published var uploadCountMsg: String?
+    
     init(){
         self.fetchPhotos()
     }
@@ -45,7 +51,9 @@ class SystemAlbumViewModel : ObservableObject{
                 let fetchResult = PHAsset.fetchAssets(with: fetchOptions)
                 var albumAsset = [SystemAlbumBean]()
                 fetchResult.enumerateObjects { asset, _, _ in
-                    let bean = self.getAssetFileExtension(asset, albumAsset.count)
+                    let index = albumAsset.count
+                    self.identifier2index[asset.localIdentifier] = index
+                    let bean = self.getAssetFileExtension(asset, index)
                     albumAsset.append(bean)
                 }
                 Task{@MainActor in
@@ -95,10 +103,22 @@ class SystemAlbumViewModel : ObservableObject{
         self.albumList[item.index].checked = !item.checked
     }
     
-    
     ///上传按钮点击事件
     func onUploadClick() {
-        self.loopUpload(0)
+        var assetList = [PHAsset]()
+        for i in self.albumList.indices{
+            if !self.albumList[i].checked{
+                continue
+            }
+            self.albumList[i].uploadMsg = "等待上传"
+            assetList.append(self.albumList[i].asset)
+        }
+        if assetList.isEmpty{
+            Toast.show("请选择后上传")
+            return
+        }
+        PHAssetUploadManager.upload(assetList)
+//        self.loopUpload(0)
     }
     
     func delete(assets: [PHAsset]) {
@@ -237,42 +257,11 @@ class SystemAlbumViewModel : ObservableObject{
     
     //循环上传图片
     private func upload(_ index: Int){
-        let bean = self.albumList[index]
-        let uploader = StreamUploader(bean.asset)
-        
-        let url = SettingShared.domainNotNull + "/app/file_upload/by_stream/" + bean.md5!
-        uploader.upload(to: url)
-//        uploader.start()
-        
-//        Task{
-//            await Task.sleep(3_000_000_000)
-//            uploader.readPHAssetTask()
-//        }
-        
-        //相册文件输入流
-//        let iStream = MemoryInputStream(bean.asset, uploader.outputStream!)
-//        iStream.readPHAssetTask()
-        
-        //获取该文件已经上传大小
-//        FileUploadApi.getUploadedSize(md5: bean.md5).post {
-//            <#code#>
-//        }
-        
-//        let options = PHAssetResourceRequestOptions()
-//        options.isNetworkAccessAllowed = false// 允许从iCloud下载
+//        let bean = self.albumList[index]
+//        let uploader = StreamUploader(bean.asset)
 //        
-//        // 读取资源数据并计算 MD5
-//        PHAssetResourceManager.default().requestData(for: PHAssetResource.assetResources(for: bean.asset).first!, options: options, dataReceivedHandler: { data in
-//            self.semaphore.wait()
-//            print("-->count:\(data.count)")
-//            
-//        }, completionHandler: { error in
-//            if let error = error {
-//                print("读取失败: \(error)")
-//            } else {
-//                print("读取完毕")
-//            }
-//        })
+//        let url = SettingShared.domainNotNull + "/app/file_upload/by_stream/" + bean.md5!
+//        uploader.upload(to: url)
     }
     
     //循环去获取图片上传状态

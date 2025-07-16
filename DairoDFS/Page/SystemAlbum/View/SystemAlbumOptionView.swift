@@ -16,6 +16,12 @@ struct SystemAlbumOptionView: View {
             EmptyView()
         } else {
             VStack(spacing: 8){
+                if let msg = self.vm.uploadCountMsg{
+                    Divider()
+                    HStack{
+                        Text(msg).foregroundColor(.secondary)
+                    }
+                }
                 if !self.vm.status.isEmpty{
                     Divider()
                     HStack{
@@ -53,6 +59,19 @@ struct SystemAlbumOptionView: View {
                     UCOptionMenuButton("重命名", icon: "pencil", disabled: self.vm.checkedCount != 1, action: self.onRenameClick)
                     UCOptionMenuButton("属性", icon: "info", disabled: self.vm.checkedCount == 0, action: self.onPropertyClick)
                 }
+            }.onReceive(NotificationCenter.default.publisher(for: Notification.Name(PHAssetUploadManager.NOTIFY_UPLOAD_COUNT))){
+                self.vm.uploadCountMsg = $0.object as! String
+            }.onReceive(NotificationCenter.default.publisher(for: Notification.Name(PHAssetUploadManager.NOTIFY_UPLOAD_FINISH))){
+                let values = $0.object as! Array<String>
+                let localIdentifier = values[0]
+                let uploadMsg = values[1]
+                
+                //当前文件所在序号
+                guard let index = self.vm.identifier2index[localIdentifier] else{
+                    return
+                }
+                self.vm.albumList[index].uploadMsg = uploadMsg
+                PHAssetUploadManager.uploadFinish(localIdentifier)
             }
             //        this.redrawVN.value++;
         }

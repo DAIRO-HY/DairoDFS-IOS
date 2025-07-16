@@ -33,6 +33,9 @@ struct SystemAlbumBean{
     //上传标记  -1:未知  0:未上传  1:已上传
     var existsFlag = -1
     
+    //上传消息
+    var uploadMsg = ""
+    
     //是否选中
     var checked = false
 }

@@ -34,11 +34,11 @@ struct SystemAlbumImageView: View {
             if self.albumBean.checked{//如果是选择状态
                 Image(systemName:"checkmark.circle.fill").offset(x: 5, y: 5)
             }
-            if self.albumBean.existsFlag != -1{//上传状态
+            if !self.albumBean.uploadMsg.isEmpty{//上传状态
                 HStack{
                     Spacer()
-                    Text(self.albumBean.existsFlag == 0 ? "未传" : "已传")
-                        .font(.subheadline).foregroundColor(.white).frame(width: 50,height: 20).background(Color.gray)
+                    Text(self.albumBean.uploadMsg)
+                        .font(.subheadline).foregroundColor(.white).frame(height: 20).background(Color.gray)
                 }
                 .frame(maxWidth: .infinity)
             }
