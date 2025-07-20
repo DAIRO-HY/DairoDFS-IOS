@@ -110,11 +110,11 @@ class SystemAlbumViewModel : ObservableObject{
             if !self.albumList[i].checked{
                 continue
             }
-            self.albumList[i].uploadMsg = "等待上传"
+            self.albumList[i].uploadMsg = "排队中"
             assetList.append(self.albumList[i].asset)
         }
         if assetList.isEmpty{
-            Toast.show("请选择后上传")
+            Toast.show("未选择任何对象")
             return
         }
         

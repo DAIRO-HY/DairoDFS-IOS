@@ -53,12 +53,13 @@ class StreamUploader: NSObject,
     
     ///上传
     func upload() {
-        self.computeMd5(self.checkExists)
+        self.computeMd5(false, self.checkExists)
     }
     
-    ///计算图片MD5
-    /// - index 当前计算的下标
-    private func computeMd5(_ callback: @escaping () -> Void) {
+    ///计算图文件MD5
+    /// - isIcloudAllowed 是否允许从iCloud下载
+    /// - callback 计算完成之后的回调函数
+    private func computeMd5(_ isIcloudAllowed: Bool, _ callback: @escaping () -> Void) {
         if self.asset.mediaSubtypes.contains(.photoLive) {
             // 实况照片
             self.finish("实况照片暂不支持")
@@ -73,7 +74,7 @@ class StreamUploader: NSObject,
         
         // 设置读取选项（可设置 isNetworkAccessAllowed 等）
         let options = PHAssetResourceRequestOptions()
-        options.isNetworkAccessAllowed = false
+        options.isNetworkAccessAllowed = isIcloudAllowed
         
         // 初始化 MD5 计算上下文
         var context = CC_MD5_CTX()
@@ -86,6 +87,15 @@ class StreamUploader: NSObject,
             }
         }, completionHandler: { error in
             if let error = error as NSError? {
+                if error.domain == PHPhotosErrorDomain && error.code == 3164{//文件在iCloud中
+                    if isIcloudAllowed{
+                        self.finish("从iCloud同步失败")
+                        return
+                    }
+                    self.progress("从iCloud下载中")
+                    self.computeMd5(true, callback)
+                    return
+                }
                 if error.code == NSUserCancelledError {//请求被手动取消
                     self.finish("已取消")
                     return
@@ -340,7 +350,7 @@ class StreamUploader: NSObject,
             NotificationCenter.default.post(name: Notification.Name(PHAssetUploadManager.NOTIFY_UPLOAD_PROGRESS), object: [self.identifier, msg])
         }
     }
-
+    
     ///取消
     func cancel(){
         if let assetDataRequestId{
