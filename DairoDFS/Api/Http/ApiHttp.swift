@@ -15,10 +15,17 @@ struct URLSessionManager{
     }
 }
 
+///api请求基类
+protocol ApiHttpBase{
+    
+    //取消请求
+    func cancel()
+}
+
 /**
  * API请求
  */
-class ApiHttp<T: Codable> {
+class ApiHttp<T: Codable> : ApiHttpBase{
     
     private let url: String
     
@@ -129,10 +136,11 @@ class ApiHttp<T: Codable> {
      * 带参回调
      * - paramter successFunc  成功的返回值
      */
-    func post(_ successFunc: @escaping (_ data: T) -> Void) {
+    func post(_ successFunc: @escaping (_ data: T) -> Void)  -> ApiHttp{
         self.request("POST") {
             successFunc($0!)
         }
+        return self
     }
     
     /**
@@ -140,10 +148,11 @@ class ApiHttp<T: Codable> {
      * 无参回调
      * - paramter successFunc  成功的返回值
      */
-    func post(_ successFunc: @escaping () -> Void) {
+    func post(_ successFunc: @escaping () -> Void)  -> ApiHttp{
         self.request("POST") {_ in
             successFunc()
         }
+        return self
     }
     
     /**

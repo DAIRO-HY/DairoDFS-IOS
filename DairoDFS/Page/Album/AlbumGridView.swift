@@ -52,8 +52,7 @@ struct AlbumGridView: View {
                     
                     //初期化滚动到最底部的目的
                     Color.clear.frame(height: 1).id("BOTTOM")
-                }
-                .onAppear {
+                }.onAppear {
                     proxy.scrollTo("BOTTOM", anchor: .bottomTrailing)
                 }
             }.ignoresSafeArea(.all)

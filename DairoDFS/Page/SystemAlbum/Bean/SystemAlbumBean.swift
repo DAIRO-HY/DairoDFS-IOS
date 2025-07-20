@@ -27,6 +27,9 @@ struct SystemAlbumBean{
     //文件名
     let name: String
     
+    //视频时长
+    let duration: String?
+    
     //文件的md5
     var md5: String?
     

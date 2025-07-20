@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Photos
+import DairoUI_IOS
 
 
 struct SystemAlbumImageView: View {
@@ -31,16 +32,29 @@ struct SystemAlbumImageView: View {
             } else {
                 ProgressView("Loading...")
             }
-            if self.albumBean.checked{//如果是选择状态
-                Image(systemName:"checkmark.circle.fill").offset(x: 5, y: 5)
-            }
-            if !self.albumBean.uploadMsg.isEmpty{//上传状态
+            VStack(spacing: 0){
+                HStack{
+                    if self.albumBean.checked{//如果是选择状态
+                        Image(systemName:"checkmark.circle.fill")
+                    }
+                    Spacer()
+                }
+                Spacer()
                 HStack{
                     Spacer()
-                    Text(self.albumBean.uploadMsg)
-                        .font(.subheadline).foregroundColor(.white).frame(height: 20).background(Color.gray)
+                    if let duration = self.albumBean.duration{
+                        Text(duration).foregroundColor(.white).font(.footnote).shadow(color: .black, radius: 2, x: 1, y: 1)
+                        Spacer().frame(width: 5)
+                    }
                 }
-                .frame(maxWidth: .infinity)
+                if !self.albumBean.uploadMsg.isEmpty{//上传状态
+                    Button(action: {
+                        Toast.show(self.albumBean.uploadMsg)
+                    }){
+                        Text(self.albumBean.uploadMsg)
+                            .font(.footnote).foregroundColor(.white)
+                    }.frame(maxWidth: .infinity).frame(height: 20).background(Color.black.opacity(0.5))
+                }
             }
         }
         .frame(width: self.size, height: self.size)
