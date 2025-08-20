@@ -41,6 +41,12 @@ class StreamUploader: NSObject,
     //是否仅检查是否上传
     private var isOnlyCheck = false
     
+    //当前上传任务,用于取消
+    private var task: URLSessionTask?
+    
+    ///记录已经读取了的数据大小
+    private var readedDataSize: Int64 = 0
+    
     init(_ dasset: PHAsset, _ isOnlyCheck: Bool) {
         self.asset = dasset
         self.isOnlyCheck = isOnlyCheck
@@ -163,9 +169,12 @@ class StreamUploader: NSObject,
                                  timeoutInterval: 60)
         request.httpMethod = "POST"
         request.setValue("application/octet-stream", forHTTPHeaderField: "Content-Type")
-        request.setValue("\(self.fileSize)", forHTTPHeaderField: "Content-Length")
+        
+        //要监听上传进度,这个参数必须传
+        request.setValue("\(self.fileSize - self.offset)", forHTTPHeaderField: "Content-Length")
         let uploadTask = self.session.uploadTask(withStreamedRequest: request)
         uploadTask.resume()
+        self.task = uploadTask
         request.httpBodyStream = boundStreams.input
     }
     
@@ -176,7 +185,9 @@ class StreamUploader: NSObject,
         //得到文件后缀
         let ext = (originalFilename as NSString).pathExtension.lowercased()
         self.progress("服务端处理中")
-        self.apiHttp = FileUploadApi.byMd5(md5: self.md5!, path: "/相册/\(Date().timeIntervalSince1970 * 1000)." + ext, contentType: "").hide()
+        
+        let time = Int64(Date().timeIntervalSince1970 * 1_000_000)
+        self.apiHttp = FileUploadApi.byMd5(md5: self.md5!, path: "/相册/\(time)." + ext, contentType: "").hide()
             .error{
                 self.finish("失败:\($0)")
             }.fail{
@@ -230,14 +241,19 @@ class StreamUploader: NSObject,
         self.readPHAssetTask()
     }
     
-    func urlSession(_ session: URLSession,
-                    task: URLSessionTask,
-                    didSendBodyData bytesSent: Int64,
-                    totalBytesSent: Int64,
-                    totalBytesExpectedToSend: Int64) {
+    ///上传进度监听
+    /// - totalBytesSent 已上传大小
+    /// - totalBytesExpectedToSend 文件总大小,依旧是上传前配置的content-leng值
+    func urlSession(
+        _ session: URLSession,
+        task: URLSessionTask,
+        didSendBodyData bytesSent: Int64,
+        totalBytesSent: Int64,
+        totalBytesExpectedToSend: Int64
+    ) {
         
         //通知上传进度
-        let progress = totalBytesSent.fileSize + "/" +  totalBytesExpectedToSend.fileSize
+        let progress = (totalBytesSent + self.offset).fileSize + "/" +  (totalBytesExpectedToSend + self.offset).fileSize
         self.progress(progress)
     }
     
@@ -250,6 +266,7 @@ class StreamUploader: NSObject,
     }
     
     func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
+        self.task = nil
         
         //z最后一定要调用该函数,否则析构函数不会被调用
         session.invalidateAndCancel()
@@ -292,9 +309,23 @@ class StreamUploader: NSObject,
         let options = PHAssetResourceRequestOptions()
         options.isNetworkAccessAllowed = false// 允许从iCloud下载
         
-        // 读取资源数据并计算 MD5
+        // 读取资源数据并上传
+        // 这里是单线程的,即使开启多线程读取数据,同时也只有一个任务在读,暂时还不知道解决方案
         self.assetDataRequestId = PHAssetResourceManager.default().requestData(for: PHAssetResource.assetResources(for: self.asset).first!, options: options, dataReceivedHandler: { data in
+            
+            //当前读取到的数据大小
+            let currentSize = Int64(data.count)
             var data = data
+            if self.readedDataSize + currentSize <= self.offset{//跳过指定偏移大小,这部分数据可能已经被上传
+                data = Data()
+            } else if self.readedDataSize < self.offset{//本次只需要部分数据
+                
+                //移除多余的数据
+                data.removeSubrange(0 ..< Int(self.offset - self.readedDataSize))
+            } else {
+                //不做任何处理
+            }
+            self.readedDataSize += currentSize
             while data.count > 0{
                 let bytesWritten: Int = data.withUnsafeBytes() { (buffer: UnsafePointer<UInt8>) in
                     //                    self.canWrite = false
@@ -356,6 +387,9 @@ class StreamUploader: NSObject,
         if let assetDataRequestId{
             PHAssetResourceManager.default().cancelDataRequest(assetDataRequestId)
         }
+        
+        //手动取消正在上传的task,否则服务端无法知道客户端结束,造成阻塞直到超时
+        self.task?.cancel()
         if let apiHttp{
             apiHttp.cancel()
         }

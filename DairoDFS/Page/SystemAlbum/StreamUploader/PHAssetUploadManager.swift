@@ -6,6 +6,7 @@
 //
 
 import Photos
+import DairoUI_IOS
 
 class PHAssetUploadManager{
     
@@ -22,7 +23,7 @@ class PHAssetUploadManager{
     static let NOTIFY_UPLOAD_FINISH = "NOTIFY_UPLOAD_FINISH"
     
     //相册文件唯一ID对应的MD5
-    static var md5Map: Dictionary<String,String> = [String:String]()
+    static var md5Map = [String:String]()
     
     //已经上传的文件ID
     static var uploadedSet = Set<String>()
@@ -30,7 +31,8 @@ class PHAssetUploadManager{
     //文件信息获取锁
     static let assetLock = NSLock()
     
-    private static let MAX_LIMIT = 5
+    //由于PHAsset读取数据时单线程的,这里即使开启多线程上传,同时也只有一个上传任务,暂时无解
+    private static let MAX_LIMIT = 1
     
     private static let lock = NSLock()
     
@@ -51,6 +53,15 @@ class PHAssetUploadManager{
     
     //开始上传
     static func upload(_ uploadList: [PHAsset], _ isOnlyCheck: Bool){
+        self.assetLock.lock()
+        if self.md5Map.isEmpty{
+            if let md5Map = LocalObjectUtil.read([String:String].self, "album-md5"){
+                self.md5Map = md5Map
+            }
+        }
+        PHAssetUploadManager.assetLock.unlock()
+        
+        
         PHAssetUploadManager.isOnlyCheck = isOnlyCheck
         PHAssetUploadManager.lock.lock()
         self.isCancel = false
@@ -151,5 +162,22 @@ class PHAssetUploadManager{
             v.cancel()
         }
         PHAssetUploadManager.lock.unlock()
+    }
+    
+    ///保存计算好的相册文件md5
+    static func saveAlbumMd5(_ identifierList: [String]){
+        PHAssetUploadManager.assetLock.lock()
+        
+        //相册文件唯一ID对应的MD5
+        var md5Map: Dictionary<String,String> = [String:String]()
+        identifierList.forEach{ item in
+            if self.md5Map.contains{$0.key == item}{//如果该id存在
+                md5Map[item] = self.md5Map[item]
+            }
+        }
+        
+        //将已经计算好的相册文件md5保存到本地
+        LocalObjectUtil.write(md5Map, "album-md5")
+        PHAssetUploadManager.assetLock.unlock()
     }
 }

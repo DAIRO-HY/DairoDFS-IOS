@@ -12,7 +12,7 @@ struct FilesView: View {
     var body: some View {
         ScrollView{
             LazyVStack{
-                ForEach(self.fileVm.dfsFileList, id: \.self.dfsModel.id) { item in
+                ForEach(self.fileVm.dfsFileList, id: \.self.fm.id) { item in
                     Button(action: { self.onFileClick(item) }){
                         FileListViewItem(item, isSelectMode: self.fileVm.isSelectMode)
                     }
@@ -32,8 +32,8 @@ struct FilesView: View {
             self.fileVm.selectedCount += (item.isSelected ? 1 : -1)
             return
         }
-        if item.isFolder{//如果这是一个文件夹
-            self.fileVm.loadSubFile(self.fileVm.currentFolder + "/" + item.dfsModel.name)
+        if item.fm.isFolder{//如果这是一个文件夹
+            self.fileVm.loadSubFile(self.fileVm.currentFolder + "/" + item.fm.name)
         }
     }
 }

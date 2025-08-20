@@ -217,12 +217,22 @@ class ApiHttp<T: Codable> : ApiHttpBase{
         //添加公共参数
         var body = ""
         for entry in self.parameter{
+            let bodyValue: String
             if let value = entry.value as? String{//过滤掉空字符串的参数
                 if value.isEmpty{
                     continue
                 }
+                bodyValue = value
+            } else if let value  = entry.value as? [String]{//如果是一个字符串数组
+                
+                //@TODO: 数组里面的字符串的逗号(,)需要单独处理
+                bodyValue = "[" + value.joined(separator: ",") + "]"
+            } else if let value  = entry.value as? [any Codable]{//如果是一个数组
+                bodyValue = "[" + value.map{"\($0)"}.joined(separator: ",") + "]"
+            } else {
+                bodyValue = "\(entry.value)"
             }
-            body += "\(entry.key)=\(entry.value)&"
+            body += "\(entry.key)=" + bodyValue + "&"
         }
         if !body.isEmpty{
             body.removeLast()

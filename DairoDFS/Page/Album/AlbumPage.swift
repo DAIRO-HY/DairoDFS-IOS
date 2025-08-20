@@ -6,10 +6,14 @@
 //
 
 import SwiftUI
+import DairoUI_IOS
 
 struct AlbumPage: View {
     
-    @StateObject var fileVm = AlbumViewModel()
+    /// 页面重新加载标识
+    static let ALBUM_PAGE_RELOAD_DATA = "ALBUM_PAGE_RELOAD_DATA"
+    
+    @StateObject var vm = AlbumViewModel()
     
     var body: some View {
         NavigationView{
@@ -17,11 +21,34 @@ struct AlbumPage: View {
                 
                 //撑开内部控件,使功能按钮初始化时就显示在右上角
                 Spacer().frame(maxWidth: .infinity, maxHeight: .infinity)
-                AlbumGridView().environmentObject(self.fileVm)
-                AlbumOptionBarView().environmentObject(self.fileVm)
+                AlbumGridView().environmentObject(self.vm)
+                AlbumOptionBarView().environmentObject(self.vm)
+                AlbumOptionView().environmentObject(self.vm)
             }
             .navigationTitle("相册")
             .navigationBarHidden(true)
+            
+            //刷新数据通知
+            .onReceive(NotificationCenter.default.publisher(for: Notification.Name(AlbumPage.ALBUM_PAGE_RELOAD_DATA))){ _ in
+                self.vm.isNeedReloadData = true
+            }
+            .onChange(of: self.vm.showViewerPage){
+                if $0{
+                    self.vm.isNeedReloadData = false
+                    return
+                }
+                
+                //当相册查看页面关闭时,如果需要更新数据
+                if self.vm.isNeedReloadData{
+                    self.vm.loadData()
+                }
+            }
+            .fullScreenCover(isPresented: self.$vm.showViewerPage) {
+                let viewModel = self.vm.getAlbumViewerViewModel()
+                RootView{
+                    AlbumViewerPage(viewModel, self.$vm.showViewerPage)
+                }
+            }
         }
     }
 }

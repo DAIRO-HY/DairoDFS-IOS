@@ -6,25 +6,16 @@
 //
 class AlbumEntity{
     
-    let model: AlbumModel
+    /// 当前序号
+    let index: Int
 
+    
+    let fm: FileModel
+    
     /// 是否选中
     var isSelected = false
-
-    init(_ model: AlbumModel) {
-        self.model = model
-    }
-
-    ///得到文件预览url
-//    String get preview => "/app/files/preview/${this.id}/${this.name}";
-    
-    /// 是否有缩略图
-    var hasThumb: Bool{
-        return !self.model.thumb.isEmpty
-    }
-    
-    ///得到缩略图URL
-    var thumb: String{
-        return SettingShared.domainNotNull + self.model.thumb + "?extra=thumb&_token=" + SettingShared.token
+    init(_ index: Int, _ fm: FileModel) {
+        self.fm = fm
+        self.index = index
     }
 }

@@ -44,16 +44,10 @@ struct MinePage: View {
                             SettingButton("回收站"){
                             }
                             .icon("trash.fill", backgroundColor: Color.green)
-                            SettingButton("传输列表"){
-                                
-                            }
-                            .icon("arrow.trianglehead.2.clockwise.rotate.90.circle.fill", backgroundColor: Color.pink)
-                        }
-                        SettingGroup{
-                            SettingButton("缓存管理"){
-                                
-                            }.icon("opticaldiscdrive.fill", backgroundColor: Color.cyan)
                             
+                            SettingNavigationLink("下载管理",tip: "下载、缓存文件"){
+                                AnyView(DownloadPage())
+                            }.icon("opticaldiscdrive.fill", backgroundColor: Color.cyan)
                             SettingButton("修改密码"){
                                 
                             }.icon("lock.open.rotation", backgroundColor: Color.orange)
@@ -62,34 +56,16 @@ struct MinePage: View {
                             SettingPicker("切换主题",data: self.themeData, value: self.$theme)
                                 .icon("paintbrush.fill", backgroundColor: Color.red)
                             
-                            SettingPicker("功能模式",data: self.functionData, value: self.$functionType)
-                                .icon("die.face.4.fill", backgroundColor: Color.purple)
-                            
-                            SettingButton("相册"){
-                                AlbumPage().relaunch()
+                            SettingPicker("功能模式",data: self.functionData, value: self.$functionType){
+                                if $0 == FunctionModel.FILE{
+                                    FilePage().relaunch()
+                                } else if $0 == FunctionModel.ALBUM{
+                                    AlbumPage().relaunch()
+                                } else {
+                                }
+                                return true
                             }
                             .icon("die.face.4.fill", backgroundColor: Color.purple)
-                        }
-                        
-                        SettingCustomView(id: "123"){
-                            VStack{
-                                
-                                NavigationLink(destination: TestImage()){
-                                    Text("图片显示")
-                                }
-                                
-                                Spacer().frame(height: 20)
-                                
-                                NavigationLink(destination: TestImage1()){
-                                    Text("第一个页面")
-                                }
-                                
-                                Spacer().frame(height: 20)
-                                
-                                NavigationLink(destination: TestImageJump()){
-                                    Text("中转")
-                                }
-                            }
                         }
                         
                         SettingGroup{

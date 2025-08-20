@@ -55,6 +55,11 @@ struct SystemAlbumPage: View {
         }
         .navigationBarTitleDisplayMode(.inline)
         .navigationTitle("所有照片")
+        .onDisappear{
+            PHAssetUploadManager.cancel()
+            let identifierList = self.viewModel.albumList.map{$0.identifier}
+            PHAssetUploadManager.saveAlbumMd5(identifierList)
+        }
     }
 }
 

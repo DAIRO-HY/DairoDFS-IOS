@@ -12,8 +12,8 @@ enum FilesApi {
   }
 
   //获取相册列表
-  static func getAlbumList() -> ApiHttp<[AlbumModel]>{
-    return ApiHttp<[AlbumModel]>(ApiConst.APP_FILES_GET_ALBUM_LIST)
+  static func getAlbumList() -> ApiHttp<[FileModel]>{
+    return ApiHttp<[FileModel]>(ApiConst.APP_FILES_GET_ALBUM_LIST)
   }
 
   //获取扩展文件的所有key值

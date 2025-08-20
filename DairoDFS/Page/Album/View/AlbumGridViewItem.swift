@@ -25,8 +25,8 @@ struct AlbumGridViewItem: View {
     var body: some View {
         ZStack(alignment: .bottomTrailing){
             self.thumb
-            if !self.entity.model.duration.isEmpty{
-                Text(self.entity.model.duration)
+            if !self.entity.fm.other1.isEmpty{//如果有视频时间
+                Text(self.entity.fm.other1)
                     .font(.subheadline)
                     .foregroundColor(.white)
                     .offset(x: -5, y: -5)
@@ -51,8 +51,8 @@ struct AlbumGridViewItem: View {
     
     private var thumb: some View{
         Section{
-            if self.entity.hasThumb{//如果有缩略图
-                CacheImage(self.entity.thumb)
+            if self.entity.fm.hasThumb{//如果有缩略图
+                CacheImage(self.entity.fm.thumbUrl, downloadId: self.entity.fm.thumbDownloadId)
                     .frame(width: self.size, height: self.size)
             }else{//没有缩略图
                 Image(systemName: "document.fill")
@@ -70,16 +70,15 @@ struct AlbumGridViewItem: View {
 
 
 private func getTestEntity() -> AlbumEntity{
-    var dfb = AlbumEntity(
-        AlbumModel(
+    var dfb = AlbumEntity(0, 
+        FileModel(
             id: 1,
             name: "文件名",
             size: 123456789,
             fileFlag: true,
-            date: 123456,
+            date: "123456",
             thumb: "http://192.168.10.112:8031/d/oq8221/WechatIMG2.jpg",
-            cameraName:"",
-            duration:"12:00"
+            other1:"12:00"
         )
     )
     dfb.isSelected = true

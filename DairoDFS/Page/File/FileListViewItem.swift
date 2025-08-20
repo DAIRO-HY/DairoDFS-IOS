@@ -24,10 +24,10 @@ struct FileListViewItem: View {
                 //缩略图
                 self.thumb
                 VStack{
-                    Text(self.dfsFile.dfsModel.name)
+                    Text(self.dfsFile.fm.name)
                         .font(.body)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                    Text(self.dfsFile.dfsModel.date + "    " + self.dfsFile.dfsModel.size.fileSize)
+                    Text(self.dfsFile.fm.date + "    " + self.dfsFile.fm.size.fileSize)
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -48,9 +48,9 @@ struct FileListViewItem: View {
     ///缩略图
     private var thumb: some View{
         Section{
-            if self.dfsFile.isFile{
-                if self.dfsFile.hasThumb{//如果有缩略图
-                    CacheImage(self.dfsFile.thumb)
+            if self.dfsFile.fm.isFile{
+                if self.dfsFile.fm.hasThumb{//如果有缩略图
+                    CacheImage(self.dfsFile.fm.thumbUrl,downloadId: self.dfsFile.fm.thumbDownloadId)
                         .frame(width: 50, height: 50)
                         .cornerRadius(6)
                 }else{//没有缩略图
@@ -81,7 +81,9 @@ private func getDfsFileBean() -> DfsFileEntity{
             size: 123456789,
             fileFlag: true,
             date: "2024-05-05 23:00:01",
-            thumb: "http://192.168.10.112:8031/d/oq8221/WechatIMG2.jpg")
+            thumb: "http://192.168.10.112:8031/d/oq8221/WechatIMG2.jpg",
+            other1: ""
+        )
     )
     dfb.isSelected = true
     return dfb

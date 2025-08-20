@@ -13,7 +13,7 @@ struct LoginPage: View {
     //登录信息
     @ObservedObject private var loginInfo : LoginViewModel
     
-    init(_ loginInfo: LoginViewModel = LoginViewModel(domain: "http://192.168.1.60:8031/", name: "admin", pwd: "111111")) {
+    init(_ loginInfo: LoginViewModel = LoginViewModel(domain: "http://192.168.10.114:8031/", name: "admin", pwd: "111111")) {
         self.loginInfo = loginInfo
     }
     

@@ -38,28 +38,16 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
-				Page/ImageViewer/ImageViewerPage.bk.txt,
 			);
 			target = 5BED0B272DA654D000CCB9F9 /* DairoDFS */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
-/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
-		5BA5635C2DC9E012000ACCAB /* Exceptions for "DairoDFS" folder in "Compile Sources" phase from "DairoDFS" target */ = {
-			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
-			buildPhase = 5BED0B242DA654D000CCB9F9 /* Sources */;
-			membershipExceptions = (
-				Page/ImageViewer/ImageViewerPage.bk.txt,
-			);
-		};
-/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		5BED0B2A2DA654D000CCB9F9 /* DairoDFS */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				5BED0B602DA6596900CCB9F9 /* Exceptions for "DairoDFS" folder in "DairoDFS" target */,
-				5BA5635C2DC9E012000ACCAB /* Exceptions for "DairoDFS" folder in "Compile Sources" phase from "DairoDFS" target */,
 			);
 			path = DairoDFS;
 			sourceTree = "<group>";
