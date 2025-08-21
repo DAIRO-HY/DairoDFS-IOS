@@ -10,12 +10,15 @@ import SwiftUI
 struct AlbumOptionBarView: View {
     @EnvironmentObject var fileVm: AlbumViewModel
     var body: some View {
-        HStack{
-            self.optionBtn(self.fileVm.isSelectMode ? "xmark" : "ellipsis"){
-                self.fileVm.isSelectMode = !self.fileVm.isSelectMode
-                self.fileVm.clearSelected()
-            }
-            Spacer().frame(width: 10)
+        VStack{
+            HStack{
+                Spacer()
+                self.optionBtn(self.fileVm.isSelectMode ? "xmark" : "ellipsis"){
+                    self.fileVm.isSelectMode = !self.fileVm.isSelectMode
+                    self.fileVm.clearSelected()
+                }
+            }.padding()
+            Spacer()
         }
     }
     

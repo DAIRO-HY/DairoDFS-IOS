@@ -24,6 +24,9 @@ class FileViewModel : ObservableObject{
     ///选择模式
     @Published var isSelectMode = false
     
+    ///是否添加视图
+    @Published var isShowAddView = false
+    
     init(){
         self.loadSubFile("")
     }

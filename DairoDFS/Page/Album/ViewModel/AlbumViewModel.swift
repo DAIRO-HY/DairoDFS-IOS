@@ -12,8 +12,14 @@ import DairoUI_IOS
 
 class AlbumViewModel : ObservableObject{
     
+    /// 相册列表数据缓存key
+    static let LOCAL_OBJ_KEY_ALBUM = "albums"
+    
     /// 显示查看相册页面
     @Published var showViewerPage = false
+    
+    //跳转相册同步班页面
+    @Published var showAlbunSyncPage = false
     
     ///记录当前选中的文件数
     @Published var selectedCount = 0
@@ -48,11 +54,11 @@ class AlbumViewModel : ObservableObject{
     func loadData() {
         
         //从本地缓存读取数据
-        if let modelList = LocalObjectUtil.read([FileModel].self, "albums"){
+        if let modelList = LocalObjectUtil.read([FileModel].self, AlbumViewModel.LOCAL_OBJ_KEY_ALBUM){
             self.toEntity(modelList)
         }
         FilesApi.getAlbumList().hide().post(){ modelList in
-            if LocalObjectUtil.write(modelList, "albums"){
+            if LocalObjectUtil.write(modelList, AlbumViewModel.LOCAL_OBJ_KEY_ALBUM){
                 Task{@MainActor in
                     self.toEntity(modelList)
                 }
@@ -111,6 +117,39 @@ class AlbumViewModel : ObservableObject{
         }
         let viewModel = AlbumViewerViewModel(fileModels, self.currentClickIndex)
         return viewModel
+    }
+    
+    /// 删除按钮点击事件
+    func onDeleteClick(){
+        var deleteIds = [Int64]()
+        for item in self.entityList{
+            if !item.isSelected{
+                continue
+            }
+            deleteIds.append(item.fm.id)
+        }
+        FilesApi.deleteByIds(ids: deleteIds).post{
+            Toast.show("删除成功")
+            
+            //删除数据缓存
+            LocalObjectUtil.delete(AlbumViewModel.LOCAL_OBJ_KEY_ALBUM)
+            self.loadData()
+        }
+    }
+    
+    /// 下载按钮点击事件
+    func onDownloadClick(){
+        var downloadIds = [(id: String, url: String)]()
+        for item in self.entityList{
+            if !item.isSelected{
+                continue
+            }
+            downloadIds.append((id: item.fm.downloadId, url: item.fm.download))
+        }
+        
+        //将选中的文件添加到下载列表
+        DownloadManager.save(downloadIds)
+        Toast.show("已添加到下载列表")
     }
     
     deinit{

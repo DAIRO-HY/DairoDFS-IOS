@@ -100,6 +100,8 @@ class PHAssetUploadManager{
         PHAssetUploadManager.lock.unlock()
     }
     
+    
+    /// @TODO: 该函数不应再页面调用,若页面被关闭了,这个函数无法被调用,导致正在上传中的数量不能更新
     ///上传完成
     static func uploadFinish(_ identifier: String){
         PHAssetUploadManager.lock.lock()

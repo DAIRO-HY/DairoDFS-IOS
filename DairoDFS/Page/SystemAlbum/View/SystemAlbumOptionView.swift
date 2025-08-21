@@ -71,7 +71,6 @@ struct SystemAlbumOptionView: View {
                 return
             }
             self.vm.albumList[index].uploadMsg = uploadMsg
-            PHAssetUploadManager.uploadFinish(localIdentifier)
         }.onReceive(NotificationCenter.default.publisher(for: Notification.Name(PHAssetUploadManager.NOTIFY_UPLOAD_FINISH))){ _ in
             self.vm.isUploading = false
         }

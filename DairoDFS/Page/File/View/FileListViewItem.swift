@@ -19,30 +19,31 @@ struct FileListViewItem: View {
         self.isSelectMode = isSelectMode
     }
     var body: some View {
-            HStack{
-                
-                //缩略图
-                self.thumb
-                VStack{
-                    Text(self.dfsFile.fm.name)
-                        .font(.body)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    Text(self.dfsFile.fm.date + "    " + self.dfsFile.fm.size.fileSize)
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-                if self.isSelectMode{//如果是选择模式
-                    if self.dfsFile.isSelected{//当前为选中状态
-                        Image(systemName: "checkmark.circle")
-                            .font(.title2)
-                    } else {
-                        Image(systemName: "circle")
-                            .font(.title2)
-                    }
+        HStack{
+            Spacer().frame(width: 8)
+            
+            //缩略图
+            self.thumb
+            VStack{
+                Text(self.dfsFile.fm.name)
+                    .font(.body)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                Text(self.dfsFile.fm.date + "    " + self.dfsFile.fm.size.fileSize)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                Divider()
+            }
+            if self.isSelectMode{//如果是选择模式
+                if self.dfsFile.isSelected{//当前为选中状态
+                    Image(systemName: "checkmark.circle")
+                        .font(.title2)
+                } else {
+                    Image(systemName: "circle")
+                        .font(.title2)
                 }
             }
-            .padding(.horizontal)
+        }
     }
     
     ///缩略图
@@ -51,18 +52,19 @@ struct FileListViewItem: View {
             if self.dfsFile.fm.isFile{
                 if self.dfsFile.fm.hasThumb{//如果有缩略图
                     CacheImage(self.dfsFile.fm.thumbUrl,downloadId: self.dfsFile.fm.thumbDownloadId)
-                        .frame(width: 50, height: 50)
+                        .frame(width: 44, height: 44)
                         .cornerRadius(6)
                 }else{//没有缩略图
-                    Image(systemName: "document.fill")
+                    Image(systemName: "questionmark.square.fill")
                         .resizable()
-                        .frame(width: 50, height: 50)
+                        .frame(width: 44, height: 44)
                         .foregroundColor(.white)
+                        .shadow(color: .black.opacity(0.3), radius: 10, x: 5, y: 5)
                 }
             } else {
                 Image(systemName: "folder.fill")
                     .resizable()
-                    .frame(width: 50, height: 50)
+                    .frame(width: 44, height: 44)
                     .foregroundColor(.cyan)
             }
         }

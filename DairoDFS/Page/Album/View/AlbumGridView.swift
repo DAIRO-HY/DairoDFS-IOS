@@ -26,7 +26,18 @@ struct AlbumGridView: View {
     }
     var body: some View {
         if self.vm.entityList.isEmpty{
-            EmptyView()
+            Button(action:{
+                self.vm.showAlbunSyncPage = true
+            }){
+                VStack{
+                    Image(systemName: "plus.circle.fill")
+                        .resizable()
+                        .foregroundColor(Color.gl.black)
+                        .frame(width: 36,height: 36)
+                    Text("添加")
+                }
+            }
+            .buttonStyle(.row)
         } else{
             ScrollViewReader { proxy in
                 ScrollView {
@@ -41,8 +52,9 @@ struct AlbumGridView: View {
                         }
                     }
                     
-                    //初期化滚动到最底部的目的
-                    Color.clear.frame(height: 1).id("BOTTOM")
+                    //初期化滚动到最底部的
+                    //让底部有一定控件显示操作按钮
+                    Color.clear.frame(height: 80).id("BOTTOM")
                 }.onAppear {
                     proxy.scrollTo("BOTTOM", anchor: .bottomTrailing)
                 }

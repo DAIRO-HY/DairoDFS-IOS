@@ -17,10 +17,15 @@ struct AlbumPage: View {
     
     var body: some View {
         NavigationView{
-            ZStack(alignment: .topTrailing){
+            ZStack{
+                
+                //图片上传页面
+                NavigationLink(destination: SystemAlbumPage(), isActive: self.$vm.showAlbunSyncPage){
+                    EmptyView()
+                }
                 
                 //撑开内部控件,使功能按钮初始化时就显示在右上角
-                Spacer().frame(maxWidth: .infinity, maxHeight: .infinity)
+//                Spacer().frame(maxWidth: .infinity, maxHeight: .infinity)
                 AlbumGridView().environmentObject(self.vm)
                 AlbumOptionBarView().environmentObject(self.vm)
                 AlbumOptionView().environmentObject(self.vm)
@@ -40,6 +45,22 @@ struct AlbumPage: View {
                 
                 //当相册查看页面关闭时,如果需要更新数据
                 if self.vm.isNeedReloadData{
+                    
+                    //删除数据缓存
+                    LocalObjectUtil.delete(AlbumViewModel.LOCAL_OBJ_KEY_ALBUM)
+                    self.vm.loadData()
+                }
+            }.onChange(of: self.vm.showAlbunSyncPage){
+                if $0{
+                    self.vm.isNeedReloadData = false
+                    return
+                }
+                
+                //当相册查看页面关闭时,如果需要更新数据
+                if self.vm.isNeedReloadData{
+                    
+                    //删除数据缓存
+                    LocalObjectUtil.delete(AlbumViewModel.LOCAL_OBJ_KEY_ALBUM)
                     self.vm.loadData()
                 }
             }

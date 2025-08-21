@@ -6,73 +6,43 @@
 //
 
 import SwiftUI
+import DairoUI_IOS
 
-struct FileOptionView: View {
+struct FileAddView: View {
     
-    @EnvironmentObject var fileVm: FileViewModel
+    /// 文件添加视图打开状态广播通知标识
+    static let FILE_ADD_VIEW_SHOW_FLAG = "FILE_ADD_VIEW_SHOW_FLAG"
+    
+    @State private var showPicker = false
+    
+    @EnvironmentObject var vm: FileViewModel
     
     var body: some View {
-        if !self.fileVm.isSelectMode{
+        if !self.vm.isShowAddView{
             EmptyView()
         } else {
             VStack(spacing: 8){
                 Divider()
                 HStack{
-                    Text("排序:").foregroundColor(.secondary)
-                    self.sortBtn("名称")
-                    self.sortBtn("时间")
-                    self.sortBtn("大小")
-                    self.sortBtn("类型")
-                    Spacer()
-                    Button(action:{}){
-                        Image(systemName: "square.grid.2x2")
-                    }.buttonStyle(.row)
-                }.padding(.horizontal, 5)
-                Divider()
-                HStack{
-                    UCOptionMenuButton("全选", icon: "checklist.checked", action: self.fileVm.selectAll)
-                    UCOptionMenuButton("复制", icon: "document.on.document", disabled: self.fileVm.selectedCount == 0, action: {
-                        self.toClipboard(2)
-                    })
-                    UCOptionMenuButton("剪切", icon: "scissors", disabled: self.fileVm.selectedCount == 0, action: {
-                        self.toClipboard(1)
-                    })
-                    UCOptionMenuButton("粘贴", icon: "document.on.clipboard", disabled: self.fileVm.clipboardType == 0, action: self.onClipboardClick)
-                    UCOptionMenuButton("分享", icon: "square.and.arrow.up", disabled: self.fileVm.selectedCount == 0, action: self.onShareClick)
+                    BottomOptionButton("上传文件", icon: "arrow.up.document", action: self.onUploadFileClick)
+                    BottomOptionButton("上传文件夹", icon: "square.grid.3x1.folder.badge.plus", action: self.vm.selectAll)
+                    BottomOptionButton("图片/视频", icon: "rectangle.stack.badge.plus", action: self.vm.selectAll)
+                    BottomOptionButton("创建文件夹", icon: "folder.badge.plus", action: self.vm.selectAll)
                 }
-                HStack{
-                    UCOptionMenuButton("删除", icon: "trash", disabled: self.fileVm.selectedCount == 0, action: self.onDeleteClick)
-                    UCOptionMenuButton("下载", icon: "square.and.arrow.down", disabled: self.fileVm.selectedCount == 0, action: self.onDownloadClick)
-                    UCOptionMenuButton("刷新", icon: "repeat", action: self.fileVm.reload)
-                    UCOptionMenuButton("重命名", icon: "pencil", disabled: self.fileVm.selectedCount != 1, action: self.onRenameClick)
-                    UCOptionMenuButton("属性", icon: "info", disabled: self.fileVm.selectedCount == 0, action: self.onPropertyClick)
+            }
+            .sheet(isPresented: $showPicker) {
+                DocumentPicker { urls in
+                    print("-->:\(urls)")
+                    FileUploaderManager.upload(urls)
                 }
             }
             //        this.redrawVN.value++;
         }
     }
     
-    /**
-     排序按钮
-     */
-    private func sortBtn(_ label: String) -> some View{
-        return Button(action:{
-            
-        }){
-            Text(label)
-        }.buttonStyle(.row)
-    }
-    
-    
-    
-    ///全选
-    private func onCheckAllClick() {
-        //      for (var it in this.filePageState.filesView.dfsFileList) {
-        //        it.isSelected = true;
-        //      }
-        //      this.filePageState.selectedCount = this.filePageState.filesView.dfsFileList.length;
-        //      this.redraw();
-        //      this.filePageState.filesView.redraw();
+    ///文件上传点击事件
+    private func onUploadFileClick() {
+        self.showPicker = true
     }
     
     ///全取消

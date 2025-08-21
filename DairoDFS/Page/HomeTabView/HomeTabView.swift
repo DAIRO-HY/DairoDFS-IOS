@@ -49,11 +49,13 @@ struct HomeTabView: View {
                 .opacity(self.pageTag == .MINE_PAGE ? 1 : HomeTabView.DISABLED_OPACITY)
                 .disabled(self.pageTag == .MINE_PAGE)
             }
-//            .background(Color.yellow)
             
             //添加按钮
             Button(action: {
-                self.showAlbunSyncPage = true
+//                self.showAlbunSyncPage = true
+                
+                //显示添加视图
+                NotificationCenter.default.post(name: Notification.Name(FileAddView.FILE_ADD_VIEW_SHOW_FLAG), object: nil)
             }){
                 ZStack{
                     Image(systemName: "plus.circle.fill")
@@ -65,8 +67,9 @@ struct HomeTabView: View {
             .background(Color.gl.bgPrimary)
             .clipShape(.circle)
             .buttonStyle(.row)
-            .offset(y: -5)
+            .offset(y: -7)
         }
+        .frame(height: 50)
         .background(Color.gl.bgPrimary)
     }
     
@@ -78,7 +81,6 @@ struct HomeTabView: View {
                 Text(text).font(.footnote)
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 10)
         }
         .foregroundColor(color)
         .buttonStyle(.row)

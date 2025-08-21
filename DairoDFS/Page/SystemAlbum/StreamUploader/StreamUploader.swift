@@ -367,6 +367,7 @@ class StreamUploader: NSObject,
         
         //一定要将apiHttp设置为nil,否则内存不会被回收
         self.apiHttp = nil
+        PHAssetUploadManager.uploadFinish(self.identifier)
         Task{@MainActor in
             NotificationCenter.default.post(name: Notification.Name(PHAssetUploadManager.NOTIFY_UPLOAD_ITEM_FINISH), object: [self.identifier, msg])
         }

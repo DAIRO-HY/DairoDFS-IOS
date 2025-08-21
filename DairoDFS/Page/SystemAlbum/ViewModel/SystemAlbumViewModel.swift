@@ -121,6 +121,9 @@ class SystemAlbumViewModel : ObservableObject{
         //标记正在上传中
         self.isUploading = true
         PHAssetUploadManager.upload(assetList, isOnlyCheck)
+        
+        //通知相册列表页面更新
+        NotificationCenter.default.post(name: Notification.Name(AlbumPage.ALBUM_PAGE_RELOAD_DATA), object: nil)
     }
     
     ///删除已经上传的相册文件

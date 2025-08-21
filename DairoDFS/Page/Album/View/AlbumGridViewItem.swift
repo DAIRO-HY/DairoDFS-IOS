@@ -37,9 +37,10 @@ struct AlbumGridViewItem: View {
                 Section{
                     if self.entity.isSelected{//当前为选中状态
                         Image(systemName: "checkmark.circle.fill")
-                    } else {
-                        Image(systemName: "circle")
                     }
+//                    else {
+//                        Image(systemName: "circle")
+//                    }
                 }
                 .font(.title2)
                 .foregroundStyle(Color.gl.bgPrimary)

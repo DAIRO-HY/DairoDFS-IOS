@@ -9,7 +9,6 @@ import SwiftUI
 import DairoUI_IOS
 
 struct AlbumOptionView: View {
-    
     @EnvironmentObject var vm: AlbumViewModel
     @State private var showDeleteAlert = false
     
@@ -22,20 +21,24 @@ struct AlbumOptionView: View {
                 Spacer()
                 Divider()
                 HStack{
-                    BottomOptionButton("共有", icon: "square.and.arrow.up"){
-                        
+                    BottomOptionButton("刷新", icon: "arrow.trianglehead.2.clockwise"){
+                        self.vm.loadData()
                     }
-                    BottomOptionButton("删除", icon: "trash"){
+                    BottomOptionButton("删除", icon: "trash", disabled: self.vm.selectedCount == 0){
                         self.showDeleteAlert = true
                     }
-                    .alert("确认删除吗？", isPresented: $showDeleteAlert) {
+                    BottomOptionButton("添加", icon: "plus.app"){
+                        self.vm.showAlbunSyncPage = true
+                    }
+                    .alert("确认删除选中的\(self.vm.selectedCount)个文件吗？", isPresented: $showDeleteAlert) {
                         Button("删除", role: .destructive) {
-                            //                        self.vm.onDeleteClick()
+                            self.vm.onDeleteClick()
                         }
                         Button("取消", role: .cancel) { }
                     } message: {
                         Text("此操作无法撤销")
                     }
+                    BottomOptionButton("下载", icon: "square.and.arrow.down", disabled: self.vm.selectedCount == 0, action: self.vm.onDownloadClick)
                     BottomOptionButton("退出", icon: "arrow.right.to.line.square"){
                         FilePage().relaunch()
                     }

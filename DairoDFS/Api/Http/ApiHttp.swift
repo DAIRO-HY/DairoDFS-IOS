@@ -156,63 +156,12 @@ class ApiHttp<T: Codable> : ApiHttpBase{
     }
     
     /**
-     * 调用成功函数
-     */
-    //    private func callRequestSuccess(_ data: Data){
-    //        if self.httpUtil.statusCode != 200 {//服务器异常
-    //            if let failModel = try? JSONDecoder().decode(ApiFailModel.self, from: data){
-    //                self.callFail(failModel)
-    //            }else{
-    //                self.callError("服务器异常,状态码:\(self.httpUtil.statusCode)")
-    //            }
-    //            return
-    //        }
-    //        if data.count == 0 {//服务器没有返回任何数据
-    //            if let f = self.voidSuccessFunc {//这是一个允许没有返回值的API
-    //                f()
-    //                return
-    //            }
-    //            if let f = self.nullSuccessFunc {//这是一个允返回null的API
-    //                f(nil)
-    //                return
-    //            }
-    //        }
-    //        let model:T
-    //        do{
-    //            model = try self.toT(data)
-    //        } catch {
-    //            self.callError("数据解析失败:\(String(data: data, encoding: .utf8))")
-    //            return
-    //        }
-    //        if let f = self.nullSuccessFunc {//这是一个允返回null的API
-    //            f(model)
-    //            return
-    //        }
-    //        if let f = self.notnullSuccessFunc {//这是一个不允返回null的API
-    //            f(model)
-    //            return
-    //        }
-    //    }
-    
-    /**
-     * 调用最终函数
-     */
-    //    private func callRequestFinish(_ error:Error?){
-    //            if error != nil{
-    //                self.callError("网络连接失败")
-    //            }
-    //            self.finishFunc?()
-    //            if self.isShowWaiting {
-    //                Loading.hide()
-    //            }
-    //    }
-    
-    /**
      * 发起请求
      */
     func request(_ method: String, _ successFunc: @escaping((_ data: T?) -> Void)) {
         var request = URLRequest(url: URL(string: SettingShared.domainNotNull + self.url + "?_token=" + SettingShared.token)!)
         request.httpMethod = method//请求方式
+        request.timeoutInterval = 15 // 设置超时(秒)
         
         //添加公共参数
         var body = ""
@@ -238,12 +187,12 @@ class ApiHttp<T: Codable> : ApiHttpBase{
             body.removeLast()
             request.httpBody = body.data(using: .utf8)
         }
-        let httpTask = URLSessionManager.urlSession.dataTask(with: request){ data, response, error in
+        let httpTask = URLSession.shared.dataTask(with: request){ data, response, error in
             if self.isShowWaiting{
                 Loading.hide()
             }
             if let error = error {
-                self.callError("\(error)")
+                self.callError(error.localizedDescription)
                 return
             }
             let httpResponse = response as! HTTPURLResponse
@@ -264,18 +213,6 @@ class ApiHttp<T: Codable> : ApiHttpBase{
             Loading.show()
         }
         httpTask.resume()
-        //        self.httpUtil.success{data in
-        //            DispatchQueue.main.async{
-        //                self.callRequestSuccess(data)
-        //            }
-        //        }.finish{error in
-        //            DispatchQueue.main.async{
-        //                self.callRequestFinish(error)
-        //            }
-        //        }.request()
-        //        if self.isShowWaiting {
-        //            Loading.show()
-        //        }
     }
     
     /**
