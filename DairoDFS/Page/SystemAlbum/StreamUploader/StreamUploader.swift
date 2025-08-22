@@ -375,9 +375,6 @@ class StreamUploader: NSObject,
     
     ///上传进度执行函数
     private func progress(_ msg: String){
-        
-        //一定要将apiHttp设置为nil,否则内存不会被回收
-        self.apiHttp = nil
         Task{@MainActor in
             NotificationCenter.default.post(name: Notification.Name(PHAssetUploadManager.NOTIFY_UPLOAD_PROGRESS), object: [self.identifier, msg])
         }

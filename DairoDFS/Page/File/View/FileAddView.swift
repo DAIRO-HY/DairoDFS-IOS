@@ -15,6 +15,8 @@ struct FileAddView: View {
     
     @State private var showPicker = false
     
+    @State private var showUpload = false
+    
     @EnvironmentObject var vm: FileViewModel
     
     var body: some View {
@@ -23,6 +25,11 @@ struct FileAddView: View {
         } else {
             VStack(spacing: 8){
                 Divider()
+                Button(action:{
+                    self.showUpload = true
+                }){
+                    Text("下载页面")
+                }
                 HStack{
                     BottomOptionButton("上传文件", icon: "arrow.up.document", action: self.onUploadFileClick)
                     BottomOptionButton("上传文件夹", icon: "square.grid.3x1.folder.badge.plus", action: self.vm.selectAll)
@@ -30,11 +37,27 @@ struct FileAddView: View {
                     BottomOptionButton("创建文件夹", icon: "folder.badge.plus", action: self.vm.selectAll)
                 }
             }
-            .sheet(isPresented: $showPicker) {
+            .sheet(isPresented: self.$showPicker) {
                 DocumentPicker { urls in
-                    print("-->:\(urls)")
-                    FileUploaderManager.upload(urls)
+                    let fileUploadBeaList = urls.map{
+                        $0.startAccessingSecurityScopedResource()
+                        let size = FileUtil.getFileSize($0.path) ?? 0
+                        $0.stopAccessingSecurityScopedResource()
+                        return FileUploaderDto(
+                            id: "\(Date().timeIntervalSince1970)-\($0.path)".md5,
+                            path: $0.path,
+                            name: $0.lastPathComponent,
+                            size: size,
+                            state: 0,
+                            date: Int(Date().timeIntervalSince1970),
+                            error: nil
+                        )
+                    }
+                    FileUploaderManager.upload(fileUploadBeaList)
                 }
+            }
+            .sheet(isPresented: self.$showUpload){
+                FileUploadPage()
             }
             //        this.redrawVN.value++;
         }
