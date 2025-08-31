@@ -11,6 +11,9 @@ import DairoUI_IOS
 ///文件上传失败错误
 public enum UploaderError: Error {
     case error(_ msg: String)
+    
+    /// 用户主动取消
+    case cancel
 }
 
 class FileUploader: NSObject,
@@ -19,7 +22,7 @@ class FileUploader: NSObject,
                     URLSessionDataDelegate {
     
     //要上传的文件url
-    private let bean: FileUploaderDto
+    private let dto: FileUploaderDto
     
     //断点续传偏移长度
     private  var offset: Int64 = 0
@@ -30,7 +33,7 @@ class FileUploader: NSObject,
     //当前请求的apiHttp
     private var apiHttp: ApiHttpBase?
     
-    //是否取消
+    /// 标记是否已经被主动取消
     private var isCancel = false
     
     //当前上传任务,用于取消
@@ -40,7 +43,7 @@ class FileUploader: NSObject,
     private var readedDataSize: Int64 = 0
     
     /// 上回统计的上传大小,用来计算网速
-    private var preTotalBytesSent: Int64 = 0
+    private var uploadedSize: Int64 = 0
     
     /// 最后一次记录的上传时间
     private var lastSendTime = Date()
@@ -49,36 +52,43 @@ class FileUploader: NSObject,
                                               delegate: self,
                                               delegateQueue: nil)
     
-    init(_ bean: FileUploaderDto) {
-        self.bean = bean
+    init(_ dto: FileUploaderDto) {
+        self.dto = dto
     }
     
     ///上传
     func upload() {
-//        self.progress("文件校验中")
-        
+        if self.dto.md5 == nil{//如果文件MD5没有设置,则设置md5
+            var isStale = false
             
-        //IOS端必须调用该函数才允许访问文件
-        let fileURL = URL(string: "file://" +  self.bean.path)!
-        fileURL.startAccessingSecurityScopedResource()
-        
-        //获取文件的MD5
-        self.fileMD5 = FileUtil.getMD5(self.bean.path)
-        fileURL.stopAccessingSecurityScopedResource()
+            //通过data恢复URL,确保app退出后该文件依然能够访问
+            let fileURL = try! URL(resolvingBookmarkData: self.dto.bookmarkData,
+                                   options: [.withoutImplicitStartAccessing], // ✅ 在恢复时加
+                                   relativeTo: nil,
+                                   bookmarkDataIsStale: &isStale)
+            fileURL.startAccessingSecurityScopedResource()
+            
+            //获取文件的MD5
+            self.fileMD5 = FileUtil.getMD5(fileURL)
+            fileURL.stopAccessingSecurityScopedResource()
+            FileUploaderDBUtil.setMd5(self.dto.id, self.fileMD5!)
+        } else {
+            self.fileMD5 = self.dto.md5
+        }
         self.checkExists()
     }
     
     ///检查文件是否已经上传
     private func checkExists(){
-//        self.progress("校验上传状态")
+        //        self.progress("校验上传状态")
         self.apiHttp = FileUploadApi.checkExistsByMd5(md5: self.fileMD5!).hide()
             .error{
-                self.finish(UploaderError.error($0))
+                self.callFinishAndNotify($0)
             }.fail{
-                self.finish(UploaderError.error($0.msg ?? ""))
+                self.callFinishAndNotify($0.msg ?? "")
             }.post {
                 if $0{//文件已经上传
-                    self.finish()
+                    self.callFinishAndNotify()
                     return
                 }
                 self.getUploadedSize()
@@ -87,17 +97,17 @@ class FileUploader: NSObject,
     
     //从服务器端获取已经上传文件大小
     private func getUploadedSize(){
-//        self.progress("校验断点续传")
+        //        self.progress("校验断点续传")
         self.apiHttp = FileUploadApi.getUploadedSize(md5: self.fileMD5!).hide()
             .error{
-                self.finish(UploaderError.error($0))
+                self.callFinishAndNotify($0)
             }.fail{
-                self.finish(UploaderError.error($0.msg ?? ""))
+                self.callFinishAndNotify($0.msg ?? "")
             }.post{
                 self.offset = $0
-                if $0 == self.bean.size{//文件已经上传完成
+                if $0 == self.dto.size{//文件已经上传完成
                     self.uploadByMd5()
-                }else{
+                } else {
                     self.uploadStream()
                 }
             }
@@ -105,7 +115,7 @@ class FileUploader: NSObject,
     
     ///开始上传
     private func uploadStream(){
-//        self.progress("准备上传")
+        //        self.progress("准备上传")
         let serverURL = SettingShared.domainNotNull + "/app/file_upload/by_stream/" + self.fileMD5!
         let url = URL(string: serverURL)!
         var request = URLRequest(url: url,
@@ -115,7 +125,7 @@ class FileUploader: NSObject,
         request.setValue("application/octet-stream", forHTTPHeaderField: "Content-Type")
         
         //要监听上传进度,这个参数必须传
-        request.setValue("\(self.bean.size - self.offset)", forHTTPHeaderField: "Content-Length")
+        request.setValue("\(self.dto.size - self.offset)", forHTTPHeaderField: "Content-Length")
         let uploadTask = self.session.uploadTask(withStreamedRequest: request)
         uploadTask.resume()
         self.task = uploadTask
@@ -126,21 +136,20 @@ class FileUploader: NSObject,
     private func uploadByMd5(){
         
         //得到文件名
-        let originalFilename = self.bean.name
+        let originalFilename = self.dto.name
         
         //得到文件后缀
         let ext = (originalFilename as NSString).pathExtension.lowercased()
-//        self.progress("服务端处理中")
+        //        self.progress("服务端处理中")
         
         let time = Int64(Date().timeIntervalSince1970 * 1_000_000)
         self.apiHttp = FileUploadApi.byMd5(md5: self.fileMD5!, path: "/相册/\(time)." + ext, contentType: "").hide()
             .error{
-                self.finish(UploaderError.error($0))
+                self.callFinishAndNotify($0)
             }.fail{
-                self.finish(UploaderError.error($0.msg ?? ""))
-            }
-            .post {
-                self.finish()
+                self.callFinishAndNotify($0.msg ?? "")
+            }.post {
+                self.callFinishAndNotify()
             }
     }
     
@@ -185,23 +194,26 @@ class FileUploader: NSObject,
     ) {
         
         //通知上传进度
-//        let progress = (totalBytesSent + self.offset).fileSize + "/" +  (totalBytesExpectedToSend + self.offset).fileSize
-//        self.progress(progress)
+        //        let progress = (totalBytesSent + self.offset).fileSize + "/" +  (totalBytesExpectedToSend + self.offset).fileSize
+        //        self.progress(progress)
         
         //当前时间戳秒
         let now = Date()
         
+        //得到已经上传大小
+        let uploadedSize = totalBytesSent + self.offset
+        
         //下载速度
-        let speed = Double(totalBytesSent - self.preTotalBytesSent) / now.timeIntervalSince(self.lastSendTime)
+        let speed = Double(uploadedSize - self.uploadedSize) / now.timeIntervalSince(self.lastSendTime)
         
         //完成之后回调下载进度,避免出现下载进度无法100%
-        self.notify(.progress, [self.bean.size, totalBytesSent + self.offset, Int64(speed)])
+        self.notify(.progress, [self.dto.size, uploadedSize, Int64(speed)])
         
         //更新最后记录时间
         self.lastSendTime = now
         
         //更新上次上传大小
-        self.preTotalBytesSent = totalBytesSent
+        self.uploadedSize = uploadedSize
     }
     
     //文件上传返回数据
@@ -219,40 +231,44 @@ class FileUploader: NSObject,
         session.invalidateAndCancel()
         if let response = task.response as? HTTPURLResponse{
             if response.statusCode != 200{
-                self.finish(UploaderError.error(self.resBody ?? ""))
+                self.callFinishAndNotify(self.resBody ?? "")
                 return
             }
         }
-        if let error = error {
-            self.finish(error)
+        if let error = error{
+            self.callFinishAndNotify(error.localizedDescription)
             return
         }
         self.uploadByMd5()
     }
     
     private func readFile(){
+        var isStale = false
         
-        //IOS端必须调用该函数才允许访问文件
-        let fileURL = URL(string: "file://" +  self.bean.path)!
+        //通过data恢复URL,确保app退出后该文件依然能够访问
+        let fileURL = try! URL(resolvingBookmarkData: self.dto.bookmarkData,
+                               options: [.withoutImplicitStartAccessing], // ✅ 在恢复时加
+                               relativeTo: nil,
+                               bookmarkDataIsStale: &isStale)
         fileURL.startAccessingSecurityScopedResource()
         defer{
             self.boundStreams.output.close()
             fileURL.stopAccessingSecurityScopedResource()
         }
-        guard let fileHandle = try? FileHandle(forReadingAtPath: self.bean.path) else{
+        guard let fileHandle = try? FileHandle(forReadingFrom: fileURL) else{
             return
         }
         defer{
             try? fileHandle.close()
         }
         try? fileHandle.seek(toOffset: UInt64(self.offset)) // 跳过前 n 字节
-//        let chunkSize = 1024 * 1024
+        //        let chunkSize = 1024 * 1024
         let chunkSize = 1024
         while true {
             var data = fileHandle.readData(ofLength: chunkSize)
             
             //测试用
-//            Thread.sleep(forTimeInterval: 0.01)
+            //            Thread.sleep(forTimeInterval: 0.01)
             if data.isEmpty { break } // 文件读完
             while data.count > 0{
                 let bytesWritten: Int = data.withUnsafeBytes() { (buffer: UnsafePointer<UInt8>) in
@@ -276,37 +292,41 @@ class FileUploader: NSObject,
         }
     }
     
-    
     ///上传完成执行函数
-    private func finish(_ err: Error? = nil){
+    private func callFinishAndNotify(_ errMsg: String? = nil){
         
         //一定要将apiHttp设置为nil,否则内存不会被回收
         self.apiHttp = nil
-        FileUploaderManager.uploadFinish(self.bean, err)
-        
+        if self.isCancel{//如果是用户主动取消
+            self.notify(.pause)
             
-            //回调下载结束函数
-            self.notify(.finish, err)
-//        Task{@MainActor in
-//            NotificationCenter.default.post(name: Notification.Name(FileUploaderManager.NOTIFY_UPLOAD_ITEM_FINISH), object: [self.bean.id, msg])
-//        }
+            //修改数据库文件上传状态
+            FileUploaderDBUtil.setState(self.dto.id, 2)
+        } else if let errMsg = errMsg{//上传失败
+            self.notify(.finish, errMsg)
+            
+            //修改数据库文件上传状态
+            FileUploaderDBUtil.setState(self.dto.id, 3, errMsg)
+        } else {// 上传成功
+            self.notify(.finish)
+            
+            //修改数据库文件上传状态
+            FileUploaderDBUtil.setState(self.dto.id, 10)
+        }
+        
+        //设置已经上传大小
+        FileUploaderDBUtil.setUploadedSize(self.dto.id, self.uploadedSize)
+        FileUploaderManager.finish(self.dto.id)
     }
-    
-//    ///上传进度执行函数
-//    private func progress(_ msg: String){
-//        Task{@MainActor in
-//            NotificationCenter.default.post(name: Notification.Name(FileUploaderManager.NOTIFY_UPLOAD_PROGRESS), object: [self.bean.id, msg])
-//        }
-//    }
     
     /// 发送通知
     ///
     /// - Parameter type:通知类型
     /// - Parameter value:参数值
-    private func notify(_ type: FileUploadNotify, _ value: Sendable? = nil){
+    private func notify(_ type: FileUploaderNotify, _ value: Sendable? = nil){
         Task{ @MainActor in
             NotificationCenter.default.post(
-                name: Notification.Name(self.bean.id),
+                name: Notification.Name(String(self.dto.id)),
                 object: nil,
                 userInfo: ["key": type, "value": value]
             )
@@ -315,6 +335,7 @@ class FileUploader: NSObject,
     
     ///取消
     func cancel(){
+        self.isCancel = true
         
         //手动取消正在上传的task,否则服务端无法知道客户端结束,造成阻塞直到超时
         self.task?.cancel()

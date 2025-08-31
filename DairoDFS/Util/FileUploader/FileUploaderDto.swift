@@ -12,16 +12,25 @@ import DairoUI_IOS
 struct FileUploaderDto : Hashable{
     
     /// 该上传任务的唯一id
-    let id: String
+    let id: Int64
     
-    /// 文件URL
-    let path: String
+    /// 文件bookmarkData数据
+    let bookmarkData: Data
     
     /// 文件名
     let name: String
     
     /// 文件大小
     let size: Int64
+    
+    /// 文件大小
+    let uploadedSize: Int64
+    
+    /// 文件MD5
+    let md5: String?
+    
+    /// 服务端DFS文件保存路径
+    let dfsPath: String
     
     /// 文件状态 0:等待上传 1:上传中 2:暂停中 3:上传失败  10:上传完成
     let state: Int8
@@ -32,11 +41,14 @@ struct FileUploaderDto : Hashable{
     /// 上传失败的错误消息
     let error: String?
     
-    init(id: String, path: String, name: String, size: Int64, state: Int8, date: Int, error: String?) {
+    init(id: Int64, bookmarkData: Data, name: String, size: Int64, uploadedSize: Int64, md5: String?, dfsPath: String, state: Int8, date: Int, error: String?) {
         self.id = id
-        self.path = path
+        self.bookmarkData = bookmarkData
         self.name = name
         self.size = size
+        self.uploadedSize = uploadedSize
+        self.md5 = md5
+        self.dfsPath = dfsPath
         self.state = state
         self.date = date
         self.error = error

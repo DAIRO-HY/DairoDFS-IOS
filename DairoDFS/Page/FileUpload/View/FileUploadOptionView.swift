@@ -18,6 +18,9 @@ struct FileUploadOptionView: View {
     
     var body: some View {
         VStack(spacing: 8){
+            NavigationLink(destination: FileUploadSetPage(), isActive: self.$isShowSet){
+                EmptyView()
+            }
             Divider()
             HStack{
                 Text("已选择:\(self.vm.checked.count)").foregroundColor(.secondary)
@@ -26,7 +29,6 @@ struct FileUploadOptionView: View {
             Divider()
             HStack{
                 BottomOptionButton("全选", icon: "checklist.checked", action: self.vm.onCheckAllClick)
-                BottomOptionButton("共有", icon: "square.and.arrow.up", disabled: self.vm.checked.isEmpty, action: self.vm.onPauseAllClick)
                 BottomOptionButton("删除", icon: "trash", disabled: self.vm.checked.isEmpty){
                     self.showDeleteAlert = true
                 }

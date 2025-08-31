@@ -19,7 +19,7 @@ extension FileModel{
     
     ///得到下载文件的url
     var download: String{
-        let baseUrl = SettingShared.domainNotNull + "/app/files/preview/\(self.id)/\(self.name)?_token=" + SettingShared.token //+ "&wait=5"
+        let baseUrl = SettingShared.domainNotNull + "/app/files/preview/\(self.id)/\(self.name)?_token=" + SettingShared.token //+ "&wait=10"
         return baseUrl
     }
     

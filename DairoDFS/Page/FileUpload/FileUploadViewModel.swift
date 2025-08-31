@@ -13,21 +13,21 @@ class FileUploadViewModel : ObservableObject{
     @Published var saveType: Int8 = 1
     
     /// 文件id列表
-    @Published var ids = [String]()
+    @Published var ids = [Int64]()
     
     /// 当前选中的id
-    @Published var checked = Set<String>()
+    @Published var checked = Set<Int64>()
     init(){
         self.reload()
     }
     
     /// 重新加载数据
     func reload(){
-        self.ids = UploaderDBUtil.selectAllId()
+        self.ids = FileUploaderDBUtil.selectAllId()
     }
     
     /// 选中状态点击事件
-    func onCheckClick(_ id: String){
+    func onCheckClick(_ id: Int64){
         if self.checked.contains(id){
             self.checked.remove(id)
         } else {
@@ -44,21 +44,21 @@ class FileUploadViewModel : ObservableObject{
     
     /// 删除点击事件
     func onDeleteClick(){
-//        DownloadManager.delete(Array(self.checked))
-//        self.checked.removeAll()
-//        self.reload()
+        FileUploaderManager.delete(Array(self.checked))
+        self.checked.removeAll()
+        self.reload()
     }
     
     /// 暂停所有点击事件
     func onPauseAllClick(){
-//        DownloadManager.cancelAll()
-//        self.reload()
+        FileUploaderManager.cancelAll()
+        self.reload()
     }
     
     /// 开始所有点击事件
     func onStartAllClick(){
-//        DownloadManager.startAll()
-//        DownloadManager.loopDownloadByWaiting()
-//        self.reload()
+        FileUploaderManager.startAll()
+        FileUploaderManager.loopUpload()
+        self.reload()
     }
 }

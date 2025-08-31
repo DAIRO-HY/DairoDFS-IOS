@@ -16,7 +16,7 @@ struct FileUploadItemView: View {
     
     ///文件信息
     @ObservedObject private var vm: FileUploadItemViewModel
-    init(_ pageVm: FileUploadViewModel, _ id: String, _ isChecked: Bool) {
+    init(_ pageVm: FileUploadViewModel, _ id: Int64, _ isChecked: Bool) {
         self.pageVm = pageVm
         self.isChecked = isChecked
         self.vm = FileUploadItemViewModel(id)
@@ -56,8 +56,8 @@ struct FileUploadItemView: View {
                             .foregroundColor(.secondary)
                     }
                 }
-                if self.vm.downloadState != 10{
-                    ProgressView(value: Float64(self.vm.downloaded), total: Float64(self.vm.total))
+                if self.vm.uploadState != 10{
+                    ProgressView(value: Float64(self.vm.uploadedSize), total: Float64(self.vm.total))
                         .progressViewStyle(.linear)
                         .tint(.blue)
                     HStack{
@@ -76,14 +76,14 @@ struct FileUploadItemView: View {
                                 .foregroundColor(.secondary)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         }
-                        Text(self.vm.downloadStateLabel)
+                        Text(self.vm.uploadStateLabel)
                             .font(.footnote)
                             .foregroundColor(.secondary)
                         //                            .frame(maxWidth: .infinity, alignment: .trailing)
                         Button(action:{
-                            self.vm.onDownloadStateClick()
+                            self.vm.onUploadStateClick()
                         }){
-                            let isDownloading = self.vm.downloadState == 0 || self.vm.downloadState == 1
+                            let isDownloading = self.vm.uploadState == 0 || self.vm.uploadState == 1
                             Image(systemName: isDownloading ? "pause.circle" : "play.circle")
                                 .resizable()
                                 .foregroundColor(.secondary)
@@ -91,38 +91,31 @@ struct FileUploadItemView: View {
                         }
                     }
                 }
-            }.onReceive(NotificationCenter.default.publisher(for: Notification.Name(self.vm.dto.id))){
+            }.onReceive(NotificationCenter.default.publisher(for: Notification.Name(String(self.vm.dto.id)))){
                 let userInfo = $0.userInfo!
-                switch userInfo["key"] as! FileUploadNotify{
+                switch userInfo["key"] as! FileUploaderNotify{
                 case .progress:/// 进度回调
                     let progress = userInfo["value"] as! [Int64]
                     self.vm.total = progress[0]
-                    self.vm.downloaded = progress[1]
+                    self.vm.uploadedSize = progress[1]
                     //                    self.vm.speed = progress[2].fileSize + "/S"
                     self.vm.progressInfo = "\(progress[1].fileSize)(\(progress[2].fileSize)/S)"
                     
                     //标记下载中
-                    self.vm.setDownloadState(1)
+                    self.vm.setUploadState(1)
                 case .pause:
                     // 标记下载暂停
-                    self.vm.setDownloadState(2)
+                    self.vm.setUploadState(2)
                 case .finish:
-                    guard let error = userInfo["value"] as? Error else{
-                        //                        self.vm.isDownloaded = true
+                    if let error = userInfo["value"] as? String{
+                        
+                        /// 标记下载失败
+                        self.vm.setUploadState(3)
+                        self.vm.error = error
+                    }else{
                         
                         // 标记下载完成
-                        self.vm.setDownloadState(10)
-                        return
-                    }
-                    
-                    /// 标记下载失败
-                    self.vm.setDownloadState(3)
-                    if let error = error as? DownloaderError{
-                        if case let .error(msg) = error {
-                            self.vm.error = msg
-                        }
-                    } else {
-                        self.vm.error = error.localizedDescription
+                        self.vm.setUploadState(10)
                     }
                 }
             }

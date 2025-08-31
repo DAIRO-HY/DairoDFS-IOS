@@ -7,7 +7,7 @@
 
 
 /// 上传通知状态
-enum FileUploadNotify: Sendable{
+enum FileUploaderNotify: Sendable{
     
     /// 下载暂停
     case pause

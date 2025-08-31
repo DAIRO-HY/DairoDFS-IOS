@@ -8,37 +8,46 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
-struct DocumentPicker: UIViewControllerRepresentable {
-    var onPick: ([URL]) -> Void
+public struct DocumentPicker: UIViewControllerRepresentable {
     
-    func makeCoordinator() -> Coordinator {
-        return Coordinator(onPick: onPick)
+    /// 文件选择方式 .data:文件选择  .folder:选择文件夹
+    private let utType: UTType
+    
+    /// 文件选择时,允许选择多个文件
+    private let allowsMultipleSelection: Bool
+    
+    /// 选择结束之后回调函数
+    private let pickFunc: ([URL]) -> Void
+    public init(_ utType: UTType, _ allowsMultipleSelection: Bool, pickFunc: @escaping ([URL]) -> Void){
+        self.utType = utType
+        self.allowsMultipleSelection = allowsMultipleSelection
+        self.pickFunc = pickFunc
     }
     
-    func makeUIViewController(context: Context) -> UIDocumentPickerViewController {
+    public func makeCoordinator() -> Coordinator {
+        return Coordinator(self.pickFunc)
+    }
+    
+    public func makeUIViewController(context: Context) -> UIDocumentPickerViewController {
         // 允许选择任意类型的文件，比如 pdf, image, plainText
-        let picker = UIDocumentPickerViewController(forOpeningContentTypes: [UTType.data])
-        picker.allowsMultipleSelection = true
+        let picker = UIDocumentPickerViewController(forOpeningContentTypes: [self.utType])
+        picker.allowsMultipleSelection = self.allowsMultipleSelection
         picker.delegate = context.coordinator
         return picker
     }
     
-    func updateUIViewController(_ uiViewController: UIDocumentPickerViewController, context: Context) {}
+    public func updateUIViewController(_ uiViewController: UIDocumentPickerViewController, context: Context) {}
     
-    class Coordinator: NSObject, UIDocumentPickerDelegate {
-        var onPick: ([URL]) -> Void
-        init(onPick: @escaping ([URL]) -> Void) {
-            self.onPick = onPick
+    public class Coordinator: NSObject, UIDocumentPickerDelegate {
+        
+        /// 选择结束之后回调函数
+        private let pickFunc: ([URL]) -> Void
+        public init(_ pickFunc: @escaping ([URL]) -> Void){
+            self.pickFunc = pickFunc
         }
         
-        func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
-            self.onPick(urls)
-//            if let url = urls.first {
-//                // iOS 沙盒限制，需要先拷贝一份到 App 的临时目录
-//                let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(url.lastPathComponent)
-//                try? FileManager.default.copyItem(at: url, to: tempURL)
-//                onPick(tempURL)
-//            }
+        public func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
+            self.pickFunc(urls)
         }
     }
 }

@@ -13,7 +13,11 @@ struct FileAddView: View {
     /// 文件添加视图打开状态广播通知标识
     static let FILE_ADD_VIEW_SHOW_FLAG = "FILE_ADD_VIEW_SHOW_FLAG"
     
-    @State private var showPicker = false
+    /// 显示文件选择标记
+    @State private var showFilePicker = false
+    
+    /// 显示文件夹选择标记
+    @State private var showFolderPicker = false
     
     @State private var showUpload = false
     
@@ -31,41 +35,116 @@ struct FileAddView: View {
                     Text("下载页面")
                 }
                 HStack{
-                    BottomOptionButton("上传文件", icon: "arrow.up.document", action: self.onUploadFileClick)
-                    BottomOptionButton("上传文件夹", icon: "square.grid.3x1.folder.badge.plus", action: self.vm.selectAll)
+                    BottomOptionButton("上传文件", icon: "arrow.up.document"){
+                        self.showFilePicker = true
+                    }
+                    BottomOptionButton("上传文件夹", icon: "square.grid.3x1.folder.badge.plus"){
+                        self.showFolderPicker = true
+                    }
                     BottomOptionButton("图片/视频", icon: "rectangle.stack.badge.plus", action: self.vm.selectAll)
                     BottomOptionButton("创建文件夹", icon: "folder.badge.plus", action: self.vm.selectAll)
                 }
             }
-            .sheet(isPresented: self.$showPicker) {
-                DocumentPicker { urls in
-                    let fileUploadBeaList = urls.map{
+            .sheet(isPresented: self.$showFilePicker) {//显示文件选择器
+                DocumentPicker(.data, true) { urls in
+                    let fileUploadDtoList = urls.map{
                         $0.startAccessingSecurityScopedResource()
                         let size = FileUtil.getFileSize($0.path) ?? 0
+                        
+                        //获取url的bookmarkData
+                        let bookmarkData = try! $0.bookmarkData(options: [.withoutImplicitSecurityScope],
+                                                                includingResourceValuesForKeys: nil,
+                                                                relativeTo: nil)
                         $0.stopAccessingSecurityScopedResource()
+                        
+                        let dfsPath = "/相册/" + $0.lastPathComponent
                         return FileUploaderDto(
-                            id: "\(Date().timeIntervalSince1970)-\($0.path)".md5,
-                            path: $0.path,
+                            id: 0,
+                            bookmarkData: bookmarkData,
                             name: $0.lastPathComponent,
                             size: size,
+                            uploadedSize: 0,
+                            md5: nil,
+                            dfsPath: dfsPath,
                             state: 0,
-                            date: Int(Date().timeIntervalSince1970),
+                            date: 0,
                             error: nil
                         )
                     }
-                    FileUploaderManager.upload(fileUploadBeaList)
+                    FileUploaderManager.upload(fileUploadDtoList)
+                }
+            }
+            .sheet(isPresented: self.$showFolderPicker) {//显示文件夹选择器
+                DocumentPicker(.folder, false) { urls in
+                    let url = urls.first!
+                    $0.startAccessingSecurityScopedResource()
+                    let size = FileUtil.getFileSize($0.path) ?? 0
+                    
+                    //获取url的bookmarkData
+                    let bookmarkData = try! $0.bookmarkData(options: [.withoutImplicitSecurityScope],
+                                                            includingResourceValuesForKeys: nil,
+                                                            relativeTo: nil)
+                    $0.stopAccessingSecurityScopedResource()
+                    
+                    let dfsPath = "/相册/" + $0.lastPathComponent
+                    return FileUploaderDto(
+                        id: 0,
+                        bookmarkData: bookmarkData,
+                        name: $0.lastPathComponent,
+                        size: size,
+                        uploadedSize: 0,
+                        md5: nil,
+                        dfsPath: dfsPath,
+                        state: 0,
+                        date: 0,
+                        error: nil
+                    )
+                    //                    FileUploaderManager.upload(fileUploadDtoList)
                 }
             }
             .sheet(isPresented: self.$showUpload){
-                FileUploadPage()
+                RootView{
+                    FileUploadPage()
+                }
             }
             //        this.redrawVN.value++;
         }
     }
     
-    ///文件上传点击事件
-    private func onUploadFileClick() {
-        self.showPicker = true
+    func getBookmarks(in folderURL: URL) -> [FileUploaderDto] {
+        var result = [FileUploaderDto]()
+        let fileManager = FileManager.default
+        
+        do {
+            let items = try fileManager.contentsOfDirectory(
+                at: folderURL,
+                includingPropertiesForKeys: [.isDirectoryKey],
+                options: [.skipsHiddenFiles])
+            for item in items {
+                var isDir: ObjCBool = false
+                if fileManager.fileExists(atPath: item.path, isDirectory: &isDir) {
+                    // 创建 bookmarkData
+                    do {
+                        let bookmark = try item.bookmarkData(options: [.withSecurityScope],
+                                                             includingResourceValuesForKeys: nil,
+                                                             relativeTo: nil)
+                        result[item.path] = bookmark
+                    } catch {
+                        print("创建 bookmark 失败: \(error)")
+                    }
+                    
+                    // 如果是目录，递归
+                    if isDir.boolValue {
+                        let subBookmarks = getBookmarks(in: item)
+                        result.merge(subBookmarks) { _, new in new }
+                    }
+                }
+            }
+        } catch {
+            print("读取文件夹失败: \(error)")
+        }
+        
+        return result
     }
     
     ///全取消
@@ -76,6 +155,9 @@ struct FileAddView: View {
         //      this.filePageState.selectedCount = 0;
         //      this.redraw();
         //      this.filePageState.filesView.redraw();
+        ///private/var/mobile/Containers/Data/Application/48D7B39D-5613-4B55-9ACA-0B42413E1EF4/Documents/image.png
+        ///private/var/mobile/Containers/Data/Application/48D7B39D-5613-4B55-9ACA-0B42413E1EF4/Documents/image.png
+        ///private/var/mobile/Containers/Data/Application/48D7B39D-5613-4B55-9ACA-0B42413E1EF4/Documents/image.png
     }
     
     ///重命名

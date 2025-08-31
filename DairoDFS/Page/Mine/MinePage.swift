@@ -45,11 +45,14 @@ struct MinePage: View {
                             }
                             .icon("trash.fill", backgroundColor: Color.green)
                             
+                            SettingNavigationLink("上传管理",tip: "上传文件列表"){
+                                AnyView(FileUploadPage())
+                            }.icon("square.and.arrow.up.fill", backgroundColor: Color.cyan)
+                            
                             SettingNavigationLink("下载管理",tip: "下载、缓存文件"){
                                 AnyView(DownloadPage())
-                            }.icon("opticaldiscdrive.fill", backgroundColor: Color.cyan)
+                            }.icon("square.and.arrow.down.fill", backgroundColor: Color.indigo)
                             SettingButton("修改密码"){
-                                
                             }.icon("lock.open.rotation", backgroundColor: Color.orange)
                         }
                         SettingGroup{
