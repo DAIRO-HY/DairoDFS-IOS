@@ -20,6 +20,11 @@ struct FileOptionBarView: View {
                 .font(.body)
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity,alignment: .leading)
+            self.optionBtn("arrow.trianglehead.2.counterclockwise"){
+                self.vm.isShowAddView = false
+                self.vm.isSelectMode.toggle()
+                self.vm.clearSelected()
+            }
             self.optionBtn(self.vm.isSelectMode ? "xmark" : "ellipsis"){
                 self.vm.isShowAddView = false
                 self.vm.isSelectMode.toggle()

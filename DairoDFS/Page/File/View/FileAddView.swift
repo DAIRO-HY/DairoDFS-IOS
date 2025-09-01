@@ -27,6 +27,9 @@ struct FileAddView: View {
     
     @State private var showUpload = false
     
+    /// 打开相册上传页面
+    @State private var showAlbunSyncPage = false
+    
     @EnvironmentObject var vm: FileViewModel
     
     var body: some View {
@@ -34,6 +37,12 @@ struct FileAddView: View {
             EmptyView()
         } else {
             VStack(spacing: 8){
+                    
+                //图片上传页面
+                NavigationLink(destination: SystemAlbumPage(mode: .file), isActive: self.$showAlbunSyncPage){
+                    EmptyView()
+                }
+                
                 Divider()
                 Button(action:{
                     self.showUpload = true
@@ -47,7 +56,9 @@ struct FileAddView: View {
                     BottomOptionButton("上传文件夹", icon: "square.grid.3x1.folder.badge.plus"){
                         self.showFolderPicker = true
                     }
-                    BottomOptionButton("图片/视频", icon: "rectangle.stack.badge.plus", action: self.vm.selectAll)
+                    BottomOptionButton("图片/视频", icon: "rectangle.stack.badge.plus"){
+                        self.showAlbunSyncPage = true
+                    }
                     BottomOptionButton("创建文件夹", icon: "folder.badge.plus"){
                         self.showCreateFolderAlter = true
                     }

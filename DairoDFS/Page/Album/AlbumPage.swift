@@ -20,7 +20,7 @@ struct AlbumPage: View {
             ZStack{
                 
                 //图片上传页面
-                NavigationLink(destination: SystemAlbumPage(), isActive: self.$vm.showAlbunSyncPage){
+                NavigationLink(destination: SystemAlbumPage(mode: .album), isActive: self.$vm.showAlbunSyncPage){
                     EmptyView()
                 }
                 

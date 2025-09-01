@@ -9,6 +9,16 @@ import Photos
 import CommonCrypto
 import DairoUI_IOS
 
+/// 上传模式
+enum UploadMode{
+    
+    /// 文件的方式上传
+    case file
+    
+    /// 相册的方式上传
+    case album
+}
+
 class StreamUploader: NSObject,
                       URLSessionTaskDelegate,
                       StreamDelegate,
@@ -47,19 +57,44 @@ class StreamUploader: NSObject,
     ///记录已经读取了的数据大小
     private var readedDataSize: Int64 = 0
     
-    init(_ dasset: PHAsset, _ isOnlyCheck: Bool) {
-        self.asset = dasset
-        self.isOnlyCheck = isOnlyCheck
-        self.identifier = dasset.localIdentifier
-    }
+    /// 上传模式
+    private let uploadMode: UploadMode
     
-    lazy var session: URLSession = URLSession(configuration: .default,
+    private lazy var session: URLSession = URLSession(configuration: .default,
                                               delegate: self,
                                               delegateQueue: nil)
     
+    /// 文件上传保存路径
+    private var dfsPath: String{
+        let originalFilename = PHAssetResource.assetResources(for: self.asset).first!.originalFilename
+        
+        //得到文件后缀
+        let ext = (originalFilename as NSString).pathExtension.lowercased()
+        let time = Int64(Date().timeIntervalSince1970 * 1_000_000)
+        switch self.uploadMode {
+        case .file://文件上传时,上传到当前打开的文件夹下
+            return SettingShared.lastOpenFolder + "/\(time)." + ext
+        case .album://相册上传时上传到固定文件夹下
+            return "/相册/\(time)." + ext
+        }
+    }
+    
+    init(_ dasset: PHAsset, _ isOnlyCheck: Bool, mode: UploadMode) {
+        self.asset = dasset
+        self.isOnlyCheck = isOnlyCheck
+        self.uploadMode = mode
+        self.identifier = dasset.localIdentifier
+    }
+    
     ///上传
     func upload() {
-        self.computeMd5(false, self.checkExists)
+        switch self.uploadMode {
+        case .file://文件上传时
+            self.computeMd5(false, self.uploadByMd5_step1)
+        case .album:
+            self.computeMd5(false, self.checkExists)
+        }
+        
     }
     
     ///计算图文件MD5
@@ -141,6 +176,25 @@ class StreamUploader: NSObject,
             }
     }
     
+    
+    ///第一步直接通过MD5上传
+    private func uploadByMd5_step1(){
+        self.progress("服务端处理中")
+        self.apiHttp = FileUploadApi.byMd5(md5: self.md5!, path: self.dfsPath, contentType: "").hide()
+            .error{
+                self.finish("失败:\($0)")
+            }.fail{
+                if $0.code == 1004{//md5文件不存在,则开始上传流
+                    self.uploadStream()
+                    return
+                }
+                self.finish("失败:\($0.msg)")
+            }
+            .post {
+                self.finish("上传完成")
+            }
+    }
+    
     //获取已经上传文件大小
     private func getUploadedSize(){
         self.progress("校验断点续传")
@@ -180,14 +234,8 @@ class StreamUploader: NSObject,
     
     ///通过MD5上传
     private func uploadByMd5(){
-        let originalFilename = PHAssetResource.assetResources(for: self.asset).first!.originalFilename
-        
-        //得到文件后缀
-        let ext = (originalFilename as NSString).pathExtension.lowercased()
         self.progress("服务端处理中")
-        
-        let time = Int64(Date().timeIntervalSince1970 * 1_000_000)
-        self.apiHttp = FileUploadApi.byMd5(md5: self.md5!, path: "/相册/\(time)." + ext, contentType: "").hide()
+        self.apiHttp = FileUploadApi.byMd5(md5: self.md5!, path: self.dfsPath, contentType: "").hide()
             .error{
                 self.finish("失败:\($0)")
             }.fail{

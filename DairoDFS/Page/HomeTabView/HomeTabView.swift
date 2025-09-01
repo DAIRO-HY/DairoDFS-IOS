@@ -20,9 +20,6 @@ struct HomeTabView: View {
     
     ///当前选中的页面标记
     private let pageTag: TabPage
-    
-    //跳转相册同步班页面
-    @State private var showAlbunSyncPage = false
     init(_ pageTag: TabPage) {
         self.pageTag = pageTag
     }
@@ -31,11 +28,6 @@ struct HomeTabView: View {
     @Environment(\.settingBackgroundColor) var settingBackgroundColor
     var body: some View {
         ZStack{
-            
-            //图片预览页面
-            NavigationLink(destination: SystemAlbumPage(), isActive: self.$showAlbunSyncPage){
-                EmptyView()
-            }
             HStack{
                 self.tabBtn("文件", "folder.fill", .white){
                     FilePage().relaunch()

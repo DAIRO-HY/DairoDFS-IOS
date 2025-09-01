@@ -18,7 +18,16 @@ struct SystemAlbumPage: View {
     //列数
     private let COLUMN_NUM = 3
     
-    @StateObject private var viewModel = SystemAlbumViewModel()
+    /// 上传模式
+    private let uploadMode: UploadMode
+    
+    @ObservedObject private var viewModel: SystemAlbumViewModel
+    
+    init(mode: UploadMode) {
+        self.uploadMode = mode
+        self.viewModel = SystemAlbumViewModel(mode)
+    }
+    
     var body: some View {
         GeometryReader { geometry in
             
@@ -64,6 +73,6 @@ struct SystemAlbumPage: View {
 }
 
 
-#Preview {
-    SystemAlbumPage()
-}
+//#Preview {
+//    SystemAlbumPage()
+//}

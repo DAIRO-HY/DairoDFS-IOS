@@ -44,8 +44,10 @@ struct SystemAlbumOptionView: View {
                 UCOptionMenuButton("上传", icon: "square.and.arrow.up", disabled: self.vm.checkedCount == 0 || self.vm.isUploading){
                     self.vm.onUploadClick(false)
                 }
-                UCOptionMenuButton("同步检查", icon: "square.and.arrow.up"){
-                    self.vm.onUploadClick(true)
+                if self.vm.uploadMode == .album{// 只有相册同步模式才允许检查
+                    UCOptionMenuButton("同步检查", icon: "square.and.arrow.up"){
+                        self.vm.onUploadClick(true)
+                    }
                 }
                 UCOptionMenuButton("删除已上传", icon: "trash", disabled: self.vm.isUploading, action: self.vm.onDeleteClick)
             }

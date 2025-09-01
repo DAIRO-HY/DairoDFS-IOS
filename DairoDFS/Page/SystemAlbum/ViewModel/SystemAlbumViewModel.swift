@@ -30,7 +30,11 @@ class SystemAlbumViewModel : ObservableObject{
     ///上传数量通知消息
     @Published var uploadCountMsg: String?
     
-    init(){
+    /// 上传模式
+    let uploadMode: UploadMode
+    
+    init(_ mode: UploadMode){
+        self.uploadMode = mode
         self.fetchPhotos()
     }
     
@@ -120,7 +124,7 @@ class SystemAlbumViewModel : ObservableObject{
         
         //标记正在上传中
         self.isUploading = true
-        PHAssetUploadManager.upload(assetList, isOnlyCheck)
+        PHAssetUploadManager.upload(assetList, isOnlyCheck, mode: self.uploadMode)
         
         //通知相册列表页面更新
         NotificationCenter.default.post(name: Notification.Name(AlbumPage.ALBUM_PAGE_RELOAD_DATA), object: nil)

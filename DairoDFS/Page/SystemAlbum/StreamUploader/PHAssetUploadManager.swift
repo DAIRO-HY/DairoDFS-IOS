@@ -51,8 +51,12 @@ class PHAssetUploadManager{
     //是否仅检查是否上传
     private static var isOnlyCheck = false
     
+    /// 上传模式
+    private static var uploadMode: UploadMode?
+    
     //开始上传
-    static func upload(_ uploadList: [PHAsset], _ isOnlyCheck: Bool){
+    static func upload(_ uploadList: [PHAsset], _ isOnlyCheck: Bool, mode: UploadMode){
+        self.uploadMode = mode
         self.assetLock.lock()
         if self.md5Map.isEmpty{
             if let md5Map = LocalObjectUtil.read([String:String].self, "album-md5"){
@@ -86,7 +90,7 @@ class PHAssetUploadManager{
             let asset = PHAssetUploadManager.uploadList[0]
             
             //去除第一个元素
-            let uploader = StreamUploader(asset, PHAssetUploadManager.isOnlyCheck)
+            let uploader = StreamUploader(asset, PHAssetUploadManager.isOnlyCheck, mode: self.uploadMode!)
             PHAssetUploadManager.uploading[asset.localIdentifier] = uploader
             
             //移除第一个元素
