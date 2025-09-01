@@ -19,6 +19,12 @@ struct FileAddView: View {
     /// 显示文件夹选择标记
     @State private var showFolderPicker = false
     
+    /// 显示文件夹名称输入框
+    @State private var showCreateFolderAlter = false
+    
+    /// 文件夹名称输入内容
+    @State private var createFolder = ""
+    
     @State private var showUpload = false
     
     @EnvironmentObject var vm: FileViewModel
@@ -42,64 +48,21 @@ struct FileAddView: View {
                         self.showFolderPicker = true
                     }
                     BottomOptionButton("图片/视频", icon: "rectangle.stack.badge.plus", action: self.vm.selectAll)
-                    BottomOptionButton("创建文件夹", icon: "folder.badge.plus", action: self.vm.selectAll)
+                    BottomOptionButton("创建文件夹", icon: "folder.badge.plus"){
+                        self.showCreateFolderAlter = true
+                    }
                 }
             }
             .sheet(isPresented: self.$showFilePicker) {//显示文件选择器
                 DocumentPicker(.data, true) { urls in
-                    let fileUploadDtoList = urls.map{
-                        $0.startAccessingSecurityScopedResource()
-                        let size = FileUtil.getFileSize($0.path) ?? 0
-                        
-                        //获取url的bookmarkData
-                        let bookmarkData = try! $0.bookmarkData(options: [.withoutImplicitSecurityScope],
-                                                                includingResourceValuesForKeys: nil,
-                                                                relativeTo: nil)
-                        $0.stopAccessingSecurityScopedResource()
-                        
-                        let dfsPath = "/相册/" + $0.lastPathComponent
-                        return FileUploaderDto(
-                            id: 0,
-                            bookmarkData: bookmarkData,
-                            name: $0.lastPathComponent,
-                            size: size,
-                            uploadedSize: 0,
-                            md5: nil,
-                            dfsPath: dfsPath,
-                            state: 0,
-                            date: 0,
-                            error: nil
-                        )
-                    }
+                    let fileUploadDtoList = self.makeFileUploadDtoList(SettingShared.lastOpenFolder, urls)
                     FileUploaderManager.upload(fileUploadDtoList)
                 }
             }
             .sheet(isPresented: self.$showFolderPicker) {//显示文件夹选择器
                 DocumentPicker(.folder, false) { urls in
-                    let url = urls.first!
-                    $0.startAccessingSecurityScopedResource()
-                    let size = FileUtil.getFileSize($0.path) ?? 0
-                    
-                    //获取url的bookmarkData
-                    let bookmarkData = try! $0.bookmarkData(options: [.withoutImplicitSecurityScope],
-                                                            includingResourceValuesForKeys: nil,
-                                                            relativeTo: nil)
-                    $0.stopAccessingSecurityScopedResource()
-                    
-                    let dfsPath = "/相册/" + $0.lastPathComponent
-                    return FileUploaderDto(
-                        id: 0,
-                        bookmarkData: bookmarkData,
-                        name: $0.lastPathComponent,
-                        size: size,
-                        uploadedSize: 0,
-                        md5: nil,
-                        dfsPath: dfsPath,
-                        state: 0,
-                        date: 0,
-                        error: nil
-                    )
-                    //                    FileUploaderManager.upload(fileUploadDtoList)
+                    let fileUploadDtoList = self.makeFileUploadDtoList(SettingShared.lastOpenFolder, urls)
+                    FileUploaderManager.upload(fileUploadDtoList)
                 }
             }
             .sheet(isPresented: self.$showUpload){
@@ -107,45 +70,123 @@ struct FileAddView: View {
                     FileUploadPage()
                 }
             }
+            .alert("创建文件夹", isPresented: self.$showCreateFolderAlter) {
+                TextField("文件夹名", text: self.$createFolder)
+                Button("创建", role: .destructive){
+                    let name = self.createFolder
+                    
+                    //清空输入值,避免下次被显示
+                    self.createFolder = ""
+                    FilesApi.createFolder(folder: SettingShared.lastOpenFolder + "/" + name).post {
+                        self.vm.reload()
+                    }
+                }
+                Button("取消", role: .cancel) {
+                }
+            }
             //        this.redrawVN.value++;
         }
     }
     
-    func getBookmarks(in folderURL: URL) -> [FileUploaderDto] {
-        var result = [FileUploaderDto]()
+    /// 生成文件上传Dto列表
+    private func makeFileUploadDtoList(_ folder: String, _ urls: [URL]) -> [FileUploaderDto] {
+        var dtoList = [FileUploaderDto]()
         let fileManager = FileManager.default
-        
-        do {
-            let items = try fileManager.contentsOfDirectory(
-                at: folderURL,
-                includingPropertiesForKeys: [.isDirectoryKey],
-                options: [.skipsHiddenFiles])
-            for item in items {
-                var isDir: ObjCBool = false
-                if fileManager.fileExists(atPath: item.path, isDirectory: &isDir) {
-                    // 创建 bookmarkData
-                    do {
-                        let bookmark = try item.bookmarkData(options: [.withSecurityScope],
+        for url in urls {
+            
+            //文件名/文件夹名
+            let filename = url.lastPathComponent
+            
+            //开启访问权限
+            url.startAccessingSecurityScopedResource()
+            var isDir: ObjCBool = false
+            if fileManager.fileExists(atPath: url.path, isDirectory: &isDir) {
+                
+                // 如果是目录，递归
+                if isDir.boolValue {
+                    let subUrls = try! fileManager.contentsOfDirectory(
+                        at: url,
+                        includingPropertiesForKeys: [.isDirectoryKey],
+                        options: [.skipsHiddenFiles])
+                    let subDtoList = self.makeFileUploadDtoList(folder + "/" + filename,subUrls)
+                    dtoList.append(contentsOf: subDtoList)
+                }else{
+                    let size = FileUtil.getFileSize(url.path) ?? 0
+                    
+                    //获取url的bookmarkData
+                    let bookmarkData = try! url.bookmarkData(options: [.withoutImplicitSecurityScope],
                                                              includingResourceValuesForKeys: nil,
                                                              relativeTo: nil)
-                        result[item.path] = bookmark
-                    } catch {
-                        print("创建 bookmark 失败: \(error)")
-                    }
-                    
-                    // 如果是目录，递归
-                    if isDir.boolValue {
-                        let subBookmarks = getBookmarks(in: item)
-                        result.merge(subBookmarks) { _, new in new }
-                    }
+                    let dto = FileUploaderDto(
+                        id: 0,
+                        bookmarkData: bookmarkData,
+                        name: filename,
+                        size: size,
+                        uploadedSize: 0,
+                        md5: nil,
+                        dfsPath: folder + "/" + filename,
+                        state: 0,
+                        date: 0,
+                        error: nil
+                    )
+                    dtoList.append(dto)
                 }
             }
-        } catch {
-            print("读取文件夹失败: \(error)")
+            
+            //停止访问权限
+            url.stopAccessingSecurityScopedResource()
         }
-        
-        return result
+        return dtoList
     }
+    
+    //    private func makeFileUploadDto(_ folderURL: URL) -> [FileUploaderDto] {
+    //        var result = [FileUploaderDto]()
+    //        let fileManager = FileManager.default
+    //        do {
+    //            let items = try fileManager.contentsOfDirectory(
+    //                at: folderURL,
+    //                includingPropertiesForKeys: [.isDirectoryKey],
+    //                options: [.skipsHiddenFiles])
+    //            for item in items {
+    //                var isDir: ObjCBool = false
+    //                if fileManager.fileExists(atPath: item.path, isDirectory: &isDir) {
+    //                    item.startAccessingSecurityScopedResource()
+    //                    let size = FileUtil.getFileSize(item.path) ?? 0
+    //
+    //                    //获取url的bookmarkData
+    //                    let bookmarkData = try! item.bookmarkData(options: [.withoutImplicitSecurityScope],
+    //                                                              includingResourceValuesForKeys: nil,
+    //                                                              relativeTo: nil)
+    //                    item.stopAccessingSecurityScopedResource()
+    //
+    //                    let dfsPath = "/相册/" + item.lastPathComponent
+    //                    let dto = FileUploaderDto(
+    //                        id: 0,
+    //                        bookmarkData: bookmarkData,
+    //                        name: item.lastPathComponent,
+    //                        size: size,
+    //                        uploadedSize: 0,
+    //                        md5: nil,
+    //                        dfsPath: dfsPath,
+    //                        state: 0,
+    //                        date: 0,
+    //                        error: nil
+    //                    )
+    //                    result.append(dto)
+    //
+    //                    // 如果是目录，递归
+    //                    if isDir.boolValue {
+    //                        let subResult = makeFileUploadDto(item)
+    //                        result.append(contentsOf: subResult)
+    //                    }
+    //                }
+    //            }
+    //        } catch {
+    //            print("读取文件夹失败: \(error)")
+    //        }
+    //
+    //        return result
+    //    }
     
     ///全取消
     private func onUncheckAllClick() {

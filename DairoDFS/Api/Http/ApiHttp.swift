@@ -109,13 +109,13 @@ class ApiHttp<T: Codable> : ApiHttpBase{
      * 调用失败函数
      */
     private func callFail(_ failModel: ApiFailModel) {
-        //        if (self.failFunc != nil) {
-        //                self.failFunc!(failModel)
-        //        } else {
-        //            if self.isShowWaiting{//有遮照层
-        //                Toast.show(failModel.msg ?? "处理失败")
-        //            }
-        //        }
+        if self.failFunc != nil {
+            self.failFunc!(failModel)
+        } else {
+            if self.isShowWaiting{//有遮照层
+                Toast.show(failModel.msg ?? "处理失败")
+            }
+        }
     }
     
     /**
@@ -197,7 +197,12 @@ class ApiHttp<T: Codable> : ApiHttpBase{
             }
             let httpResponse = response as! HTTPURLResponse
             if httpResponse.statusCode != 200{
-                self.callError(String(data: data!, encoding: .utf8)!)
+                let responseText = String(data: data!, encoding: .utf8)!
+                if responseText.hasPrefix("{"){//这是一个json字符串
+                    let fm = try! JSONDecoder().decode(ApiFailModel.self, from: responseText.data(using: .utf8)!)
+                    self.callFail(fm)
+                }
+                self.callError(responseText)
                 return
             }
             let t = self.convert(data!)

@@ -8,7 +8,7 @@
 import SwiftUI
 import DairoUI_IOS
 
-struct FileListViewItem: View {
+struct FileListItemView: View {
     
     ///文件信息
     private let dfsFile: DfsFileEntity
@@ -72,7 +72,7 @@ struct FileListViewItem: View {
 }
 
 #Preview {
-    FileListViewItem(getDfsFileBean(), isSelectMode: false)
+    FileListItemView(getDfsFileBean(), isSelectMode: false)
 }
 
 private func getDfsFileBean() -> DfsFileEntity{

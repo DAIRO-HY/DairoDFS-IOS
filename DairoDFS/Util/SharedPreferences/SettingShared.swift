@@ -191,16 +191,14 @@ enum SettingShared {
     
     /*----------------------------------------------------------------------------------*/
     
-    ///记录当前打开的文件夹
-    private static let _CURRENT_PATH = "CURRENT_PATH";
-    
+    ///记录最后打开的文件夹
     static var lastOpenFolder: String{
         get{
-            return UserDefaults.standard.string(forKey: SettingShared._CURRENT_PATH) ?? "";
+            return UserDefaults.standard.string(forKey: "CURRENT_PATH") ?? "";
         }
         
         set{
-            UserDefaults.standard.set(newValue, forKey: SettingShared._CURRENT_PATH);
+            UserDefaults.standard.set(newValue, forKey: "CURRENT_PATH");
         }
     }
     /*----------------------------------------------------------------------------------*/

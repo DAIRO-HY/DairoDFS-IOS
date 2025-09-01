@@ -52,7 +52,6 @@ struct HomeTabView: View {
             
             //添加按钮
             Button(action: {
-//                self.showAlbunSyncPage = true
                 
                 //显示添加视图
                 NotificationCenter.default.post(name: Notification.Name(FileAddView.FILE_ADD_VIEW_SHOW_FLAG), object: nil)

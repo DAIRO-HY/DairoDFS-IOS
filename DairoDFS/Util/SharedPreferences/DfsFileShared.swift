@@ -53,12 +53,9 @@ enum DfsFileShared {
         DfsFileShared._apiHttp?.cancel()
         
         //Api请求文件列表
-        let apiHttp = FilesApi.getList(folder: folder)
-        DfsFileShared._apiHttp = apiHttp
-        _ = apiHttp.finish{
+        DfsFileShared._apiHttp = FilesApi.getList(folder: folder).hide().finish{
             DfsFileShared._apiHttp = nil
-        }
-        apiHttp.post{
+        }.post{
             let isWrite = LocalObjectUtil.write($0, fileName)
             if (isWrite) {
                 

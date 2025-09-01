@@ -75,29 +75,27 @@ class FileUploader: NSObject,
         } else {
             self.fileMD5 = self.dto.md5
         }
-        self.checkExists()
+        self.uploadByMd5_step1()
     }
     
-    ///检查文件是否已经上传
-    private func checkExists(){
-        //        self.progress("校验上传状态")
-        self.apiHttp = FileUploadApi.checkExistsByMd5(md5: self.fileMD5!).hide()
+    ///第一次直接通过MD5上传
+    private func uploadByMd5_step1(){
+        self.apiHttp = FileUploadApi.byMd5(md5: self.fileMD5!, path: self.dto.dfsPath, contentType: "").hide()
             .error{
                 self.callFinishAndNotify($0)
             }.fail{
-                self.callFinishAndNotify($0.msg ?? "")
-            }.post {
-                if $0{//文件已经上传
-                    self.callFinishAndNotify()
+                if $0.code == 1004{//文件没有被上传
+                    self.getUploadedSize()
                     return
                 }
-                self.getUploadedSize()
+                self.callFinishAndNotify($0.msg ?? "")
+            }.post {
+                self.callFinishAndNotify()
             }
     }
     
     //从服务器端获取已经上传文件大小
     private func getUploadedSize(){
-        //        self.progress("校验断点续传")
         self.apiHttp = FileUploadApi.getUploadedSize(md5: self.fileMD5!).hide()
             .error{
                 self.callFinishAndNotify($0)
@@ -115,7 +113,6 @@ class FileUploader: NSObject,
     
     ///开始上传
     private func uploadStream(){
-        //        self.progress("准备上传")
         let serverURL = SettingShared.domainNotNull + "/app/file_upload/by_stream/" + self.fileMD5!
         let url = URL(string: serverURL)!
         var request = URLRequest(url: url,
@@ -134,16 +131,7 @@ class FileUploader: NSObject,
     
     ///通过MD5上传
     private func uploadByMd5(){
-        
-        //得到文件名
-        let originalFilename = self.dto.name
-        
-        //得到文件后缀
-        let ext = (originalFilename as NSString).pathExtension.lowercased()
-        //        self.progress("服务端处理中")
-        
-        let time = Int64(Date().timeIntervalSince1970 * 1_000_000)
-        self.apiHttp = FileUploadApi.byMd5(md5: self.fileMD5!, path: "/相册/\(time)." + ext, contentType: "").hide()
+        self.apiHttp = FileUploadApi.byMd5(md5: self.fileMD5!, path: self.dto.dfsPath, contentType: "").hide()
             .error{
                 self.callFinishAndNotify($0)
             }.fail{

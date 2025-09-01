@@ -16,16 +16,15 @@ struct FilePage: View {
         NavigationView{
             VStack{
                 FileOptionBarView().environmentObject(self.vm)
-                FilesView().environmentObject(self.vm)
+                FileView().environmentObject(self.vm)
                 FileOptionView().environmentObject(self.vm)
                 FileAddView().environmentObject(self.vm)
                 HomeTabView(.FILE_PAGE)
             }
             .onReceive(NotificationCenter.default.publisher(for: Notification.Name(FileAddView.FILE_ADD_VIEW_SHOW_FLAG))){_ in
                 self.vm.isSelectMode = false
-                self.vm.isShowAddView = !self.vm.isShowAddView
+                self.vm.isShowAddView.toggle()
             }
-//            .background(Color.gl.bg)
             .navigationTitle("文件列表")
             .navigationBarHidden(true)
         }
