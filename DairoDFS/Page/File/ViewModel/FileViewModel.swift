@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+import DairoUI_IOS
 
 class FileViewModel : ObservableObject{
     
@@ -18,14 +19,20 @@ class FileViewModel : ObservableObject{
     
     @Published var dfsFileList = [DfsFileEntity]()
     
-    ///  剪切板模式
-    @Published var clipboardType = 0
-    
     ///选择模式
     @Published var isSelectMode = false
     
     ///是否添加视图
     @Published var isShowAddView = false
+    
+    /// 剪切板中的文件ID
+    var clipboardSet = Set<Int64>()
+    
+    /// 剪切板中的文件路径列表
+    private var clipboardPaths = [String]()
+    
+    /// 剪切板类型 1:剪切 2:复制 
+    @Published var clipboardType: Int8 = 0
     
     init(){
         self.reload()
@@ -63,6 +70,8 @@ class FileViewModel : ObservableObject{
             //
             //        //重回文件页面
             //        this.redraw();
+            self.clearSelected()
+            self.isSelectMode = false
         }
     }
     
@@ -122,6 +131,68 @@ class FileViewModel : ObservableObject{
         self.selectedCount = 0
     }
     
+    /// 存放剪切板
+    func toClipboard(_ clipboardType: Int8){
+        let lastOpenFolder = SettingShared.lastOpenFolder
+        self.dfsFileList.forEach{
+            if $0.isSelected{
+                self.clipboardPaths.append(lastOpenFolder + "/" + $0.fm.name)
+                self.clipboardSet.insert($0.fm.id)
+            }
+        }
+        self.clipboardType = clipboardType
+        Toast.show("操作成功,请选择文件夹后粘贴")
+        self.clearSelected()
+        self.isSelectMode = false
+    }
+    
+    ///粘贴点击事件
+    func onPasteClick(){
+        let http: ApiHttp<EmptyModel>
+        if self.clipboardType == 1{
+            http = FilesApi.move(sourcePaths: self.clipboardPaths, targetFolder: SettingShared.lastOpenFolder, isOverWrite: false)
+        }else{
+            http = FilesApi.copy(sourcePaths: self.clipboardPaths, targetFolder: SettingShared.lastOpenFolder, isOverWrite: false)
+        }
+        http.post {
+            self.clipboardType = 0
+            self.clipboardSet.removeAll()
+            self.clipboardPaths.removeAll()
+            Toast.show("操作成功")
+            self.reload()
+        }
+    }
+    
+    ///重命名点击事件
+    func onRenameClick(_ newName: String){
+        
+        //当前选中文件名
+        let name = self.dfsFileList.first{$0.isSelected}!.fm.name
+        let path = SettingShared.lastOpenFolder + "/" + name
+        self.isSelectMode = false
+        FilesApi.rename(sourcePath: path, name: newName).post {
+            Toast.show("操作成功")
+            self.reload()
+        }
+    }
+    
+    /// 下载按钮点击事件
+    func onDownloadClick(){
+        let downloadList = self.dfsFileList.filter{$0.isSelected && $0.fm.isFile}.map{
+            return ($0.fm.downloadId, $0.fm.download)
+        }
+        if downloadList.isEmpty{
+            Toast.show("请选择要下载的文件,暂不支持文件夹下载")
+            return
+        }
+        
+        //添加到下载列表
+        DownloadManager.save(downloadList)
+        Toast.show("已经添加到下载列表")
+        self.isSelectMode = false
+        self.clearSelected()
+    }
+    
     /**
      全选
      */
@@ -132,10 +203,14 @@ class FileViewModel : ObservableObject{
         self.selectedCount = self.dfsFileList.count
     }
     
-    
-    /// 创建文件夹点击事件
-    func onCreatFolderClick(){
-        
+    /// 删除按钮点击事件
+    func onDeleteClick(){
+        let folder = SettingShared.lastOpenFolder
+        let paths = self.dfsFileList.filter{$0.isSelected}.map{folder + "/" + $0.fm.name}
+        FilesApi.delete(paths: paths).post {
+            Toast.show("删除成功")
+            self.reload()
+        }
     }
     
     deinit{

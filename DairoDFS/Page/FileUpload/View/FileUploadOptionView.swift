@@ -32,7 +32,7 @@ struct FileUploadOptionView: View {
                 BottomOptionButton("删除", icon: "trash", disabled: self.vm.checked.isEmpty){
                     self.showDeleteAlert = true
                 }
-                .alert("确认删除吗？", isPresented: $showDeleteAlert) {
+                .alert("确认删除吗？", isPresented: self.$showDeleteAlert) {
                     Button("删除", role: .destructive) {
                         self.vm.onDeleteClick()
                     }

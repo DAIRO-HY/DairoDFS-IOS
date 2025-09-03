@@ -8,15 +8,19 @@
 import SwiftUI
 
 struct FileView: View {
-    @EnvironmentObject var fileVm: FileViewModel
+    @EnvironmentObject var vm: FileViewModel
     var body: some View {
         ScrollView{
             LazyVStack{
-                ForEach(self.fileVm.dfsFileList, id: \.self.fm.id) { item in
+                ForEach(self.vm.dfsFileList, id: \.self.fm.id) { item in
+                    
+                    //是否在剪切板标记
+                    let isMoveFlag = self.vm.clipboardType == 1 && self.vm.clipboardSet.contains(item.fm.id)
                     Button(action: { self.onFileClick(item) }){
-                        FileListItemView(item, isSelectMode: self.fileVm.isSelectMode)
+                        FileListItemView(item, isSelectMode: self.vm.isSelectMode)
                     }
                     .buttonStyle(.row)
+                    .opacity(isMoveFlag ? 0.5 : 1)
                 }
             }
         }
@@ -25,13 +29,13 @@ struct FileView: View {
     
     /// 文件点击事件
     private func onFileClick(_ item: DfsFileEntity){
-        if self.fileVm.isSelectMode{
+        if self.vm.isSelectMode{
             item.isSelected.toggle()
-            self.fileVm.selectedCount += (item.isSelected ? 1 : -1)
+            self.vm.selectedCount += (item.isSelected ? 1 : -1)
             return
         }
         if item.fm.isFolder{//如果这是一个文件夹
-            self.fileVm.loadSubFile(SettingShared.lastOpenFolder + "/" + item.fm.name)
+            self.vm.loadSubFile(SettingShared.lastOpenFolder + "/" + item.fm.name)
         }
     }
 }

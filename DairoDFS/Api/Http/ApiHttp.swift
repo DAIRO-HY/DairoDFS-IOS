@@ -173,9 +173,16 @@ class ApiHttp<T: Codable> : ApiHttpBase{
                 }
                 bodyValue = value
             } else if let value  = entry.value as? [String]{//如果是一个字符串数组
-                
-                //@TODO: 数组里面的字符串的逗号(,)需要单独处理
-                bodyValue = "[" + value.joined(separator: ",") + "]"
+                var joinStr = ""
+                value.forEach{
+                    
+                    //这里将逗号替换成_2c,服务器端再将其替换回去
+                    joinStr += $0.replacingOccurrences(of: ",", with: "_2c") + ","
+                }
+                if !joinStr.isEmpty{
+                    joinStr.removeLast()
+                }
+                bodyValue = "[" + joinStr + "]"
             } else if let value  = entry.value as? [any Codable]{//如果是一个数组
                 bodyValue = "[" + value.map{"\($0)"}.joined(separator: ",") + "]"
             } else {

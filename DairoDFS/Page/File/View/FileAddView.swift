@@ -44,11 +44,6 @@ struct FileAddView: View {
                 }
                 
                 Divider()
-                Button(action:{
-                    self.showUpload = true
-                }){
-                    Text("下载页面")
-                }
                 HStack{
                     BottomOptionButton("上传文件", icon: "arrow.up.document"){
                         self.showFilePicker = true
