@@ -17,7 +17,7 @@ class FileViewModel : ObservableObject{
     ///记录当前选中的文件数
     @Published var selectedCount = 0
     
-    @Published var dfsFileList = [DfsFileEntity]()
+    @Published var entities = [FileEntity]()
     
     ///选择模式
     @Published var isSelectMode = false
@@ -57,11 +57,11 @@ class FileViewModel : ObservableObject{
             //        }
             //        this.sortFile(list);
             
-            var dfsFileList = [DfsFileEntity]()
+            var dfsFileList = [FileEntity]()
             for item in list{
-                dfsFileList.append(DfsFileEntity(item))
+                dfsFileList.append(FileEntity(item))
             }
-            self.dfsFileList = dfsFileList
+            self.entities = dfsFileList
             //        this.dfsFileList = list.map((it) => DfsFileVM(folderPath, it)).toList();
             //        this.filePageState.selectedCount = 0;
             
@@ -125,7 +125,7 @@ class FileViewModel : ObservableObject{
      清空已经选择的文件
      */
     func clearSelected(){
-        for item in self.dfsFileList{
+        for item in self.entities{
             item.isSelected = false
         }
         self.selectedCount = 0
@@ -134,7 +134,7 @@ class FileViewModel : ObservableObject{
     /// 存放剪切板
     func toClipboard(_ clipboardType: Int8){
         let lastOpenFolder = SettingShared.lastOpenFolder
-        self.dfsFileList.forEach{
+        self.entities.forEach{
             if $0.isSelected{
                 self.clipboardPaths.append(lastOpenFolder + "/" + $0.fm.name)
                 self.clipboardSet.insert($0.fm.id)
@@ -167,7 +167,7 @@ class FileViewModel : ObservableObject{
     func onRenameClick(_ newName: String){
         
         //当前选中文件名
-        let name = self.dfsFileList.first{$0.isSelected}!.fm.name
+        let name = self.entities.first{$0.isSelected}!.fm.name
         let path = SettingShared.lastOpenFolder + "/" + name
         self.isSelectMode = false
         FilesApi.rename(sourcePath: path, name: newName).post {
@@ -178,7 +178,7 @@ class FileViewModel : ObservableObject{
     
     /// 下载按钮点击事件
     func onDownloadClick(){
-        let downloadList = self.dfsFileList.filter{$0.isSelected && $0.fm.isFile}.map{
+        let downloadList = self.entities.filter{$0.isSelected && $0.fm.isFile}.map{
             return ($0.fm.downloadId, $0.fm.download)
         }
         if downloadList.isEmpty{
@@ -197,16 +197,16 @@ class FileViewModel : ObservableObject{
      全选
      */
     func selectAll(){
-        for item in self.dfsFileList{
+        for item in self.entities{
             item.isSelected = true
         }
-        self.selectedCount = self.dfsFileList.count
+        self.selectedCount = self.entities.count
     }
     
     /// 删除按钮点击事件
     func onDeleteClick(){
         let folder = SettingShared.lastOpenFolder
-        let paths = self.dfsFileList.filter{$0.isSelected}.map{folder + "/" + $0.fm.name}
+        let paths = self.entities.filter{$0.isSelected}.map{folder + "/" + $0.fm.name}
         FilesApi.delete(paths: paths).post {
             Toast.show("删除成功")
             self.reload()

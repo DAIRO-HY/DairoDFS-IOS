@@ -140,9 +140,7 @@ enum SettingShared {
     /*----------------------------------------------------------------------------------*/
     
     /// 登录过的用户列表
-    static var  loggedUserList: [AccountInfo]{
-        
-        
+    static var loggedUserList: [AccountInfo]{
         get{
             return LocalObjectUtil.read([AccountInfo].self, "loggedUserList") ??  [AccountInfo]()
         }
@@ -150,6 +148,65 @@ enum SettingShared {
         set{
             _ = LocalObjectUtil.write(newValue, "loggedUserList")
             SettingShared.mToken = nil
+        }
+    }
+    
+    /// 是否登录
+    static var isLogin: Bool{ !SettingShared.token.isEmpty }
+    
+    /// 退出登录
+    static func logout() {
+        var logined = SettingShared.loggedUserList
+        for i in 0 ..< logined.count{
+            logined[i].isLogining = false
+        }
+        SettingShared.loggedUserList = logined
+        SettingShared.token = ""
+    }
+    
+    /// 登录
+    static func login(_ accountInfo: AccountInfo, success: @escaping () -> Void) {
+        
+        //先记录登录之前的服务器，如果登录失败，则还原之前的服务器
+        let oldDomain = SettingShared.domain
+        SettingShared.domain = accountInfo.domain;
+        LoginApi.doLogin(name: accountInfo.name, pwd: accountInfo.pwd, deviceId: Const.deviceId).fail{
+            
+            //登录失败，将服务器还原
+            SettingShared.domain = oldDomain
+            Toast.show($0.msg!)
+        }.post{ loginInfo in//登录成功
+            var loggedUserList = SettingShared.loggedUserList
+            
+            //标记是否是已经登录过的账户
+            var isLogined = false
+            for i in 0 ..< loggedUserList.count{
+                let item = loggedUserList[i]
+                if item.domain == accountInfo.domain && item.name == accountInfo.name{
+                    isLogined = true
+                    loggedUserList[i].isLogining = true
+                }else{
+                    loggedUserList[i].isLogining = false
+                }
+            }
+            
+            var accountInfo = accountInfo
+            if !isLogined{//这是一个新登录用户
+                accountInfo.isLogining = true
+                loggedUserList.append(accountInfo)
+            }
+            SettingShared.loggedUserList = loggedUserList
+            SettingShared.token = loginInfo.token
+            
+            //后台加载用户信息
+            SettingShared.loadInBackground()
+            
+            //清空缓存的文件列表
+            DfsFileShared.clear()
+            
+            //通知登录账户更新
+            //            EventUtil.post(EventCode.ACCOUNT_CHANGE)
+            success()
         }
     }
     
@@ -270,63 +327,4 @@ enum SettingShared {
     }
     
     /*----------------------------------------------------------------------------------*/
-    
-    /// 是否登录
-    static var isLogin: Bool{ !SettingShared.token.isEmpty }
-    
-    /// 退出登录
-    static func logout() {
-        var logined = SettingShared.loggedUserList
-        for i in 0 ..< logined.count{
-            logined[i].isLogining = false
-        }
-        SettingShared.loggedUserList = logined
-        SettingShared.token = ""
-    }
-    
-    /// 登录
-    static func login(_ accountInfo: AccountInfo, success: @escaping () -> Void) {
-        
-        //先记录登录之前的服务器，如果登录失败，则还原之前的服务器
-        let oldDomain = SettingShared.domain
-        SettingShared.domain = accountInfo.domain;
-        LoginApi.doLogin(name: accountInfo.name, pwd: accountInfo.pwd, deviceId: Const.deviceId).fail{
-            
-            //登录失败，将服务器还原
-            SettingShared.domain = oldDomain
-            Toast.show($0.msg!)
-        }.post{ loginInfo in//登录成功
-            var loggedUserList = SettingShared.loggedUserList
-            
-            //标记是否是已经登录过的账户
-            var isLogined = false
-            for i in 0 ..< loggedUserList.count{
-                let item = loggedUserList[i]
-                if item.domain == accountInfo.domain && item.name == accountInfo.name{
-                    isLogined = true
-                    loggedUserList[i].isLogining = true
-                }else{
-                    loggedUserList[i].isLogining = false
-                }
-            }
-            
-            var accountInfo = accountInfo
-            if !isLogined{//这是一个新登录用户
-                accountInfo.isLogining = true
-                loggedUserList.append(accountInfo)
-            }
-            SettingShared.loggedUserList = loggedUserList
-            SettingShared.token = loginInfo.token
-            
-            //后台加载用户信息
-            SettingShared.loadInBackground()
-            
-            //清空缓存的文件列表
-            DfsFileShared.clear()
-            
-            //通知登录账户更新
-            //            EventUtil.post(EventCode.ACCOUNT_CHANGE)
-            success()
-        }
-    }
 }

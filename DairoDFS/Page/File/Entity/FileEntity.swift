@@ -4,7 +4,7 @@
 //
 //  Created by zhoulq on 2025/04/30.
 //
-class DfsFileEntity{
+class FileEntity{
     
     let fm: FileModel
 

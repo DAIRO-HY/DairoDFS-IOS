@@ -11,10 +11,10 @@ import DairoUI_IOS
 struct FileListItemView: View {
     
     ///文件信息
-    private let dfsFile: DfsFileEntity
+    private let dfsFile: FileEntity
     
     private let isSelectMode: Bool
-    init(_ dfsFile: DfsFileEntity, isSelectMode: Bool) {
+    init(_ dfsFile: FileEntity, isSelectMode: Bool) {
         self.dfsFile = dfsFile
         self.isSelectMode = isSelectMode
     }
@@ -75,8 +75,8 @@ struct FileListItemView: View {
     FileListItemView(getDfsFileBean(), isSelectMode: false)
 }
 
-private func getDfsFileBean() -> DfsFileEntity{
-    let dfb = DfsFileEntity(
+private func getDfsFileBean() -> FileEntity{
+    let dfb = FileEntity(
         FileModel(
             id: 1,
             name: "文件名",

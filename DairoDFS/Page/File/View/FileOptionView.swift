@@ -67,7 +67,7 @@ struct FileOptionView: View {
                     BottomOptionButton("重命名", icon: "pencil", disabled: self.vm.selectedCount != 1){
                         
                         //当前选中文件名
-                        let name = self.vm.dfsFileList.first{$0.isSelected}!.fm.name
+                        let name = self.vm.entities.first{$0.isSelected}!.fm.name
                         self.renameInput = name
                         self.showRenameInput = true
                     }

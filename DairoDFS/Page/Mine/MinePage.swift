@@ -16,6 +16,9 @@ struct MinePage: View {
     ///功能模式数据
     private let functionData = [SettingPickerData<Int>("文件模式",0),SettingPickerData<Int>("相册模式",1)]
     
+    //视图模型
+    @StateObject private var vm = MineViewModel()
+    
     //主题设置值
     @AppStorage("theme") private var theme = 0
     
@@ -24,26 +27,20 @@ struct MinePage: View {
     
     var body: some View {
         NavigationView{
-            VStack{
+            VStack(spacing: 0){
+                NavigationLink(destination: LoggedPage()){
+                    self.topLogoView
+                }
                 SettingStack(embedInNavigationStack: false){
-                    SettingPage(title:"我的"){
+                    SettingPage{
                         SettingGroup{
-                            SettingNavigationLink("用户名",tip: "这里是提示内容") {
-                                LoggedPage().anyView
-                            }
-                            .iconSize(60)
-                            .iconRadius(30)
-                            .icon("sparkles", backgroundColor: Color.pink)
-                            .isVertical(true)
-                        }
-                        SettingGroup{
-                            SettingButton("我的分享", tip:"点击查看"){
-                            }
-                            .icon("paperplane.fill", backgroundColor: Color.blue)
+//                            SettingButton("我的分享", tip:"点击查看"){
+//                            }
+//                            .icon("paperplane.fill", backgroundColor: Color.blue)
                             
-                            SettingButton("回收站"){
-                            }
-                            .icon("trash.fill", backgroundColor: Color.green)
+                            SettingNavigationLink("回收站",tip: "已删除的文件"){
+                                AnyView(TrashPage())
+                            }.icon("trash.fill", backgroundColor: Color.green)
                             
                             SettingNavigationLink("上传管理",tip: "上传文件列表"){
                                 AnyView(FileUploadPage())
@@ -52,8 +49,6 @@ struct MinePage: View {
                             SettingNavigationLink("下载管理",tip: "下载、缓存文件"){
                                 AnyView(DownloadPage())
                             }.icon("square.and.arrow.down.fill", backgroundColor: Color.indigo)
-                            SettingButton("修改密码"){
-                            }.icon("lock.open.rotation", backgroundColor: Color.orange)
                         }
                         SettingGroup{
                             SettingPicker("切换主题",data: self.themeData, value: self.$theme)
@@ -70,7 +65,11 @@ struct MinePage: View {
                             }
                             .icon("die.face.4.fill", backgroundColor: Color.purple)
                         }
-                        
+                        SettingGroup{
+                            SettingNavigationLink("修改密码"){
+                                ModifyPwdPage().anyView
+                            }.icon("lock.open.rotation", backgroundColor: Color.orange)
+                        }
                         SettingGroup{
                             SettingButtonSingle("退出登录"){
                                 SettingShared.logout()
@@ -81,7 +80,34 @@ struct MinePage: View {
                 }
                 HomeTabView(.MINE_PAGE)
             }
+            .navigationTitle("我的")
+            .navigationBarHidden(true)
         }
+    }
+    
+    /// 顶部头像部分视图
+    private var topLogoView: some View {
+        HStack {
+                Image("logo")
+                .resizable()
+                .frame(width: 50, height: 50)
+                .cornerRadius(1000)
+            VStack {
+                Text(self.vm.logged.name)
+                    .foregroundColor(Color.gl.textPrimaryContent)
+                    .font(.title2)
+                    .frame(maxWidth: .infinity,alignment: .leading)
+                HStack{
+                    Text(self.vm.logged.domain).font(.footnote).frame(maxWidth: .infinity,alignment: .leading)
+                        .foregroundColor(Color.gl.textPrimarySecondary)
+                }
+            }.padding(.leading,10)
+            Image(systemName: "chevron.right").foregroundColor(.white)
+        }
+        .padding(.horizontal)
+        .padding(.bottom, 10)
+        .background(Color.gl.bgPrimary)
+        
     }
 }
 

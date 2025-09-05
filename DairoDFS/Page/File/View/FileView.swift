@@ -12,7 +12,7 @@ struct FileView: View {
     var body: some View {
         ScrollView{
             LazyVStack{
-                ForEach(self.vm.dfsFileList, id: \.self.fm.id) { item in
+                ForEach(self.vm.entities, id: \.self.fm.id) { item in
                     
                     //是否在剪切板标记
                     let isMoveFlag = self.vm.clipboardType == 1 && self.vm.clipboardSet.contains(item.fm.id)
@@ -28,7 +28,7 @@ struct FileView: View {
     }
     
     /// 文件点击事件
-    private func onFileClick(_ item: DfsFileEntity){
+    private func onFileClick(_ item: FileEntity){
         if self.vm.isSelectMode{
             item.isSelected.toggle()
             self.vm.selectedCount += (item.isSelected ? 1 : -1)

@@ -13,7 +13,7 @@ struct LoginPage: View {
     //登录信息
     @ObservedObject private var loginInfo : LoginViewModel
     
-    init(_ loginInfo: LoginViewModel = LoginViewModel(domain: "http://192.168.10.114:8031/", name: "admin", pwd: "111111")) {
+    init(_ loginInfo: LoginViewModel = LoginViewModel(domain: "http://192.168.10.114:8031", name: "admin", pwd: "111111")) {
         self.loginInfo = loginInfo
     }
     
@@ -21,14 +21,18 @@ struct LoginPage: View {
         SettingStack(embedInNavigationStack: true) {
             SettingPage(title:"添加账号") {
                 SettingCustomView {
-                    Image("logo")
-                        .frame(maxWidth: .infinity)
-                        .padding(32)
+                    ZStack{
+                        Image("logo")
+                            .resizable()
+                            .frame(width: 80, height: 80)
+                            .cornerRadius(14)   // 设置圆角半径
+                            .padding(32)
+                    }.frame(maxWidth: .infinity)
                 }
                 SettingGroup{
                     SettingTextField(title: "服务器", text: $loginInfo.domain, placeholder: "例 192.168.1.100:8031")
                     SettingTextField(title: "用户名", text: $loginInfo.name, placeholder: "请输入用户名")
-                    SettingTextField(title: "密码", text: $loginInfo.pwd, placeholder: "请输入密码")
+                    SettingTextField(title: "密码", text: $loginInfo.pwd, placeholder: "请输入密码", type: .password)
                 }
                 SettingGroup{
                     if self.loginInfo.editLoggedIndex == nil{
@@ -40,13 +44,13 @@ struct LoginPage: View {
                 SettingCustomView {
                     HStack{
                         Button(action: {
-                            LoggedPage().relaunch()
+                            LoggedPage(embedInNavigationStack: true).relaunch()
                         }){
                             Text("选择账号").font(.subheadline).foregroundColor(.secondary)
                         }
                         Spacer()
                         Button(action: {
-                            //TODO:
+                            Toast.show("忘记密码请联系管理员")
                         }){
                             Text("忘记密码").font(.subheadline).foregroundColor(.secondary)
                         }
@@ -89,12 +93,10 @@ struct LoginPage: View {
             Toast.show("密码必填")
             return
         }
-        //        if (pwd.length != 32) {
-        //          pwd = pwd.md5;
-        //        }
-        pwd = pwd.md5
+        if pwd.count != 32 {//如果密码已经是32位则无需再转md5
+            pwd = pwd.md5
+        }
         
-        //
         var loggedUserList = SettingShared.loggedUserList;
         
         //登录信息
