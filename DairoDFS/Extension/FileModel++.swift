@@ -70,13 +70,20 @@ extension FileModel{
     ///这是否是一个视频文件
     var isVideo: Bool{
         let lowerName = self.name.lowercased()
-        if lowerName.hasSuffix(".mov")
-            || lowerName.hasSuffix(".mp4") {
-            return true
-        }
-        return false
+        return lowerName.hasSuffix(".mov")
+            || lowerName.hasSuffix(".mp4")
     }
     
+    ///这是否是一个图片文件
+    var isImage: Bool{
+        let lowerName = self.name.lowercased()
+        return lowerName.hasSuffix(".jpg")
+        || lowerName.hasSuffix(".jpeg")
+        || lowerName.hasSuffix(".png")
+        || lowerName.hasSuffix(".heic")
+        || lowerName.hasSuffix(".gif")
+        || lowerName.hasSuffix(".psd")
+    }
     
     /// 是否文件夹
     var isFolder: Bool{

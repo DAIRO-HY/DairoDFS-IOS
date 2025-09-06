@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import DairoUI_IOS
 
 struct FileView: View {
     @EnvironmentObject var vm: FileViewModel
@@ -16,7 +17,7 @@ struct FileView: View {
                     
                     //是否在剪切板标记
                     let isMoveFlag = self.vm.clipboardType == 1 && self.vm.clipboardSet.contains(item.fm.id)
-                    Button(action: { self.onFileClick(item) }){
+                    Button(action: { self.vm.onFileClick(item) }){
                         FileListItemView(item, isSelectMode: self.vm.isSelectMode)
                     }
                     .buttonStyle(.row)
@@ -25,17 +26,11 @@ struct FileView: View {
             }
         }
         .frame(maxHeight: .infinity)
-    }
-    
-    /// 文件点击事件
-    private func onFileClick(_ item: FileEntity){
-        if self.vm.isSelectMode{
-            item.isSelected.toggle()
-            self.vm.selectedCount += (item.isSelected ? 1 : -1)
-            return
-        }
-        if item.fm.isFolder{//如果这是一个文件夹
-            self.vm.loadSubFile(SettingShared.lastOpenFolder + "/" + item.fm.name)
+        .fullScreenCover(isPresented: self.$vm.showViewerPage) {
+            let viewModel = self.vm.getAlbumViewerViewModel()
+            RootView{
+                AlbumViewerPage(viewModel, self.$vm.showViewerPage)
+            }
         }
     }
 }

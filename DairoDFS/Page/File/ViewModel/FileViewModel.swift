@@ -25,6 +25,9 @@ class FileViewModel : ObservableObject{
     ///是否添加视图
     @Published var isShowAddView = false
     
+    /// 显示查看相册页面
+    @Published var showViewerPage = false
+    
     /// 剪切板中的文件ID
     var clipboardSet = Set<Int64>()
     
@@ -33,6 +36,9 @@ class FileViewModel : ObservableObject{
     
     /// 剪切板类型 1:剪切 2:复制 
     @Published var clipboardType: Int8 = 0
+    
+    /// 记录当前点击的文件id
+    private var currentClickFileId: Int64 = -1
     
     init(){
         self.reload()
@@ -72,6 +78,25 @@ class FileViewModel : ObservableObject{
             //        this.redraw();
             self.clearSelected()
             self.isSelectMode = false
+        }
+    }
+    
+    
+    /// 文件点击事件
+    func onFileClick(_ item: FileEntity){
+        if self.isSelectMode{
+            item.isSelected.toggle()
+            self.selectedCount += (item.isSelected ? 1 : -1)
+            return
+        }
+        if item.fm.isFolder{//如果这是一个文件夹
+            self.loadSubFile(SettingShared.lastOpenFolder + "/" + item.fm.name)
+            return
+        }
+        if item.fm.isImage || item.fm.isVideo{//这个文件是图片或者视频
+            self.currentClickFileId = item.fm.id
+            self.showViewerPage = true
+            return
         }
     }
     
@@ -211,6 +236,29 @@ class FileViewModel : ObservableObject{
             Toast.show("删除成功")
             self.reload()
         }
+    }
+    
+    /// 获取相册查看页面的ViewModel
+    func getAlbumViewerViewModel() -> AlbumViewerViewModel{
+        
+        //当前点击的文件在所有图片和视频中的序号
+        var index = -1
+        var fileModels = [FileModel]()
+        for it in self.entities{
+            let fm = it.fm
+            if fm.isFolder{
+                continue
+            }
+            if !fm.isVideo && !fm.isImage{
+                continue
+            }
+            if fm.id == self.currentClickFileId{
+                index = fileModels.count
+            }
+            fileModels.append(fm)
+        }
+        let viewModel = AlbumViewerViewModel(fileModels, index)
+        return viewModel
     }
     
     deinit{

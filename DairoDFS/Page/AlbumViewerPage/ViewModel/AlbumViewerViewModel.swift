@@ -69,9 +69,6 @@ class AlbumViewerViewModel: ObservableObject{
     var displayW1: CGFloat
     var displayH1: CGFloat
     
-    // 创建一个 AVPlayer 实例
-    @Published var videoPlayer: AVPlayer?
-    
     ///文件Model
     ///private var mFileModel: FileModel?
     var fm: FileModel{
@@ -86,6 +83,30 @@ class AlbumViewerViewModel: ObservableObject{
     
     /// 下载完成之后是否保存到系统相册
     private var isSaveToAlbum = false
+    
+    /// 是否显示操作按钮
+    @Published var showActionView = true
+    
+    /// 视频播放计时器
+    var videoTimer: Timer?
+    
+    /// 记录进度条是否正在拖拽中
+    var videoSliderDarging = false
+    
+    // 创建一个 AVPlayer 实例
+    @Published var videoPlayer: AVPlayer?
+    
+    /// 视频总时间
+    @Published var videoDuration = 1.0
+    
+    /// 视频当前播放时间
+    @Published var videoCurrentTime = 0.0
+    
+    /// 视频是否正在播放
+    @Published var videoIsPlaying = false
+    
+    /// 标记视频是否播放过
+    @Published var videoIsPlayed = false
     
     init(_ fileModels: [FileModel], _ index: Int){
         let bounds = UIScreen.main.bounds
@@ -151,11 +172,23 @@ class AlbumViewerViewModel: ObservableObject{
         self.notShowWidth = self.screenWidth * CGFloat(self.currentIndex)
         self.currentOffsetPosition = .zero
         self.zoomAmount = 1.0
+        
+        //停止视频计时器
+        self.videoTimer?.invalidate()
+        self.videoIsPlaying = false
+        self.videoIsPlayed = false
+        self.videoPlayer?.pause()
+        self.videoPlayer?.replaceCurrentItem(with: nil)
+        self.videoPlayer = nil
+
         self.isVideo = self.fm.isVideo
+        
+        if let videoPlayer{
+            videoPlayer.pause()
+        }
+        
         if self.isVideo{//视频时
-            
-            //初始化播放器
-            self.videoPlayer = AVPlayer(url: URL(string:  self.fm.preview)!)
+//            self.initVideo()
         } else {//图片时
             self.loadPicture()
         }
@@ -239,6 +272,113 @@ class AlbumViewerViewModel: ObservableObject{
         }
     }
     
+    private func initVideo(){
+        
+        //初始化播放器
+        self.videoPlayer = AVPlayer(url: URL(string:  self.fm.preview)!)
+        self.startVideoTimer()
+        
+        // 监听 status 变化
+//        avPlayer.currentItem!.observe(\.status, options: [.new, .initial]) { item, _ in
+//            if item.status == .readyToPlay {//准备完成,此时才可以获取视频总时间
+//                let total = item.duration.seconds
+//                if !total.isNaN {
+//                    self.videoDuration = total * 1000
+//                    //                    duration = total
+//                    self.addVideoCurrentTimeListen()
+//                }
+//            }
+//        }
+    }
+    
+//    /// 给视频添加当前播放进度
+//    private func addVideoCurrentTimeListen(){
+//        self.videoPlayerTimerToken = self.videoPlayer!.addPeriodicTimeObserver(forInterval: CMTime(seconds: 0.5, preferredTimescale: 600), queue: .main){
+//            self.videoCurrentTime = $0.seconds * 1000
+//#if DEBUG
+//            print("-->time:\($0.seconds)")
+//#endif
+//        }
+//    }
+
+    
+    /// 启动视频计时器
+//    private func startVideoTimer(){
+//        self.videoTimerLock.lock()
+//        if self.isVideoTimerRunning{//计时器正在运行
+//            self.videoTimerLock.unlock()
+//            return
+//        }
+//        self.isVideoTimerRunning = true
+//        self.videoTimerLock.unlock()
+//        Task{@MainActor in
+//            while true{
+//                
+//                //间隔0.25秒
+//                await Task.sleep(250_000_000)
+//                guard let player = self.videoPlayer else{
+//                    break
+//                }
+//                guard let item = player.currentItem else{
+//                    continue
+//                }
+//                let duration = item.duration.seconds
+//                if duration.isNaN{
+//                    continue
+//                }
+//                self.videoDuration = duration * 1000
+//                self.videoCurrentTime = item.currentTime().seconds * 1000
+//            }
+//            self.videoTimerLock.lock()
+//            self.isVideoTimerRunning = false
+//            self.videoTimerLock.unlock()
+//        }
+//    }
+    
+    
+    /// 启动视频计时器
+    func startVideoTimer(){
+        self.videoTimer?.invalidate()
+        self.videoTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { t in
+            #if DEBUG
+                        print("-->time:开始一次循环")
+            #endif
+            if self.videoSliderDarging{//进度条正在退拽中
+                return
+            }
+            guard let player = self.videoPlayer else{
+                self.videoTimer?.invalidate()
+                return
+            }
+            guard let item = player.currentItem else{
+                return
+            }
+            let duration = item.duration.seconds
+            if duration.isNaN{
+                return
+            }
+            self.videoDuration = duration * 1000
+            self.videoCurrentTime = item.currentTime().seconds * 1000
+        }
+    }
+    
+    /// 播放或者暂停点击事件
+    func onPlayOrPauseClick(){
+        self.videoIsPlayed = true
+        if self.videoIsPlaying{
+            self.videoPlayer?.pause()
+            self.videoTimer?.invalidate()
+        } else {
+            if self.videoPlayer == nil{
+                
+                //初始化播放器
+                self.videoPlayer = AVPlayer(url: URL(string:  self.fm.preview)!)
+            }
+            self.videoPlayer?.play()
+            self.startVideoTimer()
+        }
+        self.videoIsPlaying.toggle()
+    }
     
     /**
      计算拖拽偏移位置
@@ -421,6 +561,6 @@ class AlbumViewerViewModel: ObservableObject{
     
     
     deinit{
-        print("-->ImageViewerViewModel.deinit")
+        print("-->AlbumViewerViewModel.deinit")
     }
 }

@@ -72,18 +72,6 @@ struct AlbumViewerPage: View {
         self._showViewerPage = showViewerPage
     }
     
-    //    private func updateVm(){
-    //        if self.vm.currentIndex > 0{
-    //            dragVM1.setFileModel(self.vm.fileModels[self.vm.currentIndex - 1])
-    //        }
-    //        if self.vm.currentIndex >= 0 && self.vm.currentIndex <= self.vm.maxIndex{
-    //            dragVM2.setFileModel(self.vm.fileModels[self.vm.currentIndex])
-    //        }
-    //        if self.vm.currentIndex < self.vm.maxIndex{
-    //            dragVM3.setFileModel(self.vm.fileModels[self.vm.currentIndex + 1])
-    //        }
-    //    }
-    
     var body: some View {
         
         //为了实现懒加载,这里始终只显示上一张,本张,下一张共3张图片
@@ -103,40 +91,63 @@ struct AlbumViewerPage: View {
             .frame(width: self.vm.screenWidth, alignment: .leading)
             .offset(x: self.vm.hStackOffset)
             .animation(.linear(duration: AlbumViewerViewModel.ANIMATION_TIME), value: dragingOffset == 0)
-            .onTapGesture(count: 2) {//双击事件
-                self.vm.doubleClick()
-            }
-            .gesture(
-                MagnificationGesture()
-                    .onChanged { amount in
-                        //两手指放到屏幕上没有开始缩放时,amount的值是1,代表当前大小的1倍缩放
-                        self.vm.zoomingAmount = amount
-                    }
-                    .onEnded { amount in
-                        self.vm.zoomAmount *= self.vm.zoomingAmount
-                        if self.vm.zoomAmount > 8.0 {//放大倍数不能大于4倍
-                            withAnimation {
-                                self.vm.zoomAmount = 8.0
+            
+            //避免事件穿透,专门用一个视图来操作屏幕
+            //另外一个目的是禁止默认视频播放控件
+            Color.clear.contentShape(Rectangle()).frame(width: self.vm.screenWidth, height: self.vm.screenHeight)
+                .onTapGesture(count: 2) {//双击事件
+                    self.vm.doubleClick()
+                }
+                .onTapGesture(count: 1) {//单击事件
+                    self.vm.showActionView.toggle()
+                }
+                .gesture(
+                    MagnificationGesture()
+                        .onChanged { amount in
+                            //两手指放到屏幕上没有开始缩放时,amount的值是1,代表当前大小的1倍缩放
+                            self.vm.zoomingAmount = amount
+                        }
+                        .onEnded { amount in
+                            self.vm.zoomAmount *= self.vm.zoomingAmount
+                            if self.vm.zoomAmount > 8.0 {//放大倍数不能大于4倍
+                                withAnimation {
+                                    self.vm.zoomAmount = 8.0
+                                }
                             }
-                        }
-                        self.vm.zoomingAmount = 1
-                        withAnimation {
-                            self.vm.fixCropImage()
-                        }
-                    }.simultaneously(with: DragGesture()
-                        .updating($dragingOffset){ value, state, _ in
-                            state = value.translation.width
-                            self.vm.currentOffsetPosition = self.vm.computeDragPosition(value)
-                        }
-                        .onEnded { value in
-                            self.vm.currentOffsetPosition = self.vm.computeDragPosition(value)
-                            self.vm.preOffsetPosition = self.vm.currentOffsetPosition
-                            self.vm.fixCropImage()
-                        }
-                    )
-            )
-            AlbumViewerOptionView().environmentObject(self.vm)
-            AlbumViewerTopBarView(showViewerPage: self.$showViewerPage).environmentObject(self.vm)
+                            self.vm.zoomingAmount = 1
+                            withAnimation {
+                                self.vm.fixCropImage()
+                            }
+                        }.simultaneously(with: DragGesture()
+                            .updating($dragingOffset){ value, state, _ in
+                                state = value.translation.width
+                                self.vm.currentOffsetPosition = self.vm.computeDragPosition(value)
+                            }
+                            .onEnded { value in
+                                self.vm.currentOffsetPosition = self.vm.computeDragPosition(value)
+                                self.vm.preOffsetPosition = self.vm.currentOffsetPosition
+                                self.vm.fixCropImage()
+                            }
+                        )
+                )
+            if self.vm.showActionView{//显示操作视图
+                AlbumViewerOptionView().environmentObject(self.vm)
+                AlbumViewerTopBarView(showViewerPage: self.$showViewerPage).environmentObject(self.vm)
+            }
+            
+            if self.vm.isVideo{
+                if !self.vm.videoIsPlaying || self.vm.showActionView{//暂停中或者显示操作视图中,显示播放控制按钮
+                    
+                    //播放/暂停按钮
+                    Button(action: self.vm.onPlayOrPauseClick){
+                        Image(systemName: self.vm.videoIsPlaying ? "pause.fill" : "play.fill")
+                            .resizable()
+                            .frame(width: 40, height: 40)
+                            .foregroundColor(.white)
+                            .shadow(color: .black, radius: 3, x: 2, y: 2)
+                    }
+                }
+            }
         }
         //        .frame(maxHeight: .infinity)
         .edgesIgnoringSafeArea(.all)

@@ -5,6 +5,7 @@
 //  Created by zhoulq on 2025/04/30.
 //
 
+import AVFoundation
 import SwiftUI
 import DairoUI_IOS
 
@@ -20,6 +21,37 @@ struct AlbumViewerOptionView: View {
         VStack(spacing: 0){
             Spacer()
             Divider()
+            if self.vm.isVideo{
+                VStack{
+                    Spacer().frame(height: 10)
+                    Slider(
+                        value: self.$vm.videoCurrentTime,
+                        in:0 ... self.vm.videoDuration,
+                        step: 1,
+                        onEditingChanged:  { flag in//true:代表编辑开始。 false:代表编辑结束
+#if DEBUG
+                            debugPrint("-->拖动编辑状态:\(flag)  值:\(self.vm.videoCurrentTime)")
+#endif
+                            self.vm.videoSliderDarging = flag
+                                                if !flag{//拖动结束
+                                                    let time = CMTime(seconds: self.vm.videoCurrentTime / 1000, preferredTimescale: 600)
+                                                    self.vm.videoPlayer?.seek(to: time)
+                                                }
+                        }
+                    )
+                    HStack{
+                        Text(self.vm.videoCurrentTime.timeFormat).font(.subheadline)
+                        Spacer()
+                        Text(self.vm.videoDuration.timeFormat).font(.subheadline)
+                    }
+                    .foregroundColor(.white)
+                    
+                    Spacer().frame(height: 10)
+                }
+                .padding(.horizontal, 8)
+                .background(Color.gl.bgPrimary)
+            }
+            
             HStack{
                 BottomOptionButton("分享", icon: "square.and.arrow.up", action: self.vm.onShareClick)
                 BottomOptionButton("删除", icon: "trash"){
@@ -67,7 +99,14 @@ struct AlbumViewerOptionView: View {
                 BottomOptionButton("保存相册", icon: "rectangle.stack.badge.plus"){
                     self.vm.onDownloadOnlyClick(true)
                 }
-            }.background(Color.gl.bgPrimary)
+//                BottomOptionButton("播放", icon: "square.and.arrow.up"){
+//                    self.vm.videoPlayer?.play()
+//                }
+//                BottomOptionButton("暂停", icon: "square.and.arrow.up"){
+//                    self.vm.videoPlayer?.pause()
+//                }
+            }
+            .background(Color.gl.bgPrimary)
             Color.gl.bgPrimary.frame(height: 40)
         }
         .frame(maxHeight: .infinity)
@@ -80,7 +119,7 @@ struct AlbumViewerOptionView: View {
 //}
 //
 //struct AlbumViewerOptionTestView: View {
-//    
+//
 //    @StateObject
 //    private var vm = AlbumViewerViewModel()
 //    var body: some View {
