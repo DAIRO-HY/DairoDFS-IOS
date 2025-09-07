@@ -53,7 +53,7 @@ struct AlbumViewerOptionView: View {
             }
             
             HStack{
-                BottomOptionButton("分享", icon: "square.and.arrow.up", action: self.vm.onShareClick)
+//                BottomOptionButton("分享", icon: "square.and.arrow.up", action: self.vm.onShareClick)
                 BottomOptionButton("删除", icon: "trash"){
                     self.showDeleteAlert = true
                 }

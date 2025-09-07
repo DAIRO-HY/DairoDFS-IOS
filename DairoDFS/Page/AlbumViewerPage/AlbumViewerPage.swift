@@ -139,7 +139,7 @@ struct AlbumViewerPage: View {
                 if !self.vm.videoIsPlaying || self.vm.showActionView{//暂停中或者显示操作视图中,显示播放控制按钮
                     
                     //播放/暂停按钮
-                    Button(action: self.vm.onPlayOrPauseClick){
+                    Button(action: self.vm.onVideoPlayOrPauseClick){
                         Image(systemName: self.vm.videoIsPlaying ? "pause.fill" : "play.fill")
                             .resizable()
                             .frame(width: 40, height: 40)

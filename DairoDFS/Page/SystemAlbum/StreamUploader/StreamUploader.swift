@@ -216,7 +216,7 @@ class StreamUploader: NSObject,
     ///开始上传
     private func uploadStream(){
         self.progress("准备上传")
-        let serverURL = SettingShared.domainNotNull + "/app/file_upload/by_stream/" + self.md5!
+        let serverURL = SettingShared.domainNotNull + "/app/file_upload/by_stream/" + self.md5! + "?_token=" + SettingShared.token
         let url = URL(string: serverURL)!
         var request = URLRequest(url: url,
                                  cachePolicy: .reloadIgnoringLocalCacheData,

@@ -31,6 +31,7 @@ struct MinePage: View {
                 NavigationLink(destination: LoggedPage()){
                     self.topLogoView
                 }
+                Spacer().frame(height: 10)
                 SettingStack(embedInNavigationStack: false){
                     SettingPage{
                         SettingGroup{

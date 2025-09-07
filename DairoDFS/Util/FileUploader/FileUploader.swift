@@ -113,7 +113,7 @@ class FileUploader: NSObject,
     
     ///开始上传
     private func uploadStream(){
-        let serverURL = SettingShared.domainNotNull + "/app/file_upload/by_stream/" + self.fileMD5!
+        let serverURL = SettingShared.domainNotNull + "/app/file_upload/by_stream/" + self.fileMD5! + "?_token=" + SettingShared.token
         let url = URL(string: serverURL)!
         var request = URLRequest(url: url,
                                  cachePolicy: .reloadIgnoringLocalCacheData,

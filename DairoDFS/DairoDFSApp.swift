@@ -29,6 +29,12 @@ struct DairoDFSApp: App {
         //测试用
 //        let ids = DownloadDBUtil.selectIdByUsedDate(Int(Date().timeIntervalSince1970))
 //        DownloadManager.delete(ids)
+        
+        
+        //设置后台播放,否则在静音模式下,导致播放视频时没有声音
+        let audioSession = AVAudioSession.sharedInstance()
+        try? audioSession.setCategory(AVAudioSession.Category.playback)
+        try? audioSession.setActive(true)
     }
     var body: some Scene {
         WindowGroup {
