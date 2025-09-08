@@ -88,13 +88,14 @@ class StreamUploader: NSObject,
     
     ///上传
     func upload() {
-        switch self.uploadMode {
-        case .file://文件上传时
-            self.computeMd5(false, self.uploadByMd5_step1)
-        case .album:
-            self.computeMd5(false, self.checkExists)
+        Task.detached{//这里一定要开启异步任务,否则可能导致死锁
+            switch self.uploadMode {
+            case .file://文件上传时
+                self.computeMd5(false, self.uploadByMd5_step1)
+            case .album:
+                self.computeMd5(false, self.checkExists)
+            }
         }
-        
     }
     
     ///计算图文件MD5

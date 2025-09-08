@@ -83,6 +83,8 @@ extension FileModel{
         || lowerName.hasSuffix(".heic")
         || lowerName.hasSuffix(".gif")
         || lowerName.hasSuffix(".psd")
+        || lowerName.hasSuffix(".cr3")
+        || lowerName.hasSuffix(".tiff")
     }
     
     /// 是否文件夹

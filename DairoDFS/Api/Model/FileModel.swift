@@ -14,12 +14,14 @@ struct FileModel : Codable {
   var fileFlag: Bool
 
   	/** 创建日期 **/
-  var date: String
+	//Date string `json:"date"`
+  var date: Int64
 
   	/** 缩率图 **/
   var thumb: String
 
-  	/** 其他属性1,视频时为视频总时长 **/
+  	/** 其他属性1,视频时为视频总时长(毫秒) **/
+	//Other1 string `json:"other1"`
   var other1: String
 
 }

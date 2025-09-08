@@ -28,7 +28,7 @@ struct FileListItemView: View {
                 Text(self.dfsFile.fm.name)
                     .font(.body)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                Text(self.dfsFile.fm.date + "    " + self.dfsFile.fm.size.fileSize)
+                Text(Date(timeIntervalSince1970: Double(self.dfsFile.fm.date) / 1000).format() + "    " + self.dfsFile.fm.size.fileSize)
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -82,7 +82,7 @@ private func getDfsFileBean() -> FileEntity{
             name: "文件名",
             size: 123456789,
             fileFlag: true,
-            date: "2024-05-05 23:00:01",
+            date: 1234567890,
             thumb: "http://192.168.10.112:8031/d/oq8221/WechatIMG2.jpg",
             other1: ""
         )

@@ -25,8 +25,8 @@ struct AlbumGridViewItem: View {
     var body: some View {
         ZStack(alignment: .bottomTrailing){
             self.thumb
-            if !self.entity.fm.other1.isEmpty{//如果有视频时间
-                Text(self.entity.fm.other1)
+            if let duration = Int(self.entity.fm.other1) , duration > 0{//如果有视频时间
+                Text(duration.timeFormat)
                     .font(.subheadline)
                     .foregroundColor(.white)
                     .offset(x: -5, y: -5)
@@ -77,7 +77,7 @@ private func getTestEntity() -> AlbumEntity{
             name: "文件名",
             size: 123456789,
             fileFlag: true,
-            date: "123456",
+            date: 123456,
             thumb: "http://192.168.10.112:8031/d/oq8221/WechatIMG2.jpg",
             other1:"12:00"
         )
