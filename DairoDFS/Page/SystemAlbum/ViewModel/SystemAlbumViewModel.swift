@@ -35,7 +35,6 @@ class SystemAlbumViewModel : ObservableObject{
     
     init(_ mode: UploadMode){
         self.uploadMode = mode
-        self.fetchPhotos()
     }
     
     func fetchPhotos() {
@@ -63,26 +62,28 @@ class SystemAlbumViewModel : ObservableObject{
     
     //获取文件信息
     private func getAssetFileExtension(_ asset: PHAsset, _ index: Int) -> SystemAlbumBean {
-        //        var ext = ""
-        //        let resources = PHAssetResource.assetResources(for: asset)
+        //                var ext = ""
+        let resources = PHAssetResource.assetResources(for: asset)
         //
-        //        var name = ""
-        //        if let resource = resources.first {
-        //            let originalFilename = resource.originalFilename
-        //            ext = (originalFilename as NSString).pathExtension.lowercased()
-        //            name = originalFilename
-        //        }
-        //        var mediaType = ""
-        //        if asset.mediaSubtypes.contains(.photoLive) {
-        //            // 实况照片
-        //            mediaType = "Live Photo"
-        //        } else if asset.mediaType == .image {
-        //            // 普通图片
-        //            mediaType = "Image"
-        //        } else if asset.mediaType == .video {
-        //            // 视频
-        //            mediaType = "Video"
-        //        }
+        //                var name = ""
+        //                if let resource = resources.first {
+        //                    let originalFilename = resource.originalFilename
+        //                    ext = (originalFilename as NSString).pathExtension.lowercased()
+        //                    name = originalFilename
+        //                }
+        let resource = resources.first!
+        let locallyAvailable = resource.value(forKey: "locallyAvailable")! as! Bool
+        var mediaType = ""
+        if asset.mediaSubtypes.contains(.photoLive) {
+            // 实况照片
+            mediaType = "Live Photo"
+        } else if asset.mediaType == .image {
+            // 普通图片
+            mediaType = "Image"
+        } else if asset.mediaType == .video {
+            // 视频
+            mediaType = "Video"
+        }
         //       return AlbumSyncBean(identifier: asset.localIdentifier, asset: asset, mediaType: mediaType, ext: ext, name: name)
         
         //视频时长
@@ -94,10 +95,11 @@ class SystemAlbumViewModel : ObservableObject{
             identifier: asset.localIdentifier,
             index: index,
             asset: asset,
-            mediaType: "mediaType",
-            ext: "ext",
-            name: "name",
-            duration: duration
+            mediaType: mediaType,
+            ext: "",
+            name: "",
+            duration: duration,
+            locallyAvailable: locallyAvailable
         )
     }
     
@@ -105,6 +107,7 @@ class SystemAlbumViewModel : ObservableObject{
     func onItemClick(_ item: SystemAlbumBean){
         self.checkedCount += (item.checked ? -1 : 1)
         self.albumList[item.index].checked = !item.checked
+        print(PHAssetResource.assetResources(for: item.asset))
     }
     
     ///上传按钮点击事件

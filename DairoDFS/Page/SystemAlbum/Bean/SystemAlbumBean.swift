@@ -30,6 +30,9 @@ struct SystemAlbumBean{
     //视频时长
     let duration: String?
     
+    //是否在本地(已经从iCloud下载)
+    let locallyAvailable: Bool
+    
     //文件的md5
     var md5: String?
     

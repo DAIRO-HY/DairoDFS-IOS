@@ -234,6 +234,9 @@ class FileViewModel : ObservableObject{
         let paths = self.entities.filter{$0.isSelected}.map{folder + "/" + $0.fm.name}
         FilesApi.delete(paths: paths).post {
             Toast.show("删除成功")
+            
+            //当前选中的数量归零
+            self.selectedCount = 0
             self.reload()
         }
     }

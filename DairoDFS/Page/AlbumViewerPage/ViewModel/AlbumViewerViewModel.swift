@@ -54,7 +54,7 @@ class AlbumViewerViewModel: ObservableObject{
     @Published var uiImage: UIImage? = nil
     
     ///缩略图
-    @Published var thumbImage: UIImage? = nil
+    @Published var thumbImage1: UIImage? = nil
     
     /// 下载进度信息
     @Published var progress = ""
@@ -77,6 +77,14 @@ class AlbumViewerViewModel: ObservableObject{
     
     //这是否是一个视频
     var isVideo = false
+    
+    //是否图片
+    var isImage: Bool{
+        return !self.isVideo
+    }
+    
+   /// 标记当前加载的图片是否是原图
+   @Published var isBigPreview = false
     
     /// 标记是否下载文件
     @Published var isDownloadFlag = false
@@ -196,20 +204,25 @@ class AlbumViewerViewModel: ObservableObject{
     
     ///加载图片
     func loadPicture(){
-        let url = self.fm.preview
+        
+        //优先加载预览图片
         if let imagePath = DownloadManager.getDownloadedPath(self.fm.previewDownloadId){
             if let uiImage = UIImage(contentsOfFile: imagePath){
-                self.thumbImage = nil
+                self.isBigPreview = true
                 self.initImage(uiImage)
             }
             return
         }
+        self.isBigPreview = false
         
         //先显示缩略图
         if let thumbPath = DownloadManager.getDownloadedPath(self.fm.thumbDownloadId){
-            self.thumbImage = UIImage(contentsOfFile: thumbPath)
+            if let uiImage = UIImage(contentsOfFile: thumbPath){
+                self.initImage(uiImage)
+            }
+        } else {//取加载缩略图
+            DownloadManager.cache(self.fm.thumbDownloadId, self.fm.thumbUrl)
         }
-        DownloadManager.cache(self.fm.previewDownloadId, url)
     }
     
     /**
@@ -242,6 +255,7 @@ class AlbumViewerViewModel: ObservableObject{
     
     ///初始化图片显示
     private func initImage(_ uiImage: UIImage){
+        self.progress = ""
         self.uiImage = uiImage
         
         //图片宽高比
@@ -500,6 +514,13 @@ class AlbumViewerViewModel: ObservableObject{
         //取消下载模式
         self.isDownloadFlag = false
         self.isSaveToAlbum = false
+    }
+    
+    ///  加载原图点击事件
+    func onLoadBigPreviewClick(){
+        
+        //请求加载原图
+        DownloadManager.cache(self.fm.previewDownloadId, self.fm.preview)
     }
     
     

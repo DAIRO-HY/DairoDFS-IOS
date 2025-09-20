@@ -60,9 +60,20 @@ class StreamUploader: NSObject,
     /// 上传模式
     private let uploadMode: UploadMode
     
+    /// 这是一张实况照片
+    private let isLivePhoto: Bool
+    
     private lazy var session: URLSession = URLSession(configuration: .default,
-                                              delegate: self,
-                                              delegateQueue: nil)
+                                                      delegate: self,
+                                                      delegateQueue: nil)
+    
+    init(_ asset: PHAsset, _ isOnlyCheck: Bool, mode: UploadMode) {
+        self.asset = asset
+        self.isOnlyCheck = isOnlyCheck
+        self.uploadMode = mode
+        self.identifier = asset.localIdentifier
+        self.isLivePhoto = asset.mediaSubtypes.contains(.photoLive)
+    }
     
     /// 文件上传保存路径
     private var dfsPath: String{
@@ -79,16 +90,41 @@ class StreamUploader: NSObject,
         }
     }
     
-    init(_ dasset: PHAsset, _ isOnlyCheck: Bool, mode: UploadMode) {
-        self.asset = dasset
-        self.isOnlyCheck = isOnlyCheck
-        self.uploadMode = mode
-        self.identifier = dasset.localIdentifier
+    /// 是否一次性读取所有数据标记
+    private var isReadAllFlag: Bool{
+        return self.fileSize < 100 * 1024 * 1024
+//        return false
+    }
+    
+    ///获取文件大小
+    private func getFileSize() -> Int64{
+        let resources = PHAssetResource.assetResources(for: self.asset)
+        var fileSize: Int64 = 0
+        if self.isLivePhoto{//实况照片时
+            
+            // 图片的文件
+            if let size = resources.first{$0.type == .photo}?.value(forKey: "fileSize") as? CLong{
+                fileSize += Int64(size)
+            }
+            
+            // 视频的文件
+            if let size = resources.first{$0.type == .pairedVideo}?.value(forKey: "fileSize") as? CLong{
+                fileSize += Int64(size)
+            }
+        } else {
+            
+            // 图片的文件
+            if let size = resources.first?.value(forKey: "fileSize") as? CLong{
+                fileSize = Int64(size)
+            }
+        }
+        return fileSize
     }
     
     ///上传
     func upload() {
         Task.detached{//这里一定要开启异步任务,否则可能导致死锁
+            self.progress("文件校验中")
             switch self.uploadMode {
             case .file://文件上传时
                 self.computeMd5(false, self.uploadByMd5_step1)
@@ -102,15 +138,24 @@ class StreamUploader: NSObject,
     /// - isIcloudAllowed 是否允许从iCloud下载
     /// - callback 计算完成之后的回调函数
     private func computeMd5(_ isIcloudAllowed: Bool, _ callback: @escaping () -> Void) {
-        if self.asset.mediaSubtypes.contains(.photoLive) {
+        if self.isLivePhoto {
             // 实况照片
             self.finish("实况照片暂不支持")
             return
         }
-        self.progress("文件校验中")
         if let md5 = PHAssetUploadManager.getMD5(self.identifier){
             self.md5 = md5
             callback()
+            return
+        }
+        if self.isReadAllFlag{// 如果文件较小,则一次性全部读取
+            self.readAll{
+                
+                //得到文件的md5
+                self.md5 = self.allData.md5
+                PHAssetUploadManager.setMD5(self.identifier, self.md5!)
+                callback()
+            }
             return
         }
         
@@ -152,6 +197,127 @@ class StreamUploader: NSObject,
                 self.md5 = digest.map { String(format: "%02x", $0) }.joined()
                 PHAssetUploadManager.setMD5(self.identifier, self.md5!)
                 callback()
+            }
+        })
+    }
+    
+    /// 所有数据
+    private var allData = Data()
+    
+//    /// 一次性读取所有数据
+//    private func readAll(_ isIcloudAllowed: Bool = false, _ callback: @escaping () -> Void){
+//        if self.allData != nil{
+//            callback()
+//            return
+//        }
+//        
+//        //用来存储所有数据
+//        var allData = Data()
+//        
+//        // 设置读取选项（可设置 isNetworkAccessAllowed 等）
+//        let options = PHAssetResourceRequestOptions()
+//        options.isNetworkAccessAllowed = isIcloudAllowed
+//        if self.isLivePhoto{//如果这是一张实况照片
+//            print(PHAssetResource.assetResources(for: self.asset))
+////            let readLivePhotoDataFunc: (_ index: Int)->() = { index in
+////                self.assetDataRequestId = PHAssetResourceManager.default().requestData(for: PHAssetResource.assetResources(for: self.asset).first!, options: options, dataReceivedHandler: { data in
+////                    allData.append(contentsOf: data)
+////                }, completionHandler: { error in
+////                    if let error = error as NSError? {
+////                        if error.domain == PHPhotosErrorDomain && error.code == 3164{//文件在iCloud中
+////                            if isIcloudAllowed{
+////                                self.finish("从iCloud同步失败")
+////                                return
+////                            }
+////                            self.progress("从iCloud下载中")
+////                            self.readAll(true, callback)
+////                            return
+////                        }
+////                        if error.code == NSUserCancelledError {//请求被手动取消
+////                            self.finish("已取消")
+////                            return
+////                        }
+////                        self.finish("读取失败: \(error)")
+////                    } else {
+////                        self.allData = allData
+////                        callback()
+//////                        readLivePhotoDataFunc(2)
+////                    }
+////                })
+////            }
+////            readLivePhotoDataFunc(1)
+//            return
+//        }
+//        
+//        // 读取资源数据并计算 MD5
+//        self.assetDataRequestId = PHAssetResourceManager.default().requestData(for: PHAssetResource.assetResources(for: self.asset).first!, options: options, dataReceivedHandler: { data in
+//            allData.append(contentsOf: data)
+//        }, completionHandler: { error in
+//            if let error = error as NSError? {
+//                if error.domain == PHPhotosErrorDomain && error.code == 3164{//文件在iCloud中
+//                    if isIcloudAllowed{
+//                        self.finish("从iCloud同步失败")
+//                        return
+//                    }
+//                    self.progress("从iCloud下载中")
+//                    self.readAll(true, callback)
+//                    return
+//                }
+//                if error.code == NSUserCancelledError {//请求被手动取消
+//                    self.finish("已取消")
+//                    return
+//                }
+//                self.finish("读取失败: \(error)")
+//            } else {
+//                self.allData = allData
+//                callback()
+//            }
+//        })
+//    }
+    
+    private func readAll(_ index: Int = 1, _ isIcloudAllowed: Bool = false, _ callback: @escaping () -> Void){
+        if index == 1 && !self.allData.isEmpty{//如果文件已经全部读取完成
+            callback()
+            return
+        }
+        let resource: PHAssetResource
+        if self.isLivePhoto{//如果这是实况照片
+            if index == 1{
+                resource = PHAssetResource.assetResources(for: self.asset).first{$0.type == .photo}!
+            } else {
+                resource = PHAssetResource.assetResources(for: self.asset).first{$0.type == .pairedVideo}!
+            }
+        } else {
+            resource = PHAssetResource.assetResources(for: self.asset).first!
+        }
+        
+        // 设置读取选项（可设置 isNetworkAccessAllowed 等）
+        let options = PHAssetResourceRequestOptions()
+        options.isNetworkAccessAllowed = isIcloudAllowed
+        self.assetDataRequestId = PHAssetResourceManager.default().requestData(for: resource, options: options, dataReceivedHandler: { data in
+            self.allData.append(contentsOf: data)
+        }, completionHandler: { error in
+            if let error = error as NSError? {
+                if error.domain == PHPhotosErrorDomain && error.code == 3164{//文件在iCloud中
+                    if isIcloudAllowed{
+                        self.finish("从iCloud同步失败")
+                        return
+                    }
+                    self.progress("从iCloud下载中")
+                    self.readAll(index, true, callback)
+                    return
+                }
+                if error.code == NSUserCancelledError {//请求被手动取消
+                    self.finish("已取消")
+                    return
+                }
+                self.finish("读取失败: \(error)")
+            } else {
+                if self.isLivePhoto && index == 1{//实况照片时,继续获取实况照片的视频部分
+                    self.readAll(2, isIcloudAllowed, callback)
+                } else {
+                    callback()
+                }
             }
         })
     }
@@ -209,9 +375,20 @@ class StreamUploader: NSObject,
                 if $0 == self.fileSize{//文件已经上传完成
                     self.uploadByMd5()
                 }else{
-                    self.uploadStream()
+                    self.checkReadDataType()
                 }
             }
+    }
+    
+    /// 检查读取文件的方式
+    private func checkReadDataType(){
+        if self.isReadAllFlag{// 一次性全部读取
+            self.readAll{
+                self.uploadStream()
+            }
+        } else {
+            self.uploadStream()
+        }
     }
     
     ///开始上传
@@ -248,21 +425,6 @@ class StreamUploader: NSObject,
     }
     
     
-    ///获取文件大小
-    private func getFileSize() -> Int64{
-        let resources = PHAssetResource.assetResources(for: self.asset)
-        guard let resource = resources.first else {
-            return -1
-        }
-        
-        if let unsignedInt64 = resource.value(forKey: "fileSize") as? CLong {//优先从属性中获取,不过这种方式并不是官方推介的,所有有else预备方案
-            return Int64(unsignedInt64)
-        } else {
-            return -1
-        }
-    }
-    
-    
     struct Streams {
         let input: InputStream
         let output: OutputStream
@@ -288,6 +450,32 @@ class StreamUploader: NSObject,
                     needNewBodyStream completionHandler: @escaping (InputStream?) -> Void) {
         completionHandler(boundStreams.input)
         self.readPHAssetTask()
+    }
+    
+    private func readPHAssetTask(){
+        if !self.allData.isEmpty{//如果数据已经全部读取完毕
+            self.write(self.allData)
+            self.boundStreams.output.close()
+            return
+        }
+        let options = PHAssetResourceRequestOptions()
+        options.isNetworkAccessAllowed = false// 允许从iCloud下载
+        
+        // 读取资源数据并上传
+        // 这里是单线程的,即使开启多线程读取数据,同时也只有一个任务在读,暂时还不知道解决方案
+        self.assetDataRequestId = PHAssetResourceManager.default().requestData(for: PHAssetResource.assetResources(for: self.asset).first!, options: options, dataReceivedHandler: { data in
+            self.write(data)
+        }, completionHandler: { error in
+            if let error = error as NSError? {
+                if error.code == NSUserCancelledError {//请求被手动取消
+                    self.finish("已取消")
+                    return
+                }
+                self.finish("读取失败: \(error)")
+            } else {
+                self.boundStreams.output.close()
+            }
+        })
     }
     
     ///上传进度监听
@@ -354,61 +542,60 @@ class StreamUploader: NSObject,
     //        }
     //    }
     
-    func readPHAssetTask(){
-        let options = PHAssetResourceRequestOptions()
-        options.isNetworkAccessAllowed = false// 允许从iCloud下载
+    /// 一次性写入所有数据
+    private func write(_ data: Data) {
         
-        // 读取资源数据并上传
-        // 这里是单线程的,即使开启多线程读取数据,同时也只有一个任务在读,暂时还不知道解决方案
-        self.assetDataRequestId = PHAssetResourceManager.default().requestData(for: PHAssetResource.assetResources(for: self.asset).first!, options: options, dataReceivedHandler: { data in
+        //当前读取到的数据大小
+        let currentSize = Int64(data.count)
+        var data = data
+        if self.readedDataSize + currentSize <= self.offset{//跳过指定偏移大小,这部分数据可能已经被上传
+            data = Data()
+        } else if self.readedDataSize < self.offset{//本次只需要部分数据
             
-            //当前读取到的数据大小
-            let currentSize = Int64(data.count)
-            var data = data
-            if self.readedDataSize + currentSize <= self.offset{//跳过指定偏移大小,这部分数据可能已经被上传
-                data = Data()
-            } else if self.readedDataSize < self.offset{//本次只需要部分数据
+            //移除多余的数据
+            data.removeSubrange(0 ..< Int(self.offset - self.readedDataSize))
+        } else {
+            //不做任何处理
+        }
+        self.readedDataSize += currentSize
+        if data.isEmpty{//本次不需要上传数据
+            return
+        }
+        
+        data.withUnsafeBytes() { (buffer: UnsafePointer<UInt8>) in
+            var totalWritten = 0
+            var ptr = buffer
+            var remaining = data.count
+            while remaining > 0 {
                 
-                //移除多余的数据
-                data.removeSubrange(0 ..< Int(self.offset - self.readedDataSize))
-            } else {
-                //不做任何处理
-            }
-            self.readedDataSize += currentSize
-            while data.count > 0{
-                let bytesWritten: Int = data.withUnsafeBytes() { (buffer: UnsafePointer<UInt8>) in
-                    //                    self.canWrite = false
-                    
-                    //                    print("-->time:\(Date())")
-                    
-                    //实际验证:如果缓存满了,这里会线程阻塞
-                    return self.boundStreams.output.write(buffer, maxLength: data.count)
-                }
-                //                print("-->本次\(Date()):写入:\(bytesWritten.fileSize)")
-                if bytesWritten == 0{
+                //这里不保证一次性写入所有数据,所以需要循环写入,知道数据全部写入
+                let written = self.boundStreams.output.write(ptr, maxLength: remaining)
+//                if written <= 0 {
+//                    // 出错或者流关闭
+//                    return written
+//                }
+                if written == 0{
+                    // 出错或者流关闭
                     Toast.show("-->error:write zero")
-                    Thread.sleep(forTimeInterval: 1.0)
-                }
-                if bytesWritten == -1{//可能是写入数据超时,也可能服务器端取消接收文件
-                    print("-->error:write -1")
                     PHAssetResourceManager.default().cancelDataRequest(self.assetDataRequestId!)
                     break
                 }
-                if bytesWritten > 0{
-                    data.removeSubrange(0..<bytesWritten)
+                if written == -1{//可能是写入数据超时,也可能服务器端取消接收文件
+#if DEBUG
+                    print("-->error:write -1")
+#endif
+                    PHAssetResourceManager.default().cancelDataRequest(self.assetDataRequestId!)
+                    break
                 }
+                totalWritten += written
+                
+                //把指针 ptr 向后移动 written 个字节
+                ptr += written
+                remaining -= written
             }
-        }, completionHandler: { error in
-            if let error = error as NSError? {
-                if error.code == NSUserCancelledError {//请求被手动取消
-                    self.finish("已取消")
-                    return
-                }
-                self.finish("读取失败: \(error)")
-            } else {
-                self.boundStreams.output.close()
-            }
-        })
+            return totalWritten
+            
+        }
     }
     
     ///上传完成执行函数

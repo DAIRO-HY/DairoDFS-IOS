@@ -32,13 +32,36 @@ struct SystemAlbumImageView: View {
             } else {
                 ProgressView("Loading...")
             }
+            if !self.albumBean.locallyAvailable{//图片在iCloud中
+                ZStack{
+                    Color.black.opacity(0.2)
+                    Image(systemName: "exclamationmark.icloud")
+                        .resizable()
+                        .frame(width: 64, height: 40).foregroundColor(.white).shadow(color: .black, radius: 2, x: 1, y: 1)
+                        .opacity(0.6)
+                }.frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
             VStack(spacing: 0){
                 HStack{
                     if self.albumBean.checked{//如果是选择状态
                         Image(systemName:"checkmark.circle.fill")
+                            .resizable()
+                            .frame(width: 18, height: 18)
+//                            .font(.body)
+                            .foregroundColor(.white)
+                            .shadow(color: .black, radius: 2, x: 1, y: 1)
                     }
                     Spacer()
+                    if self.albumBean.mediaType == "Live Photo"{
+                        Image(systemName:"livephoto")
+                            .resizable()
+                            .frame(width: 18, height: 18)
+//                            .font(.body)
+                            .foregroundColor(.white)
+                            .shadow(color: .black, radius: 2, x: 1, y: 1)
+                    }
                 }
+                .padding(8)
                 Spacer()
                 HStack{
                     Spacer()

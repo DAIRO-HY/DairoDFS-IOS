@@ -31,8 +31,8 @@ class PHAssetUploadManager{
     //文件信息获取锁
     static let assetLock = NSLock()
     
-    //由于PHAsset读取数据时单线程的,这里即使开启多线程上传,同时也只有一个上传任务,暂时无解
-    private static let MAX_LIMIT = 1
+    //由于PHAsset读取数据时单线程的,这里即使开启多线程上传,读取相册数据时依然是单线程
+    private static let MAX_LIMIT = 3
     
     private static let lock = NSLock()
     

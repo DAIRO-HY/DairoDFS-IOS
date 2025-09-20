@@ -21,7 +21,7 @@ struct AlbumViewerOptionView: View {
         VStack(spacing: 0){
             Spacer()
             Divider()
-            if self.vm.isVideo{
+            if self.vm.isVideo{//如果这是一个视频的话
                 VStack{
                     Spacer().frame(height: 10)
                     Slider(
@@ -98,6 +98,11 @@ struct AlbumViewerOptionView: View {
                 }
                 BottomOptionButton("保存相册", icon: "rectangle.stack.badge.plus"){
                     self.vm.onDownloadOnlyClick(true)
+                }
+                if self.vm.isImage && !self.vm.isBigPreview{//当前显示的是图片,并且不是原图,则显示加载原图
+                    BottomOptionButton("原图", icon: "photo.on.rectangle.angled"){
+                        self.vm.onLoadBigPreviewClick()
+                    }
                 }
 //                BottomOptionButton("播放", icon: "square.and.arrow.up"){
 //                    self.vm.videoPlayer?.play()

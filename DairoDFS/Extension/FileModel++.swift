@@ -96,4 +96,14 @@ extension FileModel{
     var isFile: Bool{
         return self.fileFlag
     }
+    
+    /// 在线获取图片缩略图
+    func onlineThumb(width: Int, height: Int, maxSize: Int = 0) -> String{
+        return "\(SettingShared.domainNotNull)/app/files/thumb_online/\(self.id)?_token=\(SettingShared.token)&width=\(width)&height=\(height)&maxSize=\(maxSize)"
+    }
+    
+    /// 在线获取图片缩略图ID
+    func onlineThumbId(width: Int, height: Int, maxSize: Int = 0) -> String{
+        return "thumb-\(self.id)-\(width)-\(height)-\(maxSize)"
+    }
 }

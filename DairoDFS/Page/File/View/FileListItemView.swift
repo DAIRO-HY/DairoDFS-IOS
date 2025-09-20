@@ -51,8 +51,11 @@ struct FileListItemView: View {
         Section{
             if self.dfsFile.fm.isFile{
                 if self.dfsFile.fm.hasThumb{//如果有缩略图
-                    CacheImage(self.dfsFile.fm.thumbUrl,downloadId: self.dfsFile.fm.thumbDownloadId)
-                        .frame(width: 44, height: 44)
+                    let width = 44
+                    let thumbUrl = self.dfsFile.fm.onlineThumb(width: width * 3, height: width * 3)
+                    let thumbId = self.dfsFile.fm.onlineThumbId(width: width * 3, height: width * 3)
+                    CacheImage(thumbUrl, downloadId: thumbId)
+                        .frame(width: CGFloat(width), height: CGFloat(width))
                         .cornerRadius(6)
                 }else{//没有缩略图
                     Image(systemName: "questionmark.square.fill")

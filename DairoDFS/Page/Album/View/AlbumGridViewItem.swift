@@ -53,7 +53,9 @@ struct AlbumGridViewItem: View {
     private var thumb: some View{
         Section{
             if self.entity.fm.hasThumb{//如果有缩略图
-                CacheImage(self.entity.fm.thumbUrl, downloadId: self.entity.fm.thumbDownloadId)
+                let thumbUrl = self.entity.fm.onlineThumb(width: Int(self.size) * 3, height: Int(self.size) * 3)
+                let thumbId = self.entity.fm.onlineThumbId(width: Int(self.size) * 3, height: Int(self.size) * 3)
+                CacheImage(thumbUrl, downloadId: thumbId)
                     .frame(width: self.size, height: self.size)
             }else{//没有缩略图
                 Image(systemName: "document.fill")
