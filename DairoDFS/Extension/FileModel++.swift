@@ -85,6 +85,7 @@ extension FileModel{
         || lowerName.hasSuffix(".psd")
         || lowerName.hasSuffix(".cr3")
         || lowerName.hasSuffix(".tiff")
+        || lowerName.hasSuffix(".dlive")
     }
     
     /// 是否文件夹
