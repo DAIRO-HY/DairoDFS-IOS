@@ -16,6 +16,11 @@ enum FilesApi {
     return ApiHttp<[FileModel]>(ApiConst.APP_FILES_GET_ALBUM_LIST)
   }
 
+  //GetAlbumListV2 -获取相册列表(版本2)
+  static func getAlbumListV2() -> ApiHttp<String>{
+    return ApiHttp<String>(ApiConst.APP_FILES_GET_ALBUM_LIST_V2)
+  }
+
   //获取扩展文件的所有key值
   //id 文件id
   static func getExtraKeys(id: Int64) -> ApiHttp<[String]>{
@@ -66,9 +71,16 @@ enum FilesApi {
   }
 
   //文件或文件夹属性
+  //请使用GetPropertyV2
   //paths 选择的路径列表
   static func getProperty(paths: [String]) -> ApiHttp<FilePropertyModel>{
     return ApiHttp<FilePropertyModel>(ApiConst.APP_FILES_GET_PROPERTY,parameter: ["paths":paths])
+  }
+
+  //文件或文件夹属性
+  //paths 选择的路径列表
+  static func getPropertyV2(ids: [Int64]) -> ApiHttp<FilePropertyModel>{
+    return ApiHttp<FilePropertyModel>(ApiConst.APP_FILES_GET_PROPERTY_V2,parameter: ["ids":ids])
   }
 
   //修改文件类型
@@ -101,5 +113,17 @@ enum FilesApi {
   //id 文件ID
   static func thumb(id: Int64) -> ApiHttp<EmptyModel>{
     return ApiHttp<EmptyModel>(ApiConst.APP_FILES_THUMB_ID_,parameter: ["id":id])
+  }
+
+  //缩略图生成单线程限制
+  //ThumbOnline - 缩略图在线生成
+  //优先使用maxSize
+  //id 文件ID
+  //name 文件名
+  //width 宽
+  //height 高
+  //maxSize 最大边
+  static func thumbOnline(id: Int64,name: String,maxSize: Int,width: Int,height: Int) -> ApiHttp<EmptyModel>{
+    return ApiHttp<EmptyModel>(ApiConst.APP_FILES_THUMB_ONLINE_ID_NAME_,parameter: ["id":id,"name":name,"maxSize":maxSize,"width":width,"height":height])
   }
 }

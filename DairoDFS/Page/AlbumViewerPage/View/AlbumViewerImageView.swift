@@ -7,6 +7,7 @@
 
 import SwiftUI
 import DairoUI_IOS
+import _AVKit_SwiftUI
 
 struct AlbumViewerImageView: View {
     
@@ -27,9 +28,8 @@ struct AlbumViewerImageView: View {
                     .frame(width: self.vm.screenWidth, height: self.vm.screenHeight)
                     .clipped()
             }
-            if let dlivePlayer = self.vm.dlivePlayer{
-                VideoPlayer(player: self.vm.dlivePlayer)
-                .frame(width: self.vm.screenWidth, height: self.vm.screenHeight)
+            if self.vm.fm.isDlive{
+                AlbumViewerDliveView(self.vm.dliveVm)
             }
             if !self.vm.progress.isEmpty{
                 Text(self.vm.progress)

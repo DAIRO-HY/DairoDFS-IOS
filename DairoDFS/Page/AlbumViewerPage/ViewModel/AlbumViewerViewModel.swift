@@ -115,9 +115,8 @@ class AlbumViewerViewModel: ObservableObject{
     
     /// 标记视频是否播放过
     @Published var videoIsPlayed = false
-
-    // 实况照片视频播放器
-    var dlivePlayer: AVPlayer?
+    
+    let dliveVm = AlbumViewerDliveViewModel()
     
     init(_ fileModels: [FileModel], _ index: Int){
         let bounds = UIScreen.main.bounds
@@ -193,9 +192,7 @@ class AlbumViewerViewModel: ObservableObject{
         self.videoPlayer = nil
 
         //停止实况视频播放
-        self.dlivePlayer?.pause()
-        self.dlivePlayer?.replaceCurrentItem(with: nil)
-        self.dlivePlayer = nil
+        self.dliveVm.clear()
 
         self.isVideo = self.fm.isVideo
         if self.isVideo{//视频时
@@ -207,17 +204,21 @@ class AlbumViewerViewModel: ObservableObject{
     
     ///加载图片
     func loadPicture(){
-        
-        //优先加载预览图片
-        if let imagePath = DownloadManager.getDownloadedPath(self.fm.previewDownloadId){
-            let uiImage: UIImage
-            if self.fm.isDlive{//如果这是实况照片
-                let dliveInfo = DliveUtil.getInfo(imagePath)
-                uiImage = UIImage(data: dliveInfo.photoData)
-            } else {
-                uiImage = UIImage(contentsOfFile: imagePath)
+        if self.fm.isDlive{//如果这是实况照片
+            self.dliveVm.setFm(self.fm)
+            if let path = DownloadManager.getDownloadedPath( self.fm.downloadId){//如果文件已经下载
+                let dliveInfo = DliveUtil.getInfo(path)
+                if let uiImage = UIImage(data: dliveInfo.photoData){
+                    self.isBigPreview = true
+                    self.initImage(uiImage)
+                }
+                return
             }
-            if let uiImage = uiImage{
+        }
+        
+        //优先加载下载好的预览图片
+        if let path = DownloadManager.getDownloadedPath(self.fm.isDlive ? self.fm.previewDownloadId : self.fm.previewDownloadId){
+            if let uiImage = UIImage(contentsOfFile: path){
                 self.isBigPreview = true
                 self.initImage(uiImage)
             }
@@ -226,17 +227,12 @@ class AlbumViewerViewModel: ObservableObject{
         self.isBigPreview = false
         
         //先显示缩略图
-        if let thumbPath = DownloadManager.getDownloadedPath(self.fm.thumbDownloadId){
-            if let uiImage = UIImage(contentsOfFile: thumbPath){
+        if let path = DownloadManager.getDownloadedPath(self.fm.thumbDownloadId){
+            if let uiImage = UIImage(contentsOfFile: path){
                 self.initImage(uiImage)
             }
         } else {//取加载缩略图
             DownloadManager.cache(self.fm.thumbDownloadId, self.fm.thumbUrl)
-        }
-
-        if self.fm.isDlive{//如果这是实况照片
-            self.dlivePlayer = AVPlayer(url: URL(string:  self.fm.dliveVideoPreview)!)
-            self.dlivePlayer!.play()
         }
     }
     
@@ -331,7 +327,7 @@ class AlbumViewerViewModel: ObservableObject{
                     self.startVideoTimer()
                 } else {//视频没有被下载,从网络播放
                     Task.detached{ //@MainActor in//网络视频应该通过异步任务加载,否则可能导致UI卡顿
-                        self.videoPlayer = AVPlayer(url: URL(string:  self.fm.preview)!)
+                        self.videoPlayer = AVPlayer(url: URL(string:  self.fm.download)!)
                         self.videoPlayer?.currentItem?.asset.loadValuesAsynchronously(forKeys: ["duration"]){
                             var error: NSError?
                             let status = self.videoPlayer?.currentItem?.asset.statusOfValue(forKey: "duration", error: &error)
@@ -533,9 +529,13 @@ class AlbumViewerViewModel: ObservableObject{
     
     ///  加载原图点击事件
     func onLoadBigPreviewClick(){
-        
-        //请求加载原图
-        DownloadManager.cache(self.fm.previewDownloadId, self.fm.preview)
+//        if self.fm.isDlive{//实况照片下载源文件
+//            DownloadManager.cache(self.fm.downloadId, self.fm.download)
+//        }else{
+            
+            //请求加载原图
+            DownloadManager.cache(self.fm.previewDownloadId, self.fm.previewImage)
+//        }
     }
     
     

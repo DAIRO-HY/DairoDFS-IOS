@@ -17,8 +17,8 @@ struct FileModel : Codable {
 	//Date string `json:"date"`
   var date: Int64
 
-  	/** 缩率图 **/
-  var thumb: String
+  	/** 是否有缩略图 **/
+  var hasThumb: Bool
 
   	/** 其他属性1,视频时为视频总时长(毫秒) **/
 	//Other1 string `json:"other1"`

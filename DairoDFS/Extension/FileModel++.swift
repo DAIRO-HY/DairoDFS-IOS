@@ -7,19 +7,21 @@
 
 extension FileModel{
     
-    /// 是否有缩略图
-    var hasThumb: Bool{
-        return !self.thumb.isEmpty
+    /// 生成获取附属文件地址
+    /// - Parameter ext 要下载的文件后缀
+    func makeExtraUrl(_ extra: String, _ ext: String = "") -> String{
+        let baseUrl = SettingShared.domainNotNull + "/app/files/extra/\(self.id)/\(self.name)\(ext)?_token=" + SettingShared.token + "&extra=\(extra)" + "&wait=10"
+        return baseUrl
     }
 
-    ///得到文件缩略图文件下载ID
+    /// 得到文件缩略图文件下载ID
     var thumbDownloadId: String{
         return "\(self.id)-thumb"
     }
 
-    ///得到缩略图URL
+    /// 得到缩略图URL
     var thumbUrl: String{
-        return SettingShared.domainNotNull + self.thumb + "?extra=thumb&_token=" + SettingShared.token
+        return self.makeExtraUrl("thumb", "-thumb.jpg")
     }
 
     ///得到文件缩略图文件下载ID
@@ -27,15 +29,14 @@ extension FileModel{
         return "\(self.id)"
     }
 
-    ///得到下载文件的url
+    /// 得到下载文件的url
     var download: String{
-        let baseUrl = SettingShared.domainNotNull + "/app/files/preview/\(self.id)/\(self.name)?_token=" + SettingShared.token //+ "&wait=10"
-        return baseUrl
+        return self.makeExtraUrl("")
     }
 
     ///得到文件预览文件下载ID
     var previewDownloadId: String{
-        if self.preview == self.download{
+        if self.previewImage == self.download{
             return self.downloadId
         }else{
             return self.downloadId + "-preview"
@@ -43,18 +44,15 @@ extension FileModel{
     }
 
     ///得到文件预览url
-    var preview: String{
+    var previewImage: String{
         let lowerName = self.name.lowercased()
         if lowerName.hasSuffix(".jpg")
             || lowerName.hasSuffix(".jpeg")
             || lowerName.hasSuffix(".png")
-            || lowerName.hasSuffix(".heic") {//这些格式的预览图和原图都是一样的
-            return self.download
-        } else if lowerName.hasSuffix(".mov")
-                    || lowerName.hasSuffix(".mp4") {//视频文件时
+            || lowerName.hasSuffix(".heic"){//这些格式的预览图和原图都是一样的
             return self.download
         } else {
-            return self.download + "&extra=preview"
+            return self.makeExtraUrl("preview", ".jpg")
         }
     }
 
@@ -65,21 +63,17 @@ extension FileModel{
 
     /// 在线获取图片缩略图
     func onlineThumb(width: Int, height: Int, maxSize: Int = 0) -> String{
-        return "\(SettingShared.domainNotNull)/app/files/thumb_online/\(self.id)?_token=\(SettingShared.token)&width=\(width)&height=\(height)&maxSize=\(maxSize)"
-    }
-
-    /// 实况照片预览视频
-    var dliveVideoPreview: String{
-        return self.download + "&extra=preview-dlive"
+        return "\(SettingShared.domainNotNull)/app/files/thumb_online/\(self.id)/\(self.id)-\(width)-\(height)-\(maxSize).jpg?_token=\(SettingShared.token)&width=\(width)&height=\(height)&maxSize=\(maxSize)"
     }
     
-    /// 文件预览的文件名
-    var previewDownloadFileName: String{
-        let lowerName = self.name.lowercased()
-        if lowerName.hasSuffix(".cr3"){
-            return self.name + ".jpg"
-        }
-        return self.name
+    /// 实况照片预览视频
+    var dliveVideoPreviewId: String{
+        return self.downloadId + "-preview-dlive"
+    }
+    
+    /// 实况照片预览视频
+    var dliveVideoPreview: String{
+        return self.makeExtraUrl("preview-dlive", ".mp4")
     }
     
     ///这是否是一个视频文件

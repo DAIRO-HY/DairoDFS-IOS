@@ -105,7 +105,7 @@ struct AlbumViewerOptionView: View {
                     }
                 }
 //                BottomOptionButton("播放", icon: "square.and.arrow.up"){
-//                    self.vm.videoPlayer?.play()
+//                    self.vm.dlivePlayer?.play()
 //                }
 //                BottomOptionButton("暂停", icon: "square.and.arrow.up"){
 //                    self.vm.videoPlayer?.pause()

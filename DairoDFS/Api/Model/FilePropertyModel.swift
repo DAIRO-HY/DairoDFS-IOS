@@ -28,4 +28,7 @@ struct FilePropertyModel : Codable {
   	/** 历史记录(文件属性专用) **/
   var historyList: [FilePropertyHistoryModel]
 
+  	/** 扩展文件列表 **/
+  var extraList: [FilePropertyExtraModel]
+
 }

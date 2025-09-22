@@ -61,6 +61,9 @@ enum ApiConst{
   //获取相册列表
   static let APP_FILES_GET_ALBUM_LIST = "/app/files/get_album_list"
 
+  //GetAlbumListV2 -获取相册列表(版本2)
+  static let APP_FILES_GET_ALBUM_LIST_V2 = "/app/files/get_album_list/v2"
+
   //获取扩展文件的所有key值
   //id 文件id
   static let APP_FILES_GET_EXTRA_KEYS = "/app/files/get_extra_keys"
@@ -95,8 +98,13 @@ enum ApiConst{
   static let APP_FILES_SHARE = "/app/files/share"
 
   //文件或文件夹属性
+  //请使用GetPropertyV2
   //paths 选择的路径列表
   static let APP_FILES_GET_PROPERTY = "/app/files/get_property"
+
+  //文件或文件夹属性
+  //paths 选择的路径列表
+  static let APP_FILES_GET_PROPERTY_V2 = "/app/files/get_property/v2"
 
   //修改文件类型
   //path 文件路径
@@ -119,6 +127,16 @@ enum ApiConst{
   //缩略图下载
   //id 文件ID
   static let APP_FILES_THUMB_ID_ = "/app/files/thumb/{id}"
+
+  //缩略图生成单线程限制
+  //ThumbOnline - 缩略图在线生成
+  //优先使用maxSize
+  //id 文件ID
+  //name 文件名
+  //width 宽
+  //height 高
+  //maxSize 最大边
+  static let APP_FILES_THUMB_ONLINE_ID_NAME_ = "/app/files/thumb_online/{id}/{name}"
 
   //获取文件夹结构
   static let APP_FOLDER_SELECTOR_GET_LIST = "/app/folder_selector/get_list"

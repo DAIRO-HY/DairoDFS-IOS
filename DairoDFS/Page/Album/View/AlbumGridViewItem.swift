@@ -80,7 +80,7 @@ private func getTestEntity() -> AlbumEntity{
             size: 123456789,
             fileFlag: true,
             date: 123456,
-            thumb: "http://192.168.10.112:8031/d/oq8221/WechatIMG2.jpg",
+            hasThumb: false,
             other1:"12:00"
         )
     )

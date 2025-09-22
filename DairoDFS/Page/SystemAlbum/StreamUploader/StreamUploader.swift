@@ -86,7 +86,8 @@ class StreamUploader: NSObject,
             
             //实况照片头部追加信息如下
             //图片格式|文件大小|视频格式-
-            let photoHead = (self.resources[0].originalFilename as NSString).pathExtension.lowercased()
+            let photoHead = "dlive|"
+            + (self.resources[0].originalFilename as NSString).pathExtension.lowercased()
             + "|\(self.resources[0].value(forKey: "fileSize")!)|"
             + (self.resources[1].originalFilename as NSString).pathExtension.lowercased()
             + "|\(self.resources[1].value(forKey: "fileSize")!)-"

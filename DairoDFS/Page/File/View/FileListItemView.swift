@@ -86,7 +86,7 @@ private func getDfsFileBean() -> FileEntity{
             size: 123456789,
             fileFlag: true,
             date: 1234567890,
-            thumb: "http://192.168.10.112:8031/d/oq8221/WechatIMG2.jpg",
+            hasThumb: false,
             other1: ""
         )
     )
