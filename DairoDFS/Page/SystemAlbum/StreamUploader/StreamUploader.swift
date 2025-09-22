@@ -91,8 +91,8 @@ class StreamUploader: NSObject,
             + (self.resources[1].originalFilename as NSString).pathExtension.lowercased()
             + "|\(self.resources[1].value(forKey: "fileSize")!)-"
             self.liveHeadData = Data(photoHead.utf8)
-        } else {
-            self.resources = resources.filter{$0.type == .photo}
+        } else {//视频或者静态照片时
+            self.resources = resources.filter{$0.type == .photo || $0.type == .video}
             self.liveHeadData = Data()
         }
     }
