@@ -27,6 +27,10 @@ struct AlbumViewerImageView: View {
                     .frame(width: self.vm.screenWidth, height: self.vm.screenHeight)
                     .clipped()
             }
+            if let dlivePlayer = self.vm.dlivePlayer{
+                VideoPlayer(player: self.vm.dlivePlayer)
+                .frame(width: self.vm.screenWidth, height: self.vm.screenHeight)
+            }
             if !self.vm.progress.isEmpty{
                 Text(self.vm.progress)
                     .foregroundColor(.white)

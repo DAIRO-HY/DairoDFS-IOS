@@ -115,6 +115,9 @@ class AlbumViewerViewModel: ObservableObject{
     
     /// 标记视频是否播放过
     @Published var videoIsPlayed = false
+
+    // 实况照片视频播放器
+    var dlivePlayer: AVPlayer?
     
     init(_ fileModels: [FileModel], _ index: Int){
         let bounds = UIScreen.main.bounds
@@ -189,12 +192,12 @@ class AlbumViewerViewModel: ObservableObject{
         self.videoPlayer?.replaceCurrentItem(with: nil)
         self.videoPlayer = nil
 
+        //停止实况视频播放
+        self.dlivePlayer?.pause()
+        self.dlivePlayer?.replaceCurrentItem(with: nil)
+        self.dlivePlayer = nil
+
         self.isVideo = self.fm.isVideo
-        
-        if let videoPlayer{
-            videoPlayer.pause()
-        }
-        
         if self.isVideo{//视频时
 //            self.initVideo()
         } else {//图片时
@@ -207,6 +210,10 @@ class AlbumViewerViewModel: ObservableObject{
         
         //优先加载预览图片
         if let imagePath = DownloadManager.getDownloadedPath(self.fm.previewDownloadId){
+            if self.fm.isDlive{//如果这是实况照片
+                let dliveData = FileUtil.readAll(imagePath)
+
+            }
             if let uiImage = UIImage(contentsOfFile: imagePath){
                 self.isBigPreview = true
                 self.initImage(uiImage)
@@ -222,6 +229,11 @@ class AlbumViewerViewModel: ObservableObject{
             }
         } else {//取加载缩略图
             DownloadManager.cache(self.fm.thumbDownloadId, self.fm.thumbUrl)
+        }
+
+        if self.fm.isDlive{//如果这是实况照片
+            self.dlivePlayer = AVPlayer(url: URL(string:  self.fm.dliveVideoPreview)!)
+            self.dlivePlayer!.play()
         }
     }
     
