@@ -210,11 +210,14 @@ class AlbumViewerViewModel: ObservableObject{
         
         //优先加载预览图片
         if let imagePath = DownloadManager.getDownloadedPath(self.fm.previewDownloadId){
+            let uiImage: UIImage
             if self.fm.isDlive{//如果这是实况照片
-                let dliveData = FileUtil.readAll(imagePath)
-
+                let dliveInfo = DliveUtil.getInfo(imagePath)
+                uiImage = UIImage(data: dliveInfo.photoData)
+            } else {
+                uiImage = UIImage(contentsOfFile: imagePath)
             }
-            if let uiImage = UIImage(contentsOfFile: imagePath){
+            if let uiImage = uiImage{
                 self.isBigPreview = true
                 self.initImage(uiImage)
             }
