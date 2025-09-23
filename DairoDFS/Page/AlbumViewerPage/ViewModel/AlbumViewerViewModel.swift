@@ -491,23 +491,32 @@ class AlbumViewerViewModel: ObservableObject{
             if self.isSaveToAlbum{// 下载完成之后保存到相册
                 PHPhotoLibrary.shared().performChanges({
                     let options = PHAssetResourceCreationOptions()
-                    //            options.originalFilename = filename
-                    
+                    let request = PHAssetCreationRequest.forAsset()
                     if self.isVideo{//视频时
-                        
-                        // 是否移动文件,而不是复制
-                        options.shouldMoveFile = false
+                        options.shouldMoveFile = false // 是否移动文件,而不是复制
                         let videoURL = URL(string: "file://" + path)!
-                        let creationRequest = PHAssetCreationRequest.forAsset()
-                        creationRequest.addResource(with: .video, fileURL: videoURL, options: options)
-                    } else {//照片时
-                        
-                        // 是否移动文件,而不是复制
-                        options.shouldMoveFile = false
-                        let data = FileUtil.readAll(path)!
-                        let creationRequest = PHAssetCreationRequest.forAsset()
-                        creationRequest.addResource(with: .photo, data: data, options: options)
+                        request.addResource(with: .video, fileURL: videoURL, options: options)
+                        return
                     }
+                    if self.fm.isDlive{//实况照片时
+                        options.shouldMoveFile = true // 是否移动文件,而不是复制
+                        let dliveInfo = DliveUtil.getInfo(path)
+                        
+                        // 添加 JPEG 作为照片
+                        let photoURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + "." + dliveInfo.photoExt)
+                        FileManager.default.createFile(atPath: photoURL.path, contents: dliveInfo.photoData)
+                        request.addResource(with: .photo, fileURL: photoURL, options: options)
+                        
+                        
+                        // 添加 MOV 作为实况视频
+                        let videoURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + "." + dliveInfo.videoExt)
+                        FileManager.default.createFile(atPath: videoURL.path, contents: dliveInfo.videoData)
+                        request.addResource(with: .pairedVideo, fileURL: videoURL, options: options)
+                        return
+                    }
+                    options.shouldMoveFile = false // 是否移动文件,而不是复制
+                    let data = FileUtil.readAll(path)!
+                    request.addResource(with: .photo, data: data, options: options)
                 }) { success, error in
                     if success {
                         Toast.show("已保存到相册")
