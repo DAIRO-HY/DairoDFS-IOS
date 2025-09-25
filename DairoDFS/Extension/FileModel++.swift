@@ -19,6 +19,11 @@ extension FileModel{
         return "\(self.id)-thumb"
     }
 
+    /// 文件属性id
+    var propertyId: String{
+        return "\(self.id)-property"
+    }
+
     /// 得到缩略图URL
     var thumbUrl: String{
         return self.makeExtraUrl("thumb", "-thumb.jpg")

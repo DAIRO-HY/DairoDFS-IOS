@@ -29,6 +29,12 @@ class AlbumViewerViewModel: ObservableObject{
     ///文件列表
     var fileModels = [FileModel]()
 
+    /// 获取文件属性的http请求
+    private var propertyApiHttp: ApiHttpBase?
+
+    /// 当前文件属性
+    private var fileProperty: FilePropertyModel?
+
     ///当前文件的一些标签（RAW、4K、4K60FPS......），显示在左上角
     @Published var propertyTags = [String]()
 
@@ -183,15 +189,18 @@ class AlbumViewerViewModel: ObservableObject{
         self.currentIndex = index
         self.uiImage = nil
         self.hStackOffset = -CGFloat(self.currentIndex + 1) * self.screenWidth
-        
+
         //计算未显示部分占位宽度
         self.notShowWidth = self.screenWidth * CGFloat(self.currentIndex)
         self.currentOffsetPosition = .zero
         self.zoomAmount = 1.0
 
         self.isDownload = false
+
         self.propertyTags = []()
-        
+        self.propertyApiHttp?.close()
+        self.fileProperty = nil
+
         //停止视频计时器
         self.videoTimer?.invalidate()
         self.videoIsPlaying = false
@@ -200,12 +209,34 @@ class AlbumViewerViewModel: ObservableObject{
         self.videoPlayer?.replaceCurrentItem(with: nil)
         self.videoPlayer = nil
 
+        self.isVideo = self.fm.isVideo
+
         //停止实况视频播放
         self.dliveVm.clear()
+        if let path = DownloadManager.getDownloadedPath(self.fm.propertyId){//如果属性文件已经存在
+            let data = FileUtil.readAll(path)!
+            self.fileProperty = try? JSONDecoder().decode(FilePropertyModel.self, from: data)
+            self.initView()
+        } else {
+            self.progress = "正在加载文件属性"
 
-        self.isVideo = self.fm.isVideo
+            //加载文件属性
+            self.apiHttp = Files.getPropertyV2(ids: [self.fm.id]).hide().post{
+                self.progress = ""
+                self.fileProperty = $0
+                if $0.state == 1{//如果文件已经处理完成,则将文件属性信息缓存起来
+                    let jsonData = try! JSONEncoder().encode(obj)
+                    DownloadManager.addFile(id: self.fm!.propertyId, name: self.fm!.id + "-property.json", data: jsonData, saveType: 0)
+                }
+                self.initView()
+            }
+        }
+    }
+
+    /// 初始化页面
+    private func initView(){
         if self.isVideo{//视频时
-//            self.initVideo()
+        //            self.initVideo()
         } else {//图片时
             self.loadPicture()
         }
