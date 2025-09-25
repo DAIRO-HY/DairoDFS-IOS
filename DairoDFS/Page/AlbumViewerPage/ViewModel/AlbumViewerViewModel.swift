@@ -28,7 +28,10 @@ class AlbumViewerViewModel: ObservableObject{
     
     ///文件列表
     var fileModels = [FileModel]()
-    
+
+    ///当前文件的一些标签（RAW、4K、4K60FPS......），显示在左上角
+    @Published var propertyTags = [String]()
+
     ///当前选中的序号
     @Published var currentIndex = 0
     
@@ -55,9 +58,12 @@ class AlbumViewerViewModel: ObservableObject{
     
     ///缩略图
     @Published var thumbImage1: UIImage? = nil
-    
+
     /// 下载进度信息
     @Published var progress = ""
+
+    /// 标记文件是否已经下载
+    @Published var isDownload = false
     
     ///图片宽高比
     var uiImageWHRate: CGFloat
@@ -170,7 +176,7 @@ class AlbumViewerViewModel: ObservableObject{
         }
     }
     
-    //页面发生变化
+    //页面切换
     private func changePage(_ index: Int){
         self.isDownloadFlag = false
         self.isSaveToAlbum = false
@@ -182,6 +188,9 @@ class AlbumViewerViewModel: ObservableObject{
         self.notShowWidth = self.screenWidth * CGFloat(self.currentIndex)
         self.currentOffsetPosition = .zero
         self.zoomAmount = 1.0
+
+        self.isDownload = false
+        self.propertyTags = []()
         
         //停止视频计时器
         self.videoTimer?.invalidate()
@@ -315,37 +324,61 @@ class AlbumViewerViewModel: ObservableObject{
     
     /// 播放或者暂停点击事件
     func onVideoPlayOrPauseClick(){
-        self.videoIsPlayed = true
-        if self.videoIsPlaying{//视频正在播放中,则暂停
+        self.videoIsPlayed = true//标记视频播放过
+        let videoIsPlaying = self.videoIsPlaying
+        self.videoIsPlaying.toggle()//改变视频播放状态
+        if videoIsPlaying{//视频正在播放中,则暂停
             self.videoPlayer?.pause()
             self.videoTimer?.invalidate()
-        } else {//视频暂停中,开始播放
-            if self.videoPlayer == nil{//视频第一次播放,先初始化播放器
-                if let path = DownloadManager.getDownloadedPath(self.fm.previewDownloadId){//如果该视频文件已经被下载
-                    self.videoPlayer = AVPlayer(url: URL(fileURLWithPath:  path))
-                    self.videoPlayer?.play()
-                    self.startVideoTimer()
-                } else {//视频没有被下载,从网络播放
-                    Task.detached{ //@MainActor in//网络视频应该通过异步任务加载,否则可能导致UI卡顿
-                        self.videoPlayer = AVPlayer(url: URL(string:  self.fm.download)!)
-                        self.videoPlayer?.currentItem?.asset.loadValuesAsynchronously(forKeys: ["duration"]){
-                            var error: NSError?
-                            let status = self.videoPlayer?.currentItem?.asset.statusOfValue(forKey: "duration", error: &error)
-                            if status == .loaded {//视频缓冲完成
-                                Task{ @MainActor in
-                                    self.videoPlayer?.play()
-                                    self.startVideoTimer()
-                                }
-                            }
-                        }
+            return
+        }
+        if self.videoPlayer != nil { //视频仅仅是被暂停，播放即可
+            self.videoPlayer?.play()
+            self.startVideoTimer()
+            return
+        }
+        if let path = DownloadManager.getDownloadedPath(self.fm.downloadId){//如果该视频文件已经被下载,直接播放已经下载的文件
+            self.videoPlayer = AVPlayer(url: URL(fileURLWithPath:  path))
+            self.videoPlayer?.play()
+            self.startVideoTimer()
+            self.isDownload = true
+            return
+        }
+        self.progress = "获取视频信息中"
+        Files.getPropertyV2(ids: [self.fm.id]).hide().post{
+            let videoUrl: String
+            if let previewExtra = $0.extraList.firse{ it in it.name == "preview" }{//有预览视频的话
+                videoUrl = self.fm.makeExtraUrl("preview",".mp4")
+            } else {
+                videoUrl = self.fm.download
+            }
+            self.videoPlayer = AVPlayer(url: URL(string:  videoUrl)!)
+            self.videoPlayer?.currentItem?.asset.loadValuesAsynchronously(forKeys: ["duration"]){
+                var error: NSError?
+                let status = self.videoPlayer?.currentItem?.asset.statusOfValue(forKey: "duration", error: &error)
+                if status == .loaded {//视频缓冲完成
+                    Task{ @MainActor in
+                        self.videoPlayer?.play()
+                        self.startVideoTimer()
                     }
                 }
-            } else {
-                self.videoPlayer?.play()
-                self.startVideoTimer()
             }
         }
-        self.videoIsPlaying.toggle()
+
+        //视频没有被下载,从网络播放
+//        Task.detached{ //网络视频应该通过异步任务加载,否则可能导致UI卡顿
+//            self.videoPlayer = AVPlayer(url: URL(string:  self.fm.download)!)
+//            self.videoPlayer?.currentItem?.asset.loadValuesAsynchronously(forKeys: ["duration"]){
+//                var error: NSError?
+//                let status = self.videoPlayer?.currentItem?.asset.statusOfValue(forKey: "duration", error: &error)
+//                if status == .loaded {//视频缓冲完成
+//                    Task{ @MainActor in
+//                        self.videoPlayer?.play()
+//                        self.startVideoTimer()
+//                    }
+//                }
+//            }
+//        }
     }
     
     /**
