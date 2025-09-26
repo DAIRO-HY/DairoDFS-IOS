@@ -94,12 +94,21 @@ enum FilesApi {
     return ApiHttp<EmptyModel>(ApiConst.APP_FILES_DOWNLOAD_HISTORY_,parameter: ["id":id])
   }
 
+  //请使用Extra
   //文件预览
   //dfsId dfs文件ID
   //name 文件名
   //extra 要预览的附属文件名
   static func preview(dfsId: Int64,name: String,extra: String) -> ApiHttp<EmptyModel>{
     return ApiHttp<EmptyModel>(ApiConst.APP_FILES_PREVIEW_DFSID_NAME_,parameter: ["dfsId":dfsId,"name":name,"extra":extra])
+  }
+
+  //Extra - 获取附属文件
+  //dfsId dfs文件ID
+  //name 文件名
+  //extra 要预览的附属文件名
+  static func extra(dfsId: Int64,name: String,extra: String) -> ApiHttp<EmptyModel>{
+    return ApiHttp<EmptyModel>(ApiConst.APP_FILES_EXTRA_DFSID_NAME_,parameter: ["dfsId":dfsId,"name":name,"extra":extra])
   }
 
   //文件下载

@@ -16,6 +16,9 @@ struct FilePropertyModel : Codable {
   	/** 创建日期 **/
   var date: String
 
+  	/** 文件状态 **/
+  var state: Int8
+
   	/** 是否文件 **/
   var isFile: Bool
 

@@ -99,17 +99,16 @@ struct AlbumViewerOptionView: View {
                 BottomOptionButton("保存相册", icon: "rectangle.stack.badge.plus"){
                     self.vm.onDownloadOnlyClick(true)
                 }
-                if self.vm.isImage && !self.vm.isBigPreview{//当前显示的是图片,并且不是原图,则显示加载原图
-                    BottomOptionButton("原图", icon: "photo.on.rectangle.angled"){
-                        self.vm.onLoadBigPreviewClick()
+                
+                if self.vm.isImage{//图片时
+                    BottomOptionButton("原图", icon: "photo.on.rectangle.angled", disabled: self.vm.isOriginal){
+                        self.vm.onLoadOriginalClick()
+                    }
+                } else {//视频时
+                    BottomOptionButton(self.vm.videoIsOriginal ? "流畅" : "原画", icon: "photo.on.rectangle.angled", disabled: self.vm.isOriginal){
+                        self.vm.onVideoPlayClick(!self.vm.videoIsOriginal)
                     }
                 }
-//                BottomOptionButton("播放", icon: "square.and.arrow.up"){
-//                    self.vm.dlivePlayer?.play()
-//                }
-//                BottomOptionButton("暂停", icon: "square.and.arrow.up"){
-//                    self.vm.videoPlayer?.pause()
-//                }
             }
             .background(Color.gl.bgPrimary)
             Color.gl.bgPrimary.frame(height: 40)

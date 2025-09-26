@@ -31,4 +31,7 @@ struct ProfileModel : Codable {
   	/** 忽略本机同步错误 **/
   var ignoreSyncError: Bool
 
+  	/**  数据库备份天数 **/
+  var dbBackupExpireDay: Int
+
 }

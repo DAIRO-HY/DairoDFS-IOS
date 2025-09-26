@@ -29,4 +29,14 @@ enum AdvancedApi {
   static func recycleNow() -> ApiHttp<EmptyModel>{
     return ApiHttp<EmptyModel>(ApiConst.APP_ADVANCED_RECYCLE_NOW)
   }
+
+  //备份数据库
+  static func dBBackup() -> ApiHttp<EmptyModel>{
+    return ApiHttp<EmptyModel>(ApiConst.APP_ADVANCED_DB_BACKUP)
+  }
+
+  //重置并同步本机数据
+  static func resetData() -> ApiHttp<EmptyModel>{
+    return ApiHttp<EmptyModel>(ApiConst.APP_ADVANCED_RESET_DATA)
+  }
 }

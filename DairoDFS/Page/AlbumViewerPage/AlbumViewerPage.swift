@@ -136,15 +136,29 @@ struct AlbumViewerPage: View {
             }
             
             if self.vm.isVideo{
-                if !self.vm.videoIsPlaying || self.vm.showActionView{//暂停中或者显示操作视图中,显示播放控制按钮
+                if !self.vm.videoIsPlaying{//视频为暂停状态时,始终显示播放按钮
                     
-                    //播放/暂停按钮
-                    Button(action: self.vm.onVideoPlayOrPauseClick){
-                        Image(systemName: self.vm.videoIsPlaying ? "pause.fill" : "play.fill")
+                    //播放按钮
+                    Button(action: {
+                        self.vm.onVideoPlayClick()
+                    }){
+                        Image(systemName: "play.fill")
                             .resizable()
                             .frame(width: 40, height: 40)
                             .foregroundColor(.white)
                             .shadow(color: .black, radius: 3, x: 2, y: 2)
+                    }
+                } else {
+                    if self.vm.showActionView{//是否需要显示操作按钮
+                        
+                        //暂停按钮
+                        Button(action: self.vm.onVideoPauseClick){
+                            Image(systemName: "pause.fill")
+                                .resizable()
+                                .frame(width: 40, height: 40)
+                                .foregroundColor(.white)
+                                .shadow(color: .black, radius: 3, x: 2, y: 2)
+                        }
                     }
                 }
             }

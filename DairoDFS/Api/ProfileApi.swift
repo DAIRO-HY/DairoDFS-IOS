@@ -13,8 +13,8 @@ enum ProfileApi {
   }
 
   //页面初始化
-  static func update(openSqlLog: Bool,hasReadOnly: Bool,uploadMaxSize: Int64,folders: String,syncDomains: String,token: String,trashTimeout: Int64,deleteStorageTimeout: Int64,thumbMaxSize: Int,ignoreSyncError: Bool) -> ApiHttp<EmptyModel>{
-    return ApiHttp<EmptyModel>(ApiConst.APP_PROFILE_UPDATE,parameter: ["openSqlLog":openSqlLog,"hasReadOnly":hasReadOnly,"uploadMaxSize":uploadMaxSize,"folders":folders,"syncDomains":syncDomains,"token":token,"trashTimeout":trashTimeout,"deleteStorageTimeout":deleteStorageTimeout,"thumbMaxSize":thumbMaxSize,"ignoreSyncError":ignoreSyncError])
+  static func update(openSqlLog: Bool,hasReadOnly: Bool,uploadMaxSize: Int64,folders: String,syncDomains: String,token: String,trashTimeout: Int64,deleteStorageTimeout: Int64,thumbMaxSize: Int,ignoreSyncError: Bool,dbBackupExpireDay: Int) -> ApiHttp<EmptyModel>{
+    return ApiHttp<EmptyModel>(ApiConst.APP_PROFILE_UPDATE,parameter: ["openSqlLog":openSqlLog,"hasReadOnly":hasReadOnly,"uploadMaxSize":uploadMaxSize,"folders":folders,"syncDomains":syncDomains,"token":token,"trashTimeout":trashTimeout,"deleteStorageTimeout":deleteStorageTimeout,"thumbMaxSize":thumbMaxSize,"ignoreSyncError":ignoreSyncError,"dbBackupExpireDay":dbBackupExpireDay])
   }
 
   //切换token

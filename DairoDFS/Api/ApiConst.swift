@@ -22,6 +22,12 @@ enum ApiConst{
   //立即回收未使用的文件
   static let APP_ADVANCED_RECYCLE_NOW = "/app/advanced/recycle_now"
 
+  //备份数据库
+  static let APP_ADVANCED_DB_BACKUP = "/app/advanced/db_backup"
+
+  //重置并同步本机数据
+  static let APP_ADVANCED_RESET_DATA = "/app/advanced/reset_data"
+
   //高级功能：文件验证
   //文件验证同步锁
   //当前正在文件验证的writer
@@ -113,11 +119,18 @@ enum ApiConst{
 
   static let APP_FILES_DOWNLOAD_HISTORY_ = "/app/files/download_history/"
 
+  //请使用Extra
   //文件预览
   //dfsId dfs文件ID
   //name 文件名
   //extra 要预览的附属文件名
   static let APP_FILES_PREVIEW_DFSID_NAME_ = "/app/files/preview/{dfsId}/{name}"
+
+  //Extra - 获取附属文件
+  //dfsId dfs文件ID
+  //name 文件名
+  //extra 要预览的附属文件名
+  static let APP_FILES_EXTRA_DFSID_NAME_ = "/app/files/extra/{dfsId}/{name}"
 
   //文件下载
   //name 文件名
