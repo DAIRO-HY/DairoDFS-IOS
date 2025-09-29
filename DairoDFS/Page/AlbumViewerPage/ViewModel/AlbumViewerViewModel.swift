@@ -367,23 +367,12 @@ class AlbumViewerViewModel: ObservableObject{
     func onVideoPlayClick(_ playOriginal: Bool? = nil){
         self.videoIsPlayed = true//标记视频播放过
         self.videoIsPlaying = true
-//        if self.videoPlayer != nil { //视频仅仅是被暂停，播放即可
-//            self.videoPlayer?.play()
-//            self.startVideoTimer()
-//            return
-//        }
-        
+
+        var currentTime = 0//记录当前播放时间，方便切换清晰度之后继续播放
         if let videoPlayer{//获取当前播放时间,接下来接着播放
-            
-//            guard let item = player.currentItem else{
-//                return
-//            }
-//            let duration = item.duration.seconds
-//            if duration.isNaN{
-//                return
-//            }
-//            self.videoDuration = duration * 1000
-//            self.videoCurrentTime = item.currentTime().seconds * 1000
+           if let item = videoPlayer.currentItem{
+                currentTime = item.currentTime().seconds * 1000
+           }
         }
         if let path = DownloadManager.getDownloadedPath(self.fm.downloadId){//如果该视频文件已经被下载,直接播放已经下载的文件
             self.videoPlayer = AVPlayer(url: URL(fileURLWithPath:  path))
