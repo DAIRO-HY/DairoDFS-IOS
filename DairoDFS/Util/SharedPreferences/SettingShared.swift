@@ -316,15 +316,23 @@ enum SettingShared {
     
     /*----------------------------------------------------------------------------------*/
     
-    /// 视频播放质量
+    /// 自动
+    static let VIDEO_QUALITY_AUTO = 0
+    
+    /// 原画
+    static let VIDEO_QUALITY_ORIGINAL = 1
+    
+    /// 流畅
+    static let VIDEO_QUALITY_SMOOTH = 2
+    
+    /// 视频清晰度选择
     static var videoQuality: Int{
-        get {
+        get{
             return UserDefaults.standard.integer(forKey: "VIDEO_QUALITY")
         }
         set{
             UserDefaults.standard.set(newValue, forKey: "VIDEO_QUALITY")
         }
     }
-    
     /*----------------------------------------------------------------------------------*/
 }

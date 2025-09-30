@@ -239,7 +239,7 @@ class AlbumViewerViewModel: ObservableObject{
     /// 初始化页面
     private func initView(){
         if self.isVideo{//视频时
-            self.onVideoPlayClick()
+            self.onVideoSelectResolutionClick()
         } else {//图片时
             self.loadPicture()
         }
@@ -355,6 +355,36 @@ class AlbumViewerViewModel: ObservableObject{
         }
     }
     
+    /// 选择视频清晰度播放
+    func onVideoSelectResolutionClick(){
+        let playOriginal: Bool
+        switch SettingShared.videoQuality{
+        case SettingShared.VIDEO_QUALITY_ORIGINAL:
+            playOriginal = true
+        case SettingShared.VIDEO_QUALITY_SMOOTH:
+            playOriginal = false
+        default:
+            if SettingShared.domainNotNull.hasPrefix("http://192.168") || SettingShared.domainNotNull.hasPrefix("http://localhost"){//如果是局域网,则优先原画
+                playOriginal = true
+            } else {
+                playOriginal = false
+            }
+        }
+        
+        if self.videoIsPlaying && playOriginal == self.videoIsOriginal{//当前视频正在播放中,并且清晰度没有发生变化,则不需要做任何处理
+            return
+        }
+        if self.videoPlayer != nil && playOriginal == self.videoIsOriginal{//如果播放器已经播放过,并且清晰度没有发生变化,只需要继续播放
+            self.videoPlayer?.play()
+            
+            //开启播放进度计时器
+            self.startVideoTimer()
+            self.videoIsPlaying = true
+            return
+        }
+        self.videoPlay(playOriginal)
+    }
+    
     /// 暂停视频播放
     func onVideoPauseClick(){
         self.videoPlayer?.pause()
@@ -364,42 +394,39 @@ class AlbumViewerViewModel: ObservableObject{
     
     /// 播放点击事件
     /// - Paramter playOriginal 是否播放原始尺寸的视频
-    func onVideoPlayClick(_ playOriginal: Bool? = nil){
+    private func videoPlay(_ playOriginal: Bool){
         self.videoIsPlayed = true//标记视频播放过
-        self.videoIsPlaying = true
-
-        var currentTime = 0//记录当前播放时间，方便切换清晰度之后继续播放
+        var currentTime = CMTime.zero//记录当前播放时间，方便切换清晰度之后继续播放
         if let videoPlayer{//获取当前播放时间,接下来接着播放
            if let item = videoPlayer.currentItem{
-                currentTime = item.currentTime().seconds * 1000
+                currentTime = item.currentTime()
            }
         }
         if let path = DownloadManager.getDownloadedPath(self.fm.downloadId){//如果该视频文件已经被下载,直接播放已经下载的文件
             self.videoPlayer = AVPlayer(url: URL(fileURLWithPath:  path))
+            self.videoPlayer?.seek(to: currentTime)
             self.videoPlayer?.play()
+            
+            //开启播放进度计时器
             self.startVideoTimer()
             self.isOriginal = true
             self.videoIsOriginal = true
+            self.videoIsPlaying = true
             return
         }
-        
         guard let fileProperty = self.fileProperty else{
             Toast.show("未获取到文件信息")
             return
         }
         let videoUrl: String
-        if let playOriginal {//指定播放哪种分辨率的视频
+        if let previewExtra = fileProperty.extraList.first{ it in it.name == "preview" }{//有流畅版本的视频才有的选
             if playOriginal{//播放原画视频
                 videoUrl = self.fm.download
             } else {//播放流畅视频
                 videoUrl = self.fm.makeExtraUrl("preview",".mp4")
             }
-        } else {//未指定播放哪种分辨率的视频
-            if let previewExtra = fileProperty.extraList.first{ it in it.name == "preview" }{//有预览视频的话
-                videoUrl = self.fm.makeExtraUrl("preview",".mp4")
-            } else {
-                videoUrl = self.fm.download
-            }
+        } else {
+            videoUrl = self.fm.download
         }
         self.videoIsOriginal = videoUrl == self.fm.download
         
@@ -410,6 +437,8 @@ class AlbumViewerViewModel: ObservableObject{
                 let status = self.videoPlayer?.currentItem?.asset.statusOfValue(forKey: "duration", error: &error)
                 if status == .loaded {//视频缓冲完成
                     Task{ @MainActor in
+                        self.videoIsPlaying = true
+                        self.videoPlayer?.seek(to: currentTime)
                         self.videoPlayer?.play()
                         self.startVideoTimer()
                     }
@@ -611,6 +640,9 @@ class AlbumViewerViewModel: ObservableObject{
                 }
             } else {
                 Toast.show("下载完成")
+            }
+            if self.isVideo && self.videoIsPlaying{//如果当前视频正在播放中
+                self.videoPlay(true)
             }
         } else {
             Toast.show("下载失败:\(self.progress)")

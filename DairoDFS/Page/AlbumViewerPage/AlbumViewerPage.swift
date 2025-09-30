@@ -140,7 +140,7 @@ struct AlbumViewerPage: View {
                     
                     //播放按钮
                     Button(action: {
-                        self.vm.onVideoPlayClick()
+                        self.vm.onVideoSelectResolutionClick()
                     }){
                         Image(systemName: "play.fill")
                             .resizable()

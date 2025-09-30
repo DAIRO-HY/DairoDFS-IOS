@@ -10,7 +10,7 @@ extension FileModel{
     /// 生成获取附属文件地址
     /// - Parameter ext 要下载的文件后缀
     func makeExtraUrl(_ extra: String, _ ext: String = "") -> String{
-        let baseUrl = SettingShared.domainNotNull + "/app/files/extra/\(self.id)/\(self.name)\(ext)?_token=" + SettingShared.token + "&extra=\(extra)"// + "&wait=10"
+        let baseUrl = SettingShared.domainNotNull + "/app/files/extra/\(self.id)/\(self.name)\(ext)?_token=" + SettingShared.token + "&extra=\(extra)" + "&wait=1"
         return baseUrl
     }
 
