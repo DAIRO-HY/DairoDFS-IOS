@@ -14,6 +14,9 @@ import Photos
 
 //@TODO: deinit函数尚未调用,待解决
 class AlbumViewerViewModel: ObservableObject{
+
+    /// 初始化时的序号
+    private let initIndex: Int
     
     ///页面切换动画时间(秒)
     ///该时间不宜过长,过长可能导致用户快速切换时显示的图片错乱
@@ -21,10 +24,10 @@ class AlbumViewerViewModel: ObservableObject{
     static let ANIMATION_TIME: Double = 0.2
     
     //当前视图区域的尺寸
-    let screenWidth: CGFloat
+    @Published var screenWidth = CGFloat.zero
     
     //当前视图区域的尺寸
-    let screenHeight: CGFloat
+    @Published var screenHeight = CGFloat.zero
     
     ///文件列表
     var fileModels = [FileModel]()
@@ -72,14 +75,14 @@ class AlbumViewerViewModel: ObservableObject{
 //    @Published var isDownload = false
     
     ///图片宽高比
-    var uiImageWHRate: CGFloat
+    var uiImageWHRate = CGFloat.zero
     
     ///屏幕宽高比
-    var screenWHRate: CGFloat
+    var screenWHRate = CGFloat.zero
     
     //没有缩放状态下的显示宽与高
-    var displayW1: CGFloat
-    var displayH1: CGFloat
+    var displayW1 = CGFloat.zero
+    var displayH1 = CGFloat.zero
     
     ///文件Model
     ///private var mFileModel: FileModel?
@@ -111,7 +114,7 @@ class AlbumViewerViewModel: ObservableObject{
     var videoTimer: Timer?
     
     /// 记录进度条是否正在拖拽中
-    var videoSliderDarging = false
+    var videoSliderDragging = false
     
     // 创建一个 AVPlayer 实例
      var videoPlayer: AVPlayer?
@@ -140,23 +143,25 @@ class AlbumViewerViewModel: ObservableObject{
     let dliveVm = AlbumViewerDliveViewModel()
     
     init(_ fileModels: [FileModel], _ index: Int){
-        let bounds = UIScreen.main.bounds
-        self.screenWidth = bounds.width
-        self.screenHeight = bounds.height
-        
+        self.initIndex = index
+        self.fileModels = fileModels
+    }
+
+    /// 视图初始化时
+    func onAppear(_ screenWidth: CGFloat, _ screenHeight: CGFloat){
+        self.screenWidth = screenWidth
+        self.screenHeight = screenHeight
+
         //屏幕宽高比
         self.screenWHRate = self.screenWidth / self.screenHeight
-        
-        
+
         //为了保证图片未加载时也能正常切换,默认将屏幕大小作为图片大小
         self.displayW1 = self.screenWidth
         self.displayH1 = self.screenHeight
-        
+
         //图片宽高比
         self.uiImageWHRate = self.screenWidth / self.screenHeight
-        
-        self.fileModels = fileModels
-        self.changePage(index)
+        self.changePage(self.initIndex)
     }
     
     func fixPageViewPosition(){
@@ -374,7 +379,7 @@ class AlbumViewerViewModel: ObservableObject{
             #if DEBUG
             print("-->time:开始一次循环")
             #endif
-            if self.videoSliderDarging{//进度条正在退拽中
+            if self.videoSliderDragging{//进度条正在退拽中
                 return
             }
             guard let player = self.videoPlayer else{

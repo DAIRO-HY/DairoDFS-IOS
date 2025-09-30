@@ -32,7 +32,7 @@ struct AlbumViewerOptionView: View {
 #if DEBUG
                                 debugPrint("-->拖动编辑状态:\(flag)  值:\(self.vm.videoCurrentTime)")
 #endif
-                                self.vm.videoSliderDarging = flag
+                                self.vm.videoSliderDragging = flag
                                 if !flag{//拖动结束
                                     let time = CMTime(seconds: self.vm.videoCurrentTime / 1000, preferredTimescale: 600)
                                     self.vm.videoPlayer?.seek(to: time)
