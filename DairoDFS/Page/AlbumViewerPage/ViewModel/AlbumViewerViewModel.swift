@@ -327,6 +327,7 @@ class AlbumViewerViewModel: ObservableObject{
         if self.zoomAmount > 1{
             withAnimation{
                 self.zoomAmount = 1
+                self.fixCropImage()
             }
         } else {
             
