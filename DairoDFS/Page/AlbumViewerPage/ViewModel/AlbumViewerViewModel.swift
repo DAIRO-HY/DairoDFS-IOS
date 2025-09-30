@@ -310,6 +310,7 @@ class AlbumViewerViewModel: ObservableObject{
     }
     
     ///初始化图片显示
+    /// - Paramter uiImage 图片数据
     private func initImage(_ uiImage: UIImage){
         self.progress = ""
         self.uiImage = uiImage
@@ -368,7 +369,7 @@ class AlbumViewerViewModel: ObservableObject{
     /// 视频播放按钮点击事件
     func onVideoPlayClick(){
         if self.isVideoReplay{//强制重新播放
-            self.videoPlay(playOriginal)
+            self.videoPlay()
             return
         }
         if let videoPlayer{//如果播放器仅仅是暂停，直接播放即可
@@ -388,7 +389,6 @@ class AlbumViewerViewModel: ObservableObject{
     }
     
     /// 播放点击事件
-    /// - Paramter playOriginal 是否播放原始尺寸的视频
     private func videoPlay(){
         self.videoIsPlayed = true//标记视频播放过
         self.isVideoReplay = false
@@ -436,7 +436,7 @@ class AlbumViewerViewModel: ObservableObject{
 
     /// 视频在线播放时的url
     private var videoOnlineUrl: String{
-        guard let previewExtra = self.fileProperty!.extraList.first{ it in it.name == "preview" } else {//没有预览视频，使用原视频
+        guard let previewExtra = (self.fileProperty!.extraList.first{ $0.name == "preview" }) else {//没有预览视频，使用原视频
             return self.fm.download
         }
         switch SettingShared.videoQuality{

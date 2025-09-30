@@ -165,14 +165,14 @@ struct OptionButton: View {
     
     public var body: some View {
         Button(action: self.action){
-            VStack{
+            VStack(spacing: 0){
                 Image(systemName: self.icon)
                 Text(self.label)
                     .font(.footnote)
                     .padding(.top, 1)
             }
             .foregroundColor(.white)
-            .frame(width: 60, height: 60)
+            .frame(width: 50, height: 50)
             .opacity(self.disabled ? 0.4 : 1)
         }
         .frame(maxWidth: .infinity)
