@@ -36,7 +36,7 @@ class AlbumViewerViewModel: ObservableObject{
     private var fileProperty: FilePropertyModel?
 
     ///当前文件的一些标签（RAW、4K、4K60FPS......），显示在左上角
-    @Published var propertyTags = [String]()
+    @Published var tags = [String]()
 
     ///当前选中的序号
     @Published var currentIndex = 0
@@ -242,9 +242,22 @@ class AlbumViewerViewModel: ObservableObject{
     /// 初始化页面
     private func initView(){
         if self.isVideo{//视频时
-            self.onVideoSelectResolutionClick()
+            self.onVideoPlayClick()
         } else {//图片时
             self.loadPicture()
+        }
+    }
+
+    /// 显示标签
+    private func showTag(){
+        if DownloadManager.getDownloadedPath(self.fm.downloadId) != nil{
+            self.tags.append("已下载")
+            if let propertyJson = self.fileProperty?.property{
+                if let property = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]{
+"width":3840,"height":2160
+                    if property["width"]
+                }
+            }
         }
     }
     
@@ -252,7 +265,7 @@ class AlbumViewerViewModel: ObservableObject{
     func loadPicture(){
         if self.fm.isDlive{//如果这是实况照片
             self.dliveVm.setFm(self.fm)
-            if let path = DownloadManager.getDownloadedPath( self.fm.downloadId){//如果文件已经下载
+            if let path = DownloadManager.getDownloadedPath(self.fm.downloadId){//如果文件已经下载
                 let dliveInfo = DliveUtil.getInfo(path)
                 if let uiImage = UIImage(data: dliveInfo.photoData){
                     self.isShowDownloaded = true

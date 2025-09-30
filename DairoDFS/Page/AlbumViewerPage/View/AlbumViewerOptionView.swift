@@ -86,9 +86,8 @@ struct AlbumViewerOptionView: View {
                         self.vm.onLoadOriginalClick()
                     }
                 } else {//视频时
-                    OptionButton(self.vm.videoIsOriginal ? "流畅" : "原画", icon: "play.rectangle", disabled: self.vm.isShowDownloaded){
+                    OptionButton(SettingShared.videoQualityLabel, icon: "play.rectangle", disabled: self.vm.isShowDownloaded){
                         self.showVideoResolutionActionMenu.toggle()
-                        //                        self.vm.onVideoPlayClick(!self.vm.videoIsOriginal)
                     }
                 }
             }
