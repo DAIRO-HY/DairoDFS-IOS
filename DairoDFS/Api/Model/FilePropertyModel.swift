@@ -10,6 +10,9 @@ struct FilePropertyModel : Codable {
   	/** 大小 **/
   var size: String
 
+  	/** 文件属性 **/
+  var property: String
+
   	/** 文件类型(文件专用) **/
   var contentType: String
 

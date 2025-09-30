@@ -68,17 +68,17 @@ enum SettingShared {
     /*----------------------------------------------------------------------------------*/
     
     /// 主题模式
-//    private static let _THEME = "THEME";
-//    
-//    static var theme: Int {
-//        get{
-//            return UserDefaults.standard.integer(forKey: SettingShared._THEME)
-//        }
-//        set{
-//            UserDefaults.standard.set(newValue, forKey: SettingShared._THEME)
-//        }
-//        
-//    }
+    //    private static let _THEME = "THEME";
+    //
+    //    static var theme: Int {
+    //        get{
+    //            return UserDefaults.standard.integer(forKey: SettingShared._THEME)
+    //        }
+    //        set{
+    //            UserDefaults.standard.set(newValue, forKey: SettingShared._THEME)
+    //        }
+    //
+    //    }
     
     /*----------------------------------------------------------------------------------*/
     
@@ -334,16 +334,16 @@ enum SettingShared {
             UserDefaults.standard.set(newValue, forKey: "VIDEO_QUALITY")
         }
     }
-
+    
     /// 当前视频清晰都显示标题
     static var videoQualityLabel: String{
-        switch self.videoQuality
-            case self.VIDEO_QUALITY_ORIGINAL{
-                return "原画"
-            case self.VIDEO_QUALITY_SMOOTH
-                return "流畅"
-            default:
-                return "自动"
+        switch self.videoQuality{
+        case self.VIDEO_QUALITY_ORIGINAL:
+            return "原画"
+        case self.VIDEO_QUALITY_SMOOTH:
+            return "流畅"
+        default:
+            return "自动"
         }
     }
     /*----------------------------------------------------------------------------------*/

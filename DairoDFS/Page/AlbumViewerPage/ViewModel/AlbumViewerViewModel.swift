@@ -130,6 +130,9 @@ class AlbumViewerViewModel: ObservableObject{
     
     /// 标记当前播放的视频是否原画
     @Published var videoIsOriginal = false
+    
+    ///当前视频质量
+    @Published var videoQualityLabel = SettingShared.videoQualityLabel
 
     /// 是否需要重新播放视频，而不是接着上次播放
     private var isVideoReplay = true
@@ -202,7 +205,7 @@ class AlbumViewerViewModel: ObservableObject{
         self.currentOffsetPosition = .zero
         self.zoomAmount = 1.0
 
-        self.propertyTags.removeAll()
+        self.tags.removeAll()
         self.propertyApiHttp?.cancel()
         self.fileProperty = nil
 
@@ -246,18 +249,39 @@ class AlbumViewerViewModel: ObservableObject{
         } else {//图片时
             self.loadPicture()
         }
+        self.showTag()
     }
 
     /// 显示标签
     private func showTag(){
         if DownloadManager.getDownloadedPath(self.fm.downloadId) != nil{
             self.tags.append("已下载")
-            if let propertyJson = self.fileProperty?.property{
-                if let property = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]{
-"width":3840,"height":2160
-                    if property["width"]
+            if let filePropertyPath = DownloadManager.getDownloadedPath(self.fm.propertyId){
+                if let fileProperty = try? JSONDecoder().decode(FilePropertyModel.self, from: FileUtil.readAll(filePropertyPath)!){
+                    let propertyJson = fileProperty.property
+                    if !propertyJson.isEmpty{
+                        if let property = try? JSONSerialization.jsonObject(with: propertyJson.data(using: .utf8)!, options: []) as? [String: Any]{
+                            if let width = property["width"] as? Int{
+                                if let height = property["height"] as? Int{
+                                    if width * height == 3840 * 2160{
+                                        self.tags.append("4K")
+                                    }
+                                }
+                            }
+                            if let fps = property["fps"] as? Int{
+                                if (59...60).contains(fps){
+                                    self.tags.append("60FPS")
+                                }
+                            }
+                        }
+                    }
                 }
             }
+        }
+        if self.fm.name.lowercased().hasSuffix(".cr3"){
+            self.tags.append("RAW")
+        } else if self.fm.name.lowercased().hasSuffix(".dlive"){
+            self.tags.append("实况")
         }
     }
     

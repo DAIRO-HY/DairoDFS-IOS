@@ -133,6 +133,7 @@ struct AlbumViewerPage: View {
             if self.vm.showActionView{//显示操作视图
                 AlbumViewerOptionView().environmentObject(self.vm)
                 AlbumViewerTopBarView(showViewerPage: self.$showViewerPage).environmentObject(self.vm)
+                AlbumViewerTagView().environmentObject(self.vm)
             }
             
             if self.vm.isVideo{

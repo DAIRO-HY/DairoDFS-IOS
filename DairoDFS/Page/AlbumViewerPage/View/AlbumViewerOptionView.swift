@@ -20,7 +20,6 @@ struct AlbumViewerOptionView: View {
     var body: some View {
         VStack(spacing: 0){
             Spacer()
-            Divider()
             if self.vm.isVideo{//如果这是一个视频的话
                 ZStack{
                     VStack{
@@ -86,7 +85,7 @@ struct AlbumViewerOptionView: View {
                         self.vm.onLoadOriginalClick()
                     }
                 } else {//视频时
-                    OptionButton(SettingShared.videoQualityLabel, icon: "play.rectangle", disabled: self.vm.isShowDownloaded){
+                    OptionButton(self.vm.videoQualityLabel, icon: "play.rectangle", disabled: self.vm.isShowDownloaded){
                         self.showVideoResolutionActionMenu.toggle()
                     }
                 }
@@ -123,14 +122,17 @@ struct AlbumViewerOptionView: View {
         .confirmationDialog("视频清晰度", isPresented: self.$showVideoResolutionActionMenu, titleVisibility: .visible) {
             Button("\(SettingShared.videoQuality == SettingShared.VIDEO_QUALITY_AUTO ? "✓" : "")自动") {
                 SettingShared.videoQuality = SettingShared.VIDEO_QUALITY_AUTO
+                self.vm.videoQualityLabel = SettingShared.videoQualityLabel
                 self.vm.onVideoSelectResolutionClick()
             }
             Button("\(SettingShared.videoQuality == SettingShared.VIDEO_QUALITY_ORIGINAL ? "✓" : "")原画") {
                 SettingShared.videoQuality = SettingShared.VIDEO_QUALITY_ORIGINAL
+                self.vm.videoQualityLabel = SettingShared.videoQualityLabel
                 self.vm.onVideoSelectResolutionClick()
             }
             Button("\(SettingShared.videoQuality == SettingShared.VIDEO_QUALITY_SMOOTH ? "✓" : "")流畅") {
                 SettingShared.videoQuality = SettingShared.VIDEO_QUALITY_SMOOTH
+                self.vm.videoQualityLabel = SettingShared.videoQualityLabel
                 self.vm.onVideoSelectResolutionClick()
             }
             Button("取消", role: .cancel) {}
