@@ -14,9 +14,6 @@ import Photos
 
 //@TODO: deinit函数尚未调用,待解决
 class AlbumViewerViewModel: ObservableObject{
-
-    /// 初始化时的序号
-    private let initIndex: Int
     
     ///页面切换动画时间(秒)
     ///该时间不宜过长,过长可能导致用户快速切换时显示的图片错乱
@@ -143,7 +140,7 @@ class AlbumViewerViewModel: ObservableObject{
     let dliveVm = AlbumViewerDliveViewModel()
     
     init(_ fileModels: [FileModel], _ index: Int){
-        self.initIndex = index
+        self.currentIndex = index
         self.fileModels = fileModels
     }
 
@@ -161,7 +158,7 @@ class AlbumViewerViewModel: ObservableObject{
 
         //图片宽高比
         self.uiImageWHRate = self.screenWidth / self.screenHeight
-        self.changePage(self.initIndex)
+        self.changePage(self.currentIndex)
     }
     
     func fixPageViewPosition(){

@@ -74,11 +74,11 @@ struct AlbumViewerPage: View {
     
     var body: some View {
         GeometryReader { geometry in
-        
+            
             //为了实现懒加载,这里始终只显示上一张,本张,下一张共3张图片
             ZStack{
                 HStack(spacing: 0) {
-
+                    
                     //当前图片上一张之前的图片全部不显示,这些不显示的图片总宽度用这个占位
                     Spacer().frame(width: self.vm.notShowWidth)
                     self.getThumb(self.vm.currentIndex - 1)
@@ -92,7 +92,7 @@ struct AlbumViewerPage: View {
                 .frame(width: self.vm.screenWidth, alignment: .leading)
                 .offset(x: self.vm.hStackOffset)
                 .animation(.linear(duration: AlbumViewerViewModel.ANIMATION_TIME), value: dragingOffset == 0)
-
+                
                 //避免事件穿透,专门用一个视图来操作屏幕
                 //另外一个目的是禁止默认视频播放控件
                 Color.clear.contentShape(Rectangle()).frame(width: self.vm.screenWidth, height: self.vm.screenHeight)
@@ -136,10 +136,10 @@ struct AlbumViewerPage: View {
                     AlbumViewerTopBarView(showViewerPage: self.$showViewerPage).environmentObject(self.vm)
                     AlbumViewerTagView().environmentObject(self.vm)
                 }
-
+                
                 if self.vm.isVideo{
                     if !self.vm.videoIsPlaying{//视频为暂停状态时,始终显示播放按钮
-
+                        
                         //播放按钮
                         Button(action: {
                             self.vm.onVideoPlayClick()
@@ -152,7 +152,7 @@ struct AlbumViewerPage: View {
                         }
                     } else {
                         if self.vm.showActionView{//是否需要显示操作按钮
-
+                            
                             //暂停按钮
                             Button(action: self.vm.onVideoPauseClick){
                                 Image(systemName: "pause.fill")
@@ -167,13 +167,17 @@ struct AlbumViewerPage: View {
             }
             //        .frame(maxHeight: .infinity)
             .edgesIgnoringSafeArea(.all)
+            .onChange(of: geometry.size) { newSize in
+                // 当屏幕尺寸发生变化时，更新 ViewModel
+                self.vm.onAppear(newSize.width, newSize.height)
+            }
             .onAppear{
                 self.vm.onAppear(geometry.size.width, geometry.size.height)
             }
             .onDisappear{
                 //            if AlbumViewerRecyclePage.isInited{//由于该页面是中转过来的,第一次打开时会调用onDisappear函数,如果此时将self.vm.uiImage = nil会导致第一次打开图片黑屏
                 self.vm.uiImage = nil
-
+                
                 self.vm.videoPlayer?.pause() // 离开时暂停
                 self.vm.videoPlayer = nil
                 //                NotificationCenter.default.post(name: Notification.Name("BACK_IMAGE_VIEW"), object: nil)
@@ -182,6 +186,7 @@ struct AlbumViewerPage: View {
                 //            }
             }
         }
+        .edgesIgnoringSafeArea(.all)
     }
     
     ///获取缩略图
