@@ -82,11 +82,11 @@ struct AlbumViewerOptionView: View {
                 }
                 
                 if self.vm.isImage{//图片时
-                    OptionButton("原图", icon: "photo.on.rectangle.angled", disabled: self.vm.isOriginal){
+                    OptionButton("原图", icon: "photo.on.rectangle.angled", disabled: self.vm.isShowDownloaded){
                         self.vm.onLoadOriginalClick()
                     }
                 } else {//视频时
-                    OptionButton(self.vm.videoIsOriginal ? "流畅" : "原画", icon: "play.rectangle", disabled: self.vm.isOriginal){
+                    OptionButton(self.vm.videoIsOriginal ? "流畅" : "原画", icon: "play.rectangle", disabled: self.vm.isShowDownloaded){
                         self.showVideoResolutionActionMenu.toggle()
                         //                        self.vm.onVideoPlayClick(!self.vm.videoIsOriginal)
                     }
