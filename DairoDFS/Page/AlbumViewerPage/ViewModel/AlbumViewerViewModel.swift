@@ -256,22 +256,24 @@ class AlbumViewerViewModel: ObservableObject{
     private func showTag(){
         if DownloadManager.getDownloadedPath(self.fm.downloadId) != nil{
             self.tags.append("已下载")
-            if let filePropertyPath = DownloadManager.getDownloadedPath(self.fm.propertyId){
-                if let fileProperty = try? JSONDecoder().decode(FilePropertyModel.self, from: FileUtil.readAll(filePropertyPath)!){
-                    let propertyJson = fileProperty.property
-                    if !propertyJson.isEmpty{
-                        if let property = try? JSONSerialization.jsonObject(with: propertyJson.data(using: .utf8)!, options: []) as? [String: Any]{
-                            if let width = property["width"] as? Int{
-                                if let height = property["height"] as? Int{
-                                    if width * height == 3840 * 2160{
-                                        self.tags.append("4K")
-                                    }
+        }
+        if let filePropertyPath = DownloadManager.getDownloadedPath(self.fm.propertyId){
+            if let fileProperty = try? JSONDecoder().decode(FilePropertyModel.self, from: FileUtil.readAll(filePropertyPath)!){
+                let propertyJson = fileProperty.property
+                if !propertyJson.isEmpty{
+                    if let property = try? JSONSerialization.jsonObject(with: propertyJson.data(using: .utf8)!, options: []) as? [String: Any]{
+                        if let width = property["width"] as? Int{
+                            if let height = property["height"] as? Int{
+                                if width * height == 3840 * 2160{
+                                    self.tags.append("4K")
+                                } else if width * height == 1920 * 1080{
+                                    self.tags.append("HD")
                                 }
                             }
-                            if let fps = property["fps"] as? Int{
-                                if (59...60).contains(fps){
-                                    self.tags.append("60FPS")
-                                }
+                        }
+                        if let fps = property["fps"] as? Int{
+                            if (59...60).contains(fps){
+                                self.tags.append("60FPS")
                             }
                         }
                     }
