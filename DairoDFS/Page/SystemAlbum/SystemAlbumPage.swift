@@ -34,7 +34,7 @@ struct SystemAlbumPage: View {
             //每列宽度 = (屏幕宽度 - (列数 - 1) * 列间距) / 列数
             let width = (geometry.size.width - CGFloat(self.COLUMN_NUM - 1) * self.SPACING) / CGFloat(self.COLUMN_NUM)
             VStack{
-                if !self.vm.albumList.isEmpty{
+                if self.vm.freashFlag > 0{
                     ScrollViewReader { proxy in
                         ScrollView {
                             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: self.SPACING), count: self.COLUMN_NUM), spacing: self.SPACING) {
@@ -42,7 +42,8 @@ struct SystemAlbumPage: View {
                                     Button(action:{
                                         self.vm.onItemClick(item)
                                     }){
-                                        SystemAlbumImageView(size: width,albumBean: item)
+                                        let index = self.vm.identifier2index[item.identifier]
+                                        SystemAlbumImageView(width, index!).environmentObject(self.vm)
                                         //Text("-->:\(width)")
                                         //                            Text("\(index)-\(getAssetFileExtension(imageInfo.asset)!)-\(Costom.getCostom())")
                                         //                                Text("\(item.isExistsFlag)")

@@ -13,7 +13,7 @@ import DairoUI_IOS
 class SystemAlbumViewModel : ObservableObject{
     
     //当前相册信息列表
-    @Published var albumList = [SystemAlbumBean]()
+    var albumList = [SystemAlbumBean]()
     
     //文件唯一ID对应所在序号
     var identifier2index = [String:Int]()
@@ -30,6 +30,9 @@ class SystemAlbumViewModel : ObservableObject{
     ///上传数量通知消息
     @Published var uploadCountMsg: String?
     
+    /// 页面刷新标记
+    @Published var freashFlag = 0
+    
     /// 上传模式
     let uploadMode: UploadMode
     
@@ -44,35 +47,41 @@ class SystemAlbumViewModel : ObservableObject{
                 fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: true)]
                 let fetchResult = PHAsset.fetchAssets(with: fetchOptions)
                 var albumAsset = [SystemAlbumBean]()
+                
+                let now = Date().timeIntervalSince1970
                 fetchResult.enumerateObjects { asset, _, _ in
                     let index = albumAsset.count
                     self.identifier2index[asset.localIdentifier] = index
-                    let bean = self.getAssetFileExtension(asset, index)
-                    albumAsset.append(bean)
+                    albumAsset.append(
+                        SystemAlbumBean(
+                            identifier: asset.localIdentifier,
+                            index: index,
+                            asset: asset
+                        )
+                    )
                 }
+//                print("-->\(Date().timeIntervalSince1970 - now)")
                 Task{@MainActor in
                     self.albumList = albumAsset
+                    self.freashFlag += 1
                 }
-                debugPrint(albumAsset.count)
             } else {
-                print("未授权访问相册")
+                Toast.show("未授权访问相册")
             }
         }
     }
     
-    //获取文件信息
-    private func getAssetFileExtension(_ asset: PHAsset, _ index: Int) -> SystemAlbumBean {
-        //                var ext = ""
+    /// 加载相册信息
+    /// - Parameter index 序号
+    func loadAlbumInfo(_ index: Int){
+        if !self.albumList[index].mediaType.isEmpty{
+            return
+        }
+        let asset = self.albumList[index].asset
         let resources = PHAssetResource.assetResources(for: asset)
-        //
-        //                var name = ""
-        //                if let resource = resources.first {
-        //                    let originalFilename = resource.originalFilename
-        //                    ext = (originalFilename as NSString).pathExtension.lowercased()
-        //                    name = originalFilename
-        //                }
         let resource = resources.first!
         let locallyAvailable = resource.value(forKey: "locallyAvailable")! as! Bool
+        
         var mediaType = ""
         if asset.mediaSubtypes.contains(.photoLive) {
             // 实况照片
@@ -84,23 +93,17 @@ class SystemAlbumViewModel : ObservableObject{
             // 视频
             mediaType = "Video"
         }
-        //       return AlbumSyncBean(identifier: asset.localIdentifier, asset: asset, mediaType: mediaType, ext: ext, name: name)
         
         //视频时长
         var duration: String? = nil
         if asset.mediaType == .video{
             duration = (asset.duration * 1000).timeFormat
         }
-        return SystemAlbumBean(
-            identifier: asset.localIdentifier,
-            index: index,
-            asset: asset,
-            mediaType: mediaType,
-            ext: "",
-            name: "",
-            duration: duration,
-            locallyAvailable: locallyAvailable
-        )
+        self.albumList[index].mediaType = mediaType
+        //            self.albumList[index].ext: "",
+        //            self.albumList[index].name: "",
+        self.albumList[index].duration = duration
+        self.albumList[index].locallyAvailable = locallyAvailable
     }
     
     //图片点击事件

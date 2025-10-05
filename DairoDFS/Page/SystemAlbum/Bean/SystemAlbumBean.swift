@@ -19,19 +19,19 @@ struct SystemAlbumBean{
     let asset: PHAsset
     
     //媒体类型类型
-    let mediaType: String
+    var mediaType = ""
     
     //文件后缀
-    let ext: String
+    var ext = ""
     
     //文件名
-    let name: String
+    var name = ""
     
     //视频时长
-    let duration: String?
+    var duration: String?
     
     //是否在本地(已经从iCloud下载)
-    let locallyAvailable: Bool
+    var locallyAvailable = false
     
     //文件的md5
     var md5: String?
