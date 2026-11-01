@@ -196,7 +196,8 @@ enum SettingShared {
     
     /// 登录
     /// - Parameter pwd: 明文密码
-    static func login(domain: String, name: String, pwd: String, success: @escaping () -> Void) {
+    /// - Parameter editIndex: 编辑账号时,账号在已登录列表里的序号,登录成功之后替换这个账号
+    static func login(domain: String, name: String, pwd: String, editIndex: Int? = nil, success: @escaping () -> Void) {
         
         //先记录登录之前的服务器，如果登录失败，则还原之前的服务器
         let oldDomain = SettingShared.domain
@@ -211,11 +212,8 @@ enum SettingShared {
             LoginApi.doLogin(name: name, pwd: pwd, deviceId: Const.deviceId).error(block: onFail).fail{
                 onFail($0.msg ?? "登录失败")
             }.send{ loginInfo in//登录成功
-                var loggedUserList = SettingShared.loggedUserList.filter{ $0.domain != domain || $0.name != name }
-                loggedUserList.indices.forEach{ loggedUserList[$0].isLogining = false }
                 let account = AccountInfo(domain: domain, name: name, token: loginInfo.token, clusterId: global.clusterId, isLogining: true)
-                loggedUserList.append(account)
-                SettingShared.loggedUserList = loggedUserList
+                SettingShared.loggedUserList = SettingShared.addLoggedUser(account, editIndex: editIndex)
                 SettingShared.clusterId = global.clusterId
                 SettingShared.token = loginInfo.token
                 
@@ -237,6 +235,20 @@ enum SettingShared {
                 }
             }
         }
+    }
+    
+    /// 将登录成功的账号保存到已登录列表,同一个服务器的同一个用户只保留一条,编辑时保持账号原来的位置
+    private static func addLoggedUser(_ account: AccountInfo, editIndex: Int?) -> [AccountInfo] {
+        var list = SettingShared.loggedUserList
+        list.indices.forEach{ list[$0].isLogining = false }
+        let isSameUser = { (it: AccountInfo) in it.domain == account.domain && it.name == account.name }
+        guard let editIndex, list.indices.contains(editIndex) else{
+            list.removeAll(where: isSameUser)
+            list.append(account)
+            return list
+        }
+        list[editIndex] = account
+        return list.enumerated().filter{ $0.offset == editIndex || !isSameUser($0.element) }.map{ $0.element }
     }
     
     /// 切换到已经登录过的账号,票据失效时会跳转到登录页面

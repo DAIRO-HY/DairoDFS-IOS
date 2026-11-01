@@ -46,7 +46,7 @@ struct AlbumGridView: View {
                             Button(action: {
                                 self.vm.onItemClick(item)
                             }){
-                                AlbumGridViewItem(item, size: self.columnWidth, isSelectMode: self.vm.isSelectMode)
+                                AlbumGridViewItem(item, size: self.columnWidth, isSelected: item.isSelected, isSelectMode: self.vm.isSelectMode)
                             }
                             .buttonStyle(.row)
                         }

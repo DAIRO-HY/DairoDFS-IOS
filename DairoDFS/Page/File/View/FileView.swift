@@ -18,7 +18,7 @@ struct FileView: View {
                     //是否在剪切板标记
                     let isMoveFlag = self.vm.clipboardType == 1 && self.vm.clipboardSet.contains(item.fm.id)
                     Button(action: { self.vm.onFileClick(item) }){
-                        FileListItemView(item, isSelectMode: self.vm.isSelectMode)
+                        FileListItemView(item, isSelected: item.isSelected, isSelectMode: self.vm.isSelectMode)
                     }
                     .buttonStyle(.row)
                     .opacity(isMoveFlag ? 0.5 : 1)

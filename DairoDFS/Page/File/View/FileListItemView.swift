@@ -13,9 +13,13 @@ struct FileListItemView: View {
     ///文件信息
     private let dfsFile: FileEntity
     
+    /// 是否选中,FileEntity是引用类型,要以值的方式传入,否则选中状态变化时视图不会刷新
+    private let isSelected: Bool
+    
     private let isSelectMode: Bool
-    init(_ dfsFile: FileEntity, isSelectMode: Bool) {
+    init(_ dfsFile: FileEntity, isSelected: Bool, isSelectMode: Bool) {
         self.dfsFile = dfsFile
+        self.isSelected = isSelected
         self.isSelectMode = isSelectMode
     }
     var body: some View {
@@ -35,7 +39,7 @@ struct FileListItemView: View {
                 Divider()
             }
             if self.isSelectMode{//如果是选择模式
-                if self.dfsFile.isSelected{//当前为选中状态
+                if self.isSelected{//当前为选中状态
                     Image(systemName: "checkmark.circle")
                         .font(.title2)
                 } else {
@@ -74,7 +78,7 @@ struct FileListItemView: View {
 }
 
 #Preview {
-    FileListItemView(getDfsFileBean(), isSelectMode: false)
+    FileListItemView(getDfsFileBean(), isSelected: true, isSelectMode: false)
 }
 
 private func getDfsFileBean() -> FileEntity{

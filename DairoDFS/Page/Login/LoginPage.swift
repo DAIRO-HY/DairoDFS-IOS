@@ -19,7 +19,7 @@ struct LoginPage: View {
     
     var body: some View {
         SettingStack(embedInNavigationStack: true) {
-            SettingPage(title:"添加账号") {
+            SettingPage(title: self.loginInfo.editLoggedIndex == nil ? "添加账号" : "编辑账号") {
                 SettingCustomView {
                     ZStack{
                         Image("logo")
@@ -35,11 +35,7 @@ struct LoginPage: View {
                     SettingTextField(title: "密码", text: $loginInfo.pwd, placeholder: "请输入密码", type: .password)
                 }
                 SettingGroup{
-                    if self.loginInfo.editLoggedIndex == nil{
-                        SettingButtonSingle("登录",action: self.onLoginClick)
-                    }else{
-                        SettingButtonSingle("保存",action: self.onSaveClick)
-                    }
+                    SettingButtonSingle(self.loginInfo.editLoggedIndex == nil ? "登录" : "保存",action: self.onLoginClick)
                 }
                 SettingCustomView {
                     HStack{
@@ -61,7 +57,7 @@ struct LoginPage: View {
     }
     
     /**
-     登录按钮点击事件
+     登录/保存按钮点击事件
      */
     private func onLoginClick(){
         var domain = self.loginInfo.domain.trim()
@@ -93,16 +89,9 @@ struct LoginPage: View {
             Toast.show("密码必填")
             return
         }
-        SettingShared.login(domain: domain, name: self.loginInfo.name, pwd: pwd, success:{
+        SettingShared.login(domain: domain, name: self.loginInfo.name, pwd: pwd, editIndex: self.loginInfo.editLoggedIndex, success:{
             MinePage().relaunch()
         })
-    }
-    
-    /**
-     保存点击事件
-     */
-    private func onSaveClick(){
-        
     }
 }
 

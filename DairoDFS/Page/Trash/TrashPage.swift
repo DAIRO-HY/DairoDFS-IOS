@@ -21,7 +21,7 @@ struct TrashPage: View {
                             item.isSelected.toggle()
                             self.vm.selectedCount += (item.isSelected ? 1 : -1)
                         }){
-                            TrashItemView(item)
+                            TrashItemView(item, isSelected: item.isSelected)
                         }
                         .buttonStyle(.row)
                     }

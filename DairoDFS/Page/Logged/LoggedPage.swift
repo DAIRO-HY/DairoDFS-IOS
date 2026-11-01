@@ -86,7 +86,7 @@ struct LoggedPage: View {
                 }
                 Button("编辑") {
                     let actionItem = self.vm.actionItem
-                    LoginPage(LoginViewModel(domain: actionItem.domain, name: actionItem.name, pwd: "")).relaunch()
+                    LoginPage(LoginViewModel(domain: actionItem.domain, name: actionItem.name, pwd: "", editLoggedIndex: self.vm.actionIndex)).relaunch()
                 }
                 Button("移除") {
                     let actionItem = self.vm.actionItem

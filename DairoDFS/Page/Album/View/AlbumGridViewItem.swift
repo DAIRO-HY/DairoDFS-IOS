@@ -17,9 +17,13 @@ struct AlbumGridViewItem: View {
     
     private let size: CGFloat
     
-    init(_ entity: AlbumEntity, size: CGFloat, isSelectMode: Bool) {
+    /// 是否选中,AlbumEntity是引用类型,要以值的方式传入,否则选中状态变化时视图不会刷新
+    private let isSelected: Bool
+    
+    init(_ entity: AlbumEntity, size: CGFloat, isSelected: Bool, isSelectMode: Bool) {
         self.entity = entity
         self.size = size
+        self.isSelected = isSelected
         self.isSelectMode = isSelectMode
         
         //print("-->:\(self.entity.isSelected)")
@@ -37,7 +41,7 @@ struct AlbumGridViewItem: View {
             
             if self.isSelectMode{//如果是选择模式
                 Section{
-                    if self.entity.isSelected{//当前为选中状态
+                    if self.isSelected{//当前为选中状态
                         Image(systemName: "checkmark.circle.fill")
                     }
 //                    else {
@@ -69,7 +73,7 @@ struct AlbumGridViewItem: View {
 }
 
 #Preview {
-    AlbumGridViewItem(getTestEntity(), size: 300, isSelectMode: true)
+    AlbumGridViewItem(getTestEntity(), size: 300, isSelected: true, isSelectMode: true)
 }
 
 

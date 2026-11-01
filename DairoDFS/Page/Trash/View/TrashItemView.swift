@@ -13,8 +13,12 @@ struct TrashItemView: View {
     ///回收站文件信息
     private let entity: TrashEntity
     
-    init(_ entity: TrashEntity) {
+    /// 是否选中,TrashEntity是引用类型,要以值的方式传入,否则选中状态变化时视图不会刷新
+    private let isSelected: Bool
+    
+    init(_ entity: TrashEntity, isSelected: Bool) {
         self.entity = entity
+        self.isSelected = isSelected
     }
     var body: some View {
         HStack{
@@ -32,7 +36,7 @@ struct TrashItemView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                 Divider()
             }
-            if self.entity.isSelected{//当前为选中状态
+            if self.isSelected{//当前为选中状态
                 Image(systemName: "checkmark.circle")
                     .font(.title2)
             } else {
