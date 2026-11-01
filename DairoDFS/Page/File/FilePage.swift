@@ -28,6 +28,8 @@ struct FilePage: View {
             .navigationTitle("文件列表")
             .navigationBarHidden(true)
         }
+        //iPad上默认是左右分栏,这里要全屏显示
+        .navigationViewStyle(.stack)
     }
 }
 

@@ -86,6 +86,8 @@ struct MinePage: View {
             .navigationTitle("我的")
             .navigationBarHidden(true)
         }
+        //iPad上默认是左右分栏,这里要全屏显示
+        .navigationViewStyle(.stack)
     }
     
     /// 顶部头像部分视图

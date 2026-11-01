@@ -15,9 +15,6 @@ struct SystemAlbumPage: View {
     ///表间距
     private let SPACING = CGFloat(2)
     
-    //列数
-    private let COLUMN_NUM = 3
-    
     /// 上传模式
     private let uploadMode: UploadMode
     
@@ -31,13 +28,16 @@ struct SystemAlbumPage: View {
     var body: some View {
         GeometryReader { geometry in
             
+            //列数
+            let columnNum = AlbumGridView.columnCount(geometry.size.width)
+            
             //每列宽度 = (屏幕宽度 - (列数 - 1) * 列间距) / 列数
-            let width = (geometry.size.width - CGFloat(self.COLUMN_NUM - 1) * self.SPACING) / CGFloat(self.COLUMN_NUM)
+            let width = (geometry.size.width - CGFloat(columnNum - 1) * self.SPACING) / CGFloat(columnNum)
             VStack{
                 if self.vm.freashFlag > 0{
                     ScrollViewReader { proxy in
                         ScrollView {
-                            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: self.SPACING), count: self.COLUMN_NUM), spacing: self.SPACING) {
+                            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: self.SPACING), count: columnNum), spacing: self.SPACING) {
                                 ForEach(self.vm.albumList, id:\.identifier) { item in
                                     Button(action:{
                                         self.vm.onItemClick(item)

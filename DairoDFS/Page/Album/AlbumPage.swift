@@ -71,6 +71,8 @@ struct AlbumPage: View {
                 }
             }
         }
+        //iPad上默认是左右分栏,这里要全屏显示
+        .navigationViewStyle(.stack)
     }
 }
 
