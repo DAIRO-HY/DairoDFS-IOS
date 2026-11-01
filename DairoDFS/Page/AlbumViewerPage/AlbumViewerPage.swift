@@ -169,7 +169,7 @@ struct AlbumViewerPage: View {
             .edgesIgnoringSafeArea(.all)
             .onChange(of: geometry.size) { newSize in
                 // 当屏幕尺寸发生变化时，更新 ViewModel
-                self.vm.onAppear(newSize.width, newSize.height)
+                self.vm.onResize(newSize.width, newSize.height)
             }
             .onAppear{
                 self.vm.onAppear(geometry.size.width, geometry.size.height)

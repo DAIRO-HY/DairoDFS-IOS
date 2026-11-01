@@ -165,6 +165,22 @@ class AlbumViewerViewModel: ObservableObject{
         self.changePage(self.currentIndex)
     }
     
+    /// 视图尺寸变化时(屏幕旋转、分屏等),只更新布局,不重新加载文件,视频会继续播放
+    func onResize(_ screenWidth: CGFloat, _ screenHeight: CGFloat){
+        self.screenWidth = screenWidth
+        self.screenHeight = screenHeight
+        self.screenWHRate = self.screenWidth / self.screenHeight
+        self.hStackOffset = -CGFloat(self.currentIndex + 1) * self.screenWidth
+        self.notShowWidth = self.screenWidth * CGFloat(self.currentIndex)
+        self.currentOffsetPosition = .zero
+        self.preOffsetPosition = .zero
+        self.zoomAmount = 1.0
+        
+        //为了保证图片未加载时也能正常切换,默认将屏幕大小作为图片大小
+        self.uiImageWHRate = self.uiImage.map{ $0.size.width / $0.size.height } ?? self.screenWHRate
+        self.computeDisplaySize()
+    }
+    
     func fixPageViewPosition(){
         
         //页面切换滑动距离
@@ -379,7 +395,11 @@ class AlbumViewerViewModel: ObservableObject{
         
         //图片宽高比
         self.uiImageWHRate = uiImage.size.width / uiImage.size.height
-        
+        self.computeDisplaySize()
+    }
+    
+    /// 计算没有放大缩小的状态下,图片显示的宽与高
+    private func computeDisplaySize(){
         if self.uiImageWHRate > self.screenWHRate {//图片的宽高比大于屏幕的宽高比,则没有放大缩小的状态下,显示的宽度为屏幕宽度
             self.displayW1 = self.screenWidth
             self.displayH1 = self.displayW1 / self.uiImageWHRate
