@@ -43,7 +43,7 @@ struct SystemAlbumPage: View {
                                         self.vm.onItemClick(item)
                                     }){
                                         let index = self.vm.identifier2index[item.identifier]
-                                        SystemAlbumImageView(width, index!).environmentObject(self.vm)
+                                        SystemAlbumImageView(width, index!, item.identifier).environmentObject(self.vm)
                                         //Text("-->:\(width)")
                                         //                            Text("\(index)-\(getAssetFileExtension(imageInfo.asset)!)-\(Costom.getCostom())")
                                         //                                Text("\(item.isExistsFlag)")

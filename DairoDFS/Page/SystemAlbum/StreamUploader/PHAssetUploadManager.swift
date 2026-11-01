@@ -17,7 +17,7 @@ class PHAssetUploadManager{
     static let NOTIFY_UPLOAD_PROGRESS = "NOTIFY_UPLOAD_PROGRESS"
     
     //通知:单个文件上传完成通知
-    static let NOTIFY_UPLOAD_ITEM_FINISH = "NOTIFY_UPLOAD_ITEM_FINISH"
+//    static let NOTIFY_UPLOAD_ITEM_FINISH = "NOTIFY_UPLOAD_ITEM_FINISH"
     
     //通知:全部文件上传完成通知
     static let NOTIFY_UPLOAD_FINISH = "NOTIFY_UPLOAD_FINISH"

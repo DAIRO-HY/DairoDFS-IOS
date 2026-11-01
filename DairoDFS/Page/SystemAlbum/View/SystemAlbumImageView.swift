@@ -22,12 +22,18 @@ struct SystemAlbumImageView: View {
     //预览图片
     @State private var image: UIImage?
     
+    //当前上传进度信息
+    @State private var progress = ""
+    
     /// 当前序号
     private let index: Int
     
-    init(_ size: CGFloat, _ index: Int){
+    private let localIdentifier: String
+    
+    init(_ size: CGFloat, _ index: Int, _ localIdentifier: String){
         self.size = size
         self.index = index
+        self.localIdentifier = localIdentifier
     }
     
     var body: some View {
@@ -77,11 +83,11 @@ struct SystemAlbumImageView: View {
                             Spacer().frame(width: 5)
                         }
                     }
-                    if !albumBean.uploadMsg.isEmpty{//上传状态
+                    if !self.progress.isEmpty{//上传状态
                         Button(action: {
-                            Toast.show(albumBean.uploadMsg)
+                            Toast.show(self.progress)
                         }){
-                            Text(albumBean.uploadMsg)
+                            Text(self.progress)
                                 .font(.footnote).foregroundColor(.white)
                         }.frame(maxWidth: .infinity).frame(height: 20).background(Color.black.opacity(0.5))
                     }
@@ -98,6 +104,8 @@ struct SystemAlbumImageView: View {
                 self.vm.loadAlbumInfo(self.index)
                 self.requestImage()
             }
+        }.onReceive(NotificationCenter.default.publisher(for: Notification.Name(PHAssetUploadManager.NOTIFY_UPLOAD_PROGRESS + self.localIdentifier))){
+            self.progress = $0.object as! String
         }
     }
     
@@ -112,6 +120,9 @@ struct SystemAlbumImageView: View {
             contentMode: .aspectFill,
             options: options) { image, _ in
                 Task{@MainActor in
+                    if self.progress.isEmpty{
+                        self.progress = self.vm.albumList[index].uploadMsg
+                    }
                     self.image = image
                 }
             }

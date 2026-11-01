@@ -54,7 +54,8 @@ extension FileModel{
         if lowerName.hasSuffix(".jpg")
             || lowerName.hasSuffix(".jpeg")
             || lowerName.hasSuffix(".png")
-            || lowerName.hasSuffix(".heic"){//这些格式的预览图和原图都是一样的
+            || lowerName.hasSuffix(".heic")
+            || lowerName.hasSuffix(".hif"){//这些格式的预览图和原图都是一样的
             return self.download
         } else {
             return self.makeExtraUrl("preview", ".jpg")
@@ -95,6 +96,7 @@ extension FileModel{
         || lowerName.hasSuffix(".jpeg")
         || lowerName.hasSuffix(".png")
         || lowerName.hasSuffix(".heic")
+        || lowerName.hasSuffix(".hif")
         || lowerName.hasSuffix(".gif")
         || lowerName.hasSuffix(".psd")
         || lowerName.hasSuffix(".cr3")

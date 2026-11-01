@@ -22,7 +22,7 @@ struct AlbumGridViewItem: View {
         self.size = size
         self.isSelectMode = isSelectMode
         
-        print("-->:\(self.entity.isSelected)")
+        //print("-->:\(self.entity.isSelected)")
     }
     var body: some View {
         ZStack(alignment: .bottomTrailing){

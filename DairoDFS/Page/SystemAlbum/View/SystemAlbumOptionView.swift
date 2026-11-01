@@ -63,16 +63,6 @@ struct SystemAlbumOptionView: View {
                 return
             }
             self.vm.albumList[index].uploadMsg = uploadMsg
-        }.onReceive(NotificationCenter.default.publisher(for: Notification.Name(PHAssetUploadManager.NOTIFY_UPLOAD_ITEM_FINISH))){
-            let values = $0.object as! Array<String>
-            let localIdentifier = values[0]
-            let uploadMsg = values[1]
-            
-            //当前文件所在序号
-            guard let index = self.vm.identifier2index[localIdentifier] else{
-                return
-            }
-            self.vm.albumList[index].uploadMsg = uploadMsg
         }.onReceive(NotificationCenter.default.publisher(for: Notification.Name(PHAssetUploadManager.NOTIFY_UPLOAD_FINISH))){ _ in
             self.vm.isUploading = false
         }
