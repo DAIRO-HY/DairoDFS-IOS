@@ -31,9 +31,6 @@ class FileViewModel : ObservableObject{
     /// 剪切板中的文件ID
     var clipboardSet = Set<Int64>()
     
-    /// 剪切板中的文件路径列表
-    private var clipboardPaths = [String]()
-    
     /// 剪切板类型 1:剪切 2:复制 
     @Published var clipboardType: Int8 = 0
     
@@ -158,10 +155,8 @@ class FileViewModel : ObservableObject{
     
     /// 存放剪切板
     func toClipboard(_ clipboardType: Int8){
-        let lastOpenFolder = SettingShared.lastOpenFolder
         self.entities.forEach{
             if $0.isSelected{
-                self.clipboardPaths.append(lastOpenFolder + "/" + $0.fm.name)
                 self.clipboardSet.insert($0.fm.id)
             }
         }
@@ -175,14 +170,13 @@ class FileViewModel : ObservableObject{
     func onPasteClick(){
         let http: ApiHttp<EmptyModel>
         if self.clipboardType == 1{
-            http = FilesApi.move(sourcePaths: self.clipboardPaths, targetFolder: SettingShared.lastOpenFolder, isOverWrite: false)
+            http = FilesApi.move(ids: Array(self.clipboardSet), targetFolder: SettingShared.lastOpenFolder, isOverWrite: false)
         }else{
-            http = FilesApi.copy(sourcePaths: self.clipboardPaths, targetFolder: SettingShared.lastOpenFolder, isOverWrite: false)
+            http = FilesApi.copy(ids: Array(self.clipboardSet), targetFolder: SettingShared.lastOpenFolder, isOverWrite: false)
         }
-        http.post {
+        http.send {
             self.clipboardType = 0
             self.clipboardSet.removeAll()
-            self.clipboardPaths.removeAll()
             Toast.show("操作成功")
             self.reload()
         }
@@ -191,11 +185,10 @@ class FileViewModel : ObservableObject{
     ///重命名点击事件
     func onRenameClick(_ newName: String){
         
-        //当前选中文件名
-        let name = self.entities.first{$0.isSelected}!.fm.name
-        let path = SettingShared.lastOpenFolder + "/" + name
+        //当前选中文件
+        let id = self.entities.first{$0.isSelected}!.fm.id
         self.isSelectMode = false
-        FilesApi.rename(sourcePath: path, name: newName).post {
+        FilesApi.rename(id: id, name: newName).send {
             Toast.show("操作成功")
             self.reload()
         }
@@ -203,16 +196,21 @@ class FileViewModel : ObservableObject{
     
     /// 下载按钮点击事件
     func onDownloadClick(){
-        let downloadList = self.entities.filter{$0.isSelected && $0.fm.isFile}.map{
-            return ($0.fm.downloadId, $0.fm.download)
-        }
+        let downloadList = self.entities.filter{$0.isSelected && $0.fm.isFile}
         if downloadList.isEmpty{
             Toast.show("请选择要下载的文件,暂不支持文件夹下载")
             return
         }
         
         //添加到下载列表
-        DownloadManager.save(downloadList)
+        do {
+            for item in downloadList{
+                try FileSdkUtil.download(item.fm.downloadSource)
+            }
+        } catch {
+            Toast.show(error.fileSdkMessage)
+            return
+        }
         Toast.show("已经添加到下载列表")
         self.isSelectMode = false
         self.clearSelected()
@@ -230,9 +228,7 @@ class FileViewModel : ObservableObject{
     
     /// 删除按钮点击事件
     func onDeleteClick(){
-        let folder = SettingShared.lastOpenFolder
-        let paths = self.entities.filter{$0.isSelected}.map{folder + "/" + $0.fm.name}
-        FilesApi.delete(paths: paths).post {
+        FilesApi.delete(ids: self.entities.filter{$0.isSelected}.map{$0.fm.id}).send {
             Toast.show("删除成功")
             
             //当前选中的数量归零

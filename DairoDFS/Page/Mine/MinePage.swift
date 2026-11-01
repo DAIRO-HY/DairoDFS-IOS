@@ -48,7 +48,7 @@ struct MinePage: View {
                             }.icon("square.and.arrow.up.fill", backgroundColor: Color.cyan)
                             
                             SettingNavigationLink("下载管理",tip: "下载、缓存文件"){
-                                AnyView(DownloadPage())
+                                AnyView(FileDownloadPage())
                             }.icon("square.and.arrow.down.fill", backgroundColor: Color.indigo)
                         }
                         SettingGroup{
@@ -73,6 +73,8 @@ struct MinePage: View {
                         }
                         SettingGroup{
                             SettingButtonSingle("退出登录"){
+                                //让服务端删除这个票据
+                                LoginApi.logout().hide().send{}
                                 SettingShared.logout()
                                 LoginPage().relaunch()
                             }

@@ -1,4 +1,3 @@
-/*工具自动生成代码,请勿手动修改*/
 struct MineModel : Codable {
 
   	/** 主键 **/
@@ -21,5 +20,8 @@ struct MineModel : Codable {
 
   	/** 端对端加密密钥 **/
   var encryptionKey: String
+
+  	/** 是否管理员 **/
+  var isAdmin: Bool
 
 }

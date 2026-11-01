@@ -23,7 +23,7 @@ class TrashViewModel : ObservableObject{
     
     ///加载数据
     func loadData(){
-        TrashApi.getList().post{
+        TrashApi.getList().send{
             var entities = [TrashEntity]()
             for item in $0{
                 entities.append(TrashEntity(item))
@@ -55,7 +55,7 @@ class TrashViewModel : ObservableObject{
     
     /// 删除按钮点击事件
     func onDeleteClick(){
-        TrashApi.logicDelete(ids: self.entities.filter{$0.isSelected}.map{$0.fm.id}).post {
+        TrashApi.delete(ids: self.entities.filter{$0.isSelected}.map{$0.fm.id}).send {
             Toast.show("操作成功")
             self.loadData()
         }
@@ -63,7 +63,7 @@ class TrashViewModel : ObservableObject{
     
     /// 还原按钮点击事件
     func onRecoverClick(){
-        TrashApi.trashRecover(ids: self.entities.filter{$0.isSelected}.map{$0.fm.id}).post {
+        TrashApi.recover(ids: self.entities.filter{$0.isSelected}.map{$0.fm.id}).send {
             Toast.show("操作成功")
             self.loadData()
         }

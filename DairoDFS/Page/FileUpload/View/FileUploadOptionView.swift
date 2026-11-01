@@ -40,8 +40,8 @@ struct FileUploadOptionView: View {
                 } message: {
                     Text("此操作无法撤销")
                 }
-                BottomOptionButton("全暂停", icon: "pause.circle", disabled: self.vm.saveType == 0, action: self.vm.onPauseAllClick)
-                BottomOptionButton("全开始", icon: "play.circle", disabled: self.vm.saveType == 0, action: self.vm.onStartAllClick)
+                BottomOptionButton("全暂停", icon: "pause.circle", action: self.vm.onPauseAllClick)
+                BottomOptionButton("全开始", icon: "play.circle", action: self.vm.onStartAllClick)
                 BottomOptionButton("设置", icon: "gearshape"){
                     self.isShowSet = true
                 }
@@ -50,19 +50,3 @@ struct FileUploadOptionView: View {
     }
 }
 
-
-//#Preview {
-//    DownloadOptionTestView()
-//}
-//
-//struct DownloadOptionTestView: View {
-//    
-//    @StateObject
-//    private var vm = DownloadViewModel()
-//    var body: some View {
-//        NavigationView{
-//            DownloadOptionView().environmentObject(self.vm)
-//                .navigationTitle("下载页面")
-//        }
-//    }
-//}

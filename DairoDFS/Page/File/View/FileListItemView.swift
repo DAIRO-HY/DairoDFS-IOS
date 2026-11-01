@@ -52,10 +52,9 @@ struct FileListItemView: View {
             if self.dfsFile.fm.isFile{
                 if self.dfsFile.fm.hasThumb{//如果有缩略图
                     let width = 44
-                    let thumbUrl = self.dfsFile.fm.onlineThumb(width: width * 3, height: width * 3)
-                    let thumbId = self.dfsFile.fm.onlineThumbId(width: width * 3, height: width * 3)
-                    CacheImage(thumbUrl, downloadId: thumbId)
+                    DfsImage(self.dfsFile.fm.onlineThumbSource(width: width * 3, height: width * 3))
                         .frame(width: CGFloat(width), height: CGFloat(width))
+                        .clipped()
                         .cornerRadius(6)
                 }else{//没有缩略图
                     Image(systemName: "questionmark.square.fill")
@@ -86,8 +85,7 @@ private func getDfsFileBean() -> FileEntity{
             size: 123456789,
             fileFlag: true,
             date: 1234567890,
-            hasThumb: false,
-            other1: ""
+            hasThumb: false
         )
     )
     dfb.isSelected = true

@@ -11,6 +11,7 @@ import AVFoundation
 import DairoUI_IOS
 import SwiftUI
 import Photos
+import DairoFileSDK
 
 //@TODO: deinit函数尚未调用,待解决
 class AlbumViewerViewModel: ObservableObject{
@@ -31,6 +32,9 @@ class AlbumViewerViewModel: ObservableObject{
 
     /// 获取文件属性的http请求
     private var propertyApiHttp: ApiHttpBase?
+    
+    /// 当前图片的下载任务
+    private var fetchTask: FetchTask?
 
     /// 当前文件属性
     private var fileProperty: FilePropertyModel?
@@ -210,6 +214,7 @@ class AlbumViewerViewModel: ObservableObject{
         self.tags.removeAll()
         self.propertyApiHttp?.cancel()
         self.fileProperty = nil
+        self.cancelFetch()
 
         //停止视频计时器
         self.videoTimer?.invalidate()
@@ -224,20 +229,23 @@ class AlbumViewerViewModel: ObservableObject{
 
         //停止实况视频播放
         self.dliveVm.clear()
-        if let path = DownloadManager.getDownloadedPath(self.fm.propertyId){//如果属性文件已经存在
-            let data = FileUtil.readAll(path)!
+        if let path = FileSdkUtil.cachedPath(self.fm.propertySource), let data = FileUtil.readAll(path){//如果属性文件已经存在
             self.fileProperty = try? JSONDecoder().decode(FilePropertyModel.self, from: data)
             self.initView()
         } else {
             self.progress = "正在加载文件属性"
 
             //加载文件属性
-            self.propertyApiHttp = FilesApi.getPropertyV2(ids: [self.fm.id]).hide().post{
+            let fm = self.fm
+            self.propertyApiHttp = FilesApi.getProperty(ids: [fm.id]).hide().error{
+                self.progress = $0
+            }.fail{
+                self.progress = $0.msg ?? "加载文件属性失败"
+            }.send{
                 self.progress = ""
                 self.fileProperty = $0
-                if $0.state == 1{//如果文件已经处理完成,则将文件属性信息缓存起来
-                    let jsonData = try! JSONEncoder().encode($0)
-                    DownloadManager.addFile(id: self.fm.propertyId, name:  "\(self.fm.id)-property.json", data: jsonData, saveType: 0)
+                if $0.state == 1, let jsonData = try? JSONEncoder().encode($0){//如果文件已经处理完成,则将文件属性信息缓存起来
+                    FileSdkUtil.putData(fm.propertySource, jsonData)
                 }
                 self.initView()
             }
@@ -256,29 +264,21 @@ class AlbumViewerViewModel: ObservableObject{
 
     /// 显示标签
     private func showTag(){
-        if DownloadManager.getDownloadedPath(self.fm.downloadId) != nil{
+        if FileSdkUtil.cachedPath(self.fm.downloadSource) != nil{
             self.tags.append("已下载")
         }
-        if let filePropertyPath = DownloadManager.getDownloadedPath(self.fm.propertyId){
-            if let fileProperty = try? JSONDecoder().decode(FilePropertyModel.self, from: FileUtil.readAll(filePropertyPath)!){
-                let propertyJson = fileProperty.property
-                if !propertyJson.isEmpty{
-                    if let property = try? JSONSerialization.jsonObject(with: propertyJson.data(using: .utf8)!, options: []) as? [String: Any]{
-                        if let width = property["width"] as? Int{
-                            if let height = property["height"] as? Int{
-                                if width * height == 3840 * 2160{
-                                    self.tags.append("4K")
-                                } else if width * height == 1920 * 1080{
-                                    self.tags.append("HD")
-                                }
-                            }
-                        }
-                        if let fps = property["fps"] as? Int{
-                            if (59...60).contains(fps){
-                                self.tags.append("60FPS")
-                            }
-                        }
-                    }
+        if let propertyData = self.fileProperty?.property.data(using: .utf8),
+           let property = try? JSONSerialization.jsonObject(with: propertyData, options: []) as? [String: Any]{
+            if let width = property["width"] as? Int, let height = property["height"] as? Int{
+                if width * height == 3840 * 2160{
+                    self.tags.append("4K")
+                } else if width * height == 1920 * 1080{
+                    self.tags.append("HD")
+                }
+            }
+            if let fps = property["fps"] as? Int{
+                if (59...60).contains(fps){
+                    self.tags.append("60FPS")
                 }
             }
         }
@@ -293,7 +293,7 @@ class AlbumViewerViewModel: ObservableObject{
     func loadPicture(){
         if self.fm.isDlive{//如果这是实况照片
             self.dliveVm.setFm(self.fm)
-            if let path = DownloadManager.getDownloadedPath(self.fm.downloadId){//如果文件已经下载
+            if let path = FileSdkUtil.cachedPath(self.fm.downloadSource){//如果文件已经下载
                 let dliveInfo = DliveUtil.getInfo(path)
                 if let uiImage = UIImage(data: dliveInfo.photoData){
                     self.isShowDownloaded = true
@@ -304,7 +304,7 @@ class AlbumViewerViewModel: ObservableObject{
         }
         
         //优先加载下载好的预览图片
-        if let path = DownloadManager.getDownloadedPath(self.fm.isDlive ? self.fm.previewDownloadId : self.fm.previewDownloadId){
+        if let path = FileSdkUtil.cachedPath(self.fm.previewImageSource){
             if let uiImage = UIImage(contentsOfFile: path){
                 self.isShowDownloaded = true
                 self.initImage(uiImage)
@@ -313,13 +313,33 @@ class AlbumViewerViewModel: ObservableObject{
         }
         
         //先显示缩略图
-        if let path = DownloadManager.getDownloadedPath(self.fm.thumbDownloadId){
+        if let path = FileSdkUtil.cachedPath(self.fm.thumbSource){
             if let uiImage = UIImage(contentsOfFile: path){
                 self.initImage(uiImage)
             }
-        } else {//取加载缩略图
-            DownloadManager.cache(self.fm.thumbDownloadId, self.fm.thumbUrl)
+        } else if self.fm.hasThumb{//取加载缩略图
+            self.fetch(self.fm.thumbSource)
         }
+    }
+    
+    /// 下载图片,完成之后刷新视图
+    private func fetch(_ source: FileSource){
+        self.cancelFetch()
+        self.fetchTask = FileSdkUtil.fetch(source, progress: {
+            self.progress = "\($0)%"
+        }, finish: { _, error in
+            self.fetchTask = nil
+            self.progress = error ?? ""
+            if error == nil{
+                self.loadPicture()
+            }
+        })
+    }
+    
+    /// 取消下载图片
+    func cancelFetch(){
+        self.fetchTask?.cancel()
+        self.fetchTask = nil
     }
     
     /**
@@ -440,7 +460,7 @@ class AlbumViewerViewModel: ObservableObject{
                 currentTime = item.currentTime()
            }
         }
-        if let path = DownloadManager.getDownloadedPath(self.fm.downloadId){//如果该视频文件已经被下载,直接播放已经下载的文件
+        if let path = FileSdkUtil.cachedPath(self.fm.downloadSource){//如果该视频文件已经被下载,直接播放已经下载的文件
             self.videoPlayer = AVPlayer(url: URL(fileURLWithPath:  path))
             self.videoPlayer?.seek(to: currentTime)
             self.videoPlayer?.play()
@@ -452,15 +472,19 @@ class AlbumViewerViewModel: ObservableObject{
             self.videoIsPlaying = true
             return
         }
-        guard let fileProperty = self.fileProperty else{
+        guard self.fileProperty != nil else{
             Toast.show("未获取到文件信息")
             return
         }
 
-        let videoUrl = self.videoOnlineUrl
-        self.videoIsOriginal = videoUrl == self.fm.download
+        let videoSource = self.videoOnlineSource
+        self.videoIsOriginal = videoSource.cacheKey == self.fm.downloadSource.cacheKey
+        guard let videoUrl = FileSdkUtil.open(videoSource) else{
+            Toast.show("视频加载失败")
+            return
+        }
         Task.detached{ //网络视频应该通过异步任务加载,否则可能导致UI卡顿
-            self.videoPlayer = AVPlayer(url: URL(string:  videoUrl)!)
+            self.videoPlayer = AVPlayer(url: videoUrl)
             self.videoPlayer?.currentItem?.asset.loadValuesAsynchronously(forKeys: ["duration"]){
                 var error: NSError?
                 let status = self.videoPlayer?.currentItem?.asset.statusOfValue(forKey: "duration", error: &error)
@@ -476,21 +500,21 @@ class AlbumViewerViewModel: ObservableObject{
         }
     }
 
-    /// 视频在线播放时的url
-    private var videoOnlineUrl: String{
-        guard let previewExtra = (self.fileProperty!.extraList.first{ $0.name == "preview" }) else {//没有预览视频，使用原视频
-            return self.fm.download
+    /// 视频在线播放时的文件
+    private var videoOnlineSource: FileSource{
+        guard (self.fileProperty!.extraList.contains{ $0.name == "preview" }) else {//没有预览视频，使用原视频
+            return self.fm.downloadSource
         }
         switch SettingShared.videoQuality{
         case SettingShared.VIDEO_QUALITY_ORIGINAL://播放原文件视频
-            return self.fm.download
+            return self.fm.downloadSource
         case SettingShared.VIDEO_QUALITY_SMOOTH://播放流畅视频
-            return self.fm.makeExtraUrl("preview",".mp4")
+            return self.fm.previewVideoSource
         default://自动
             if SettingShared.domainNotNull.hasPrefix("http://192.168") || SettingShared.domainNotNull.hasPrefix("http://localhost"){//如果是局域网,则优先原画
-                return self.fm.download
+                return self.fm.downloadSource
             } else {//播放流畅视频
-                return self.fm.makeExtraUrl("preview",".mp4")
+                return self.fm.previewVideoSource
             }
         }
     }
@@ -582,26 +606,38 @@ class AlbumViewerViewModel: ObservableObject{
     
     /// 共享给其他app
     func onShareClick(){
-        guard let path = DownloadManager.getDownloadedPath(self.fm.downloadId) else{
+        guard FileSdkUtil.cachedPath(self.fm.downloadSource) != nil, let id = FileSdkUtil.cacheId(self.fm.downloadSource) else{
             Toast.show("请先将文件下载之后才能共享")
             return
         }
         guard let source = UIApplication.shared.windows.last?.rootViewController else {
             return
         }
-        let shareFileURL = URL(string: "file://" + path)!
-        let vc = UIActivityViewController(
-            activityItems: [shareFileURL],
-            applicationActivities: nil
-        )
-        vc.excludedActivityTypes = nil
-        vc.popoverPresentationController?.sourceView = source.view
-        source.present(vc, animated: true)
+        let name = self.fm.name
+        let shareFolder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).path
+        Task.detached{
+            
+            //缓存文件的名字是缓存ID,导出到临时目录,这样其他app看到的才是真实的文件名
+            do {
+                let path = try FileSdkUtil.get().export(id: id, destDir: shareFolder, name: name)
+                Task{@MainActor in
+                    let vc = UIActivityViewController(
+                        activityItems: [URL(fileURLWithPath: path)],
+                        applicationActivities: nil
+                    )
+                    vc.excludedActivityTypes = nil
+                    vc.popoverPresentationController?.sourceView = source.view
+                    source.present(vc, animated: true)
+                }
+            } catch {
+                Toast.show(error.fileSdkMessage)
+            }
+        }
     }
     
     /// 删除按钮点击事件
     func onDeleteClick(){
-        FilesApi.deleteByIds(ids: [self.fm.id]).post {
+        FilesApi.delete(ids: [self.fm.id]).send {
             
             //当前显示的索引
             var currentIndex = self.currentIndex
@@ -625,23 +661,55 @@ class AlbumViewerViewModel: ObservableObject{
         self.isDownloadFlag = true
         
         //添加下载,如果文件在缓存中,则将缓存标记为永久保存
-        DownloadManager.save([(self.fm.downloadId, self.fm.download)])
-        if DownloadManager.getDownloadedPath(self.fm.downloadId) != nil{// 文件已经被下载
+        do {
+            try FileSdkUtil.download(self.fm.downloadSource)
+        } catch {
+            self.progress = error.fileSdkMessage
+            self.downloadFinish()
+            return
+        }
+        if FileSdkUtil.cachedPath(self.fm.downloadSource) != nil{// 文件已经被下载
             self.downloadFinish()
             return
         }
     }
     
+    /// SDK事件,更新当前文件的下载进度
+    func onFileSdkEvent(_ event: Event){
+        guard self.isDownloadFlag, let id = FileSdkUtil.cacheId(self.fm.downloadSource) else{
+            return
+        }
+        switch event{
+        case let .progress(eventId, _, size, downloaded, _):
+            if eventId == id, let size, size > 0{
+                self.progress = "\(Int(Double(downloaded) / Double(size) * 100))%"
+            }
+        case let .stateChanged(eventId, _, state, error):
+            if eventId != id{
+                return
+            }
+            if state == .finish{
+                self.progress = ""
+                self.downloadFinish()
+            } else if state == .error{
+                self.progress = error ?? "下载失败"
+                self.downloadFinish()
+            }
+        default:
+            break
+        }
+    }
+    
     /// 文件下载完成后的操作
     func downloadFinish(){
-        if let path = DownloadManager.getDownloadedPath(self.fm.downloadId){ //文件不一定下载成功,所以这里要加判断
+        if let path = FileSdkUtil.cachedPath(self.fm.downloadSource){ //文件不一定下载成功,所以这里要加判断
             if self.isSaveToAlbum{// 下载完成之后保存到相册
                 PHPhotoLibrary.shared().performChanges({
                     let options = PHAssetResourceCreationOptions()
                     let request = PHAssetCreationRequest.forAsset()
                     if self.isVideo{//视频时
                         options.shouldMoveFile = false // 是否移动文件,而不是复制
-                        let videoURL = URL(string: "file://" + path)!
+                        let videoURL = URL(fileURLWithPath: path)
                         request.addResource(with: .video, fileURL: videoURL, options: options)
                         return
                     }
@@ -693,9 +761,9 @@ class AlbumViewerViewModel: ObservableObject{
     
     ///  加载原图点击事件
     func onLoadOriginalClick(){
-            
-            //请求加载原图
-            DownloadManager.cache(self.fm.previewDownloadId, self.fm.previewImage)
+        
+        //请求加载原图
+        self.fetch(self.fm.previewImageSource)
     }
     
     

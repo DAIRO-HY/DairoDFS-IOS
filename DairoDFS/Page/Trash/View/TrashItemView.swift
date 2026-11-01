@@ -45,10 +45,10 @@ struct TrashItemView: View {
     ///缩略图
     private var thumb: some View{
         Section{
-            if !self.entity.fm.thumb.isEmpty{//如果有缩略图
-                let url = SettingShared.domainNotNull + self.entity.fm.thumb + "?extra=thumb&_token=" + SettingShared.token
-                CacheImage(url, downloadId: "\(self.entity.fm.id)-thumb")
+            if self.entity.fm.hasThumb{//如果有缩略图
+                DfsImage(FileSource.thumb(id: self.entity.fm.id))
                     .frame(width: 44, height: 44)
+                    .clipped()
                     .cornerRadius(6)
             } else {//没有缩略图
                 Image(systemName: "questionmark.square.fill")

@@ -7,79 +7,87 @@
 
 extension FileModel{
     
-    /// 生成获取附属文件地址
-    /// - Parameter ext 要下载的文件后缀
-    func makeExtraUrl(_ extra: String, _ ext: String = "") -> String{
-        let baseUrl = SettingShared.domainNotNull + "/app/files/extra/\(self.id)/\(self.name)\(ext)?_token=" + SettingShared.token + "&extra=\(extra)" //+ "&wait=1"
-        return baseUrl
+    /// 附属文件
+    /// - Parameter extra 附属文件名,例如:thumb、preview、preview-dlive
+    /// - Parameter ext 附属文件的扩展名
+    private func extraSource(_ extra: String, _ ext: String) -> FileSource{
+        return FileSource(
+            url: SettingShared.domainNotNull + "/api/files/extra/\(self.id)/\(extra)",
+            cacheKey: "/api/files/extra/\(self.id)/\(extra)",
+            group: extra,
+            name: "\(self.id)-\(extra).\(ext)"
+        )
     }
 
-    /// 得到文件缩略图文件下载ID
-    var thumbDownloadId: String{
-        return "\(self.id)-thumb"
+    /// 原文件
+    var downloadSource: FileSource{
+        let name = self.name.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? self.name
+        return FileSource(
+            url: SettingShared.domainNotNull + "/api/files/download/\(self.id)/\(name)",
+            cacheKey: "/api/files/download/\(self.id)",
+            group: "file",
+            name: self.name
+        )
     }
 
-    /// 文件属性id
-    var propertyId: String{
-        return "\(self.id)-property"
+    /// 缩略图
+    var thumbSource: FileSource{
+        return FileSource.thumb(id: self.id)
     }
 
-    /// 得到缩略图URL
-    var thumbUrl: String{
-        return self.makeExtraUrl("thumb", "-thumb.jpg")
+    /// 文件属性
+    var propertySource: FileSource{
+        return FileSource(
+            url: SettingShared.domainNotNull + ApiConst.FILES_PROPERTY + "?ids=\(self.id)",
+            cacheKey: ApiConst.FILES_PROPERTY + "/\(self.id)",
+            group: "property",
+            name: "\(self.id)-property.json"
+        )
     }
 
-    ///得到文件缩略图文件下载ID
-    var downloadId: String{
-        return "\(self.id)"
-    }
-
-    /// 得到下载文件的url
-    var download: String{
-        return self.makeExtraUrl("")
-    }
-
-    ///得到文件预览文件下载ID
-    var previewDownloadId: String{
-        if self.previewImage == self.download{
-            return self.downloadId
-        }else{
-            return self.downloadId + "-preview"
-        }
-    }
-
-    ///得到文件预览url
-    var previewImage: String{
+    /// 图片预览
+    var previewImageSource: FileSource{
         let lowerName = self.name.lowercased()
         if lowerName.hasSuffix(".jpg")
             || lowerName.hasSuffix(".jpeg")
             || lowerName.hasSuffix(".png")
             || lowerName.hasSuffix(".heic")
             || lowerName.hasSuffix(".hif"){//这些格式的预览图和原图都是一样的
-            return self.download
+            return self.downloadSource
         } else {
-            return self.makeExtraUrl("preview", ".jpg")
+            return self.extraSource("preview", "jpg")
         }
     }
 
-    /// 在线获取图片缩略图ID
-    func onlineThumbId(width: Int, height: Int, maxSize: Int = 0) -> String{
-        return "thumb-\(self.id)-\(width)-\(height)-\(maxSize)"
+    /// 流畅画质的预览视频
+    var previewVideoSource: FileSource{
+        return self.extraSource("preview", "mp4")
     }
 
-    /// 在线获取图片缩略图
-    func onlineThumb(width: Int, height: Int, maxSize: Int = 0) -> String{
-        return "\(SettingShared.domainNotNull)/app/files/thumb_online/\(self.id)/\(self.id)-\(width)-\(height)-\(maxSize).jpg?_token=\(SettingShared.token)&width=\(width)&height=\(height)&maxSize=\(maxSize)"
+    /// 在线生成的缩略图
+    func onlineThumbSource(width: Int, height: Int, maxSize: Int = 0) -> FileSource{
+        return FileSource(
+            url: SettingShared.domainNotNull + "/api/files/thumb_online/\(self.id)?width=\(width)&height=\(height)&maxSize=\(maxSize)",
+            cacheKey: "/api/files/thumb_online/\(self.id)/\(width)-\(height)-\(maxSize)",
+            group: "thumb",
+            name: "\(self.id)-\(width)-\(height)-\(maxSize).jpg"
+        )
     }
     
     /// 实况照片预览视频
-    var dliveVideoPreviewId: String{
-        return self.downloadId + "-preview-dlive"
+    var dliveVideoPreviewSource: FileSource{
+        return self.extraSource("preview-dlive", "mp4")
     }
     
-    /// 实况照片预览视频
-    var dliveVideoPreview: String{
-        return self.makeExtraUrl("preview-dlive", ".mp4")
+    /// 从已下载的实况照片里拆出来的视频,只存在于本地缓存
+    /// - Parameter ext 视频扩展名,只在存入缓存时起作用
+    func dliveVideoSource(ext: String = "mov") -> FileSource{
+        return FileSource(
+            url: SettingShared.domainNotNull + "/api/files/download/\(self.id)/dlive-video.\(ext)",
+            cacheKey: "/dlive-video/\(self.id)",
+            group: "dlive",
+            name: "\(self.id)-dlive.\(ext)"
+        )
     }
     
     ///这是否是一个视频文件

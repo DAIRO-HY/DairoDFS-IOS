@@ -8,6 +8,7 @@
 import SwiftUI
 import DairoUI_IOS
 import _AVKit_SwiftUI
+import DairoFileSDK
 
 class AlbumViewerDliveViewModel: ObservableObject{
     
@@ -28,44 +29,52 @@ class AlbumViewerDliveViewModel: ObservableObject{
         self.load()
     }
     
+    /// 当前下载任务
+    private var fetchTask: FetchTask?
+    
     func load(){
-        let localId = "\(self.fm!.id)-dlive-video"
-        if let path = DownloadManager.getDownloadedPath(localId){//如果视频文件已经生成
-            self.dlivePlayer = AVPlayer(url: URL(fileURLWithPath:  path))
-            self.dlivePlayer?.play()
-            Task{@MainActor in
-                await Task.sleep(3_000_000_000)
-                self.dlivePlayer?.pause()
-                self.dlivePlayer?.replaceCurrentItem(with: nil)
-                self.dlivePlayer = nil
-                self.isShow = false
-            }
+        let fm = self.fm!
+        if let path = FileSdkUtil.cachedPath(fm.dliveVideoSource()){//如果视频文件已经生成
+            self.play(path)
             return
         }
-        if let path = DownloadManager.getDownloadedPath(self.fm!.downloadId){//如果文件已经下载
+        if let path = FileSdkUtil.cachedPath(fm.downloadSource){//如果文件已经下载
             let dliveInfo = DliveUtil.getInfo(path)
-            DownloadManager.addFile(id: localId, name: self.fm!.name + "." + dliveInfo.videoExt, data: dliveInfo.videoData, saveType: 0)
-            self.load()
+            if let videoPath = FileSdkUtil.putData(fm.dliveVideoSource(ext: dliveInfo.videoExt), Data(dliveInfo.videoData)){
+                self.play(videoPath)
+            }
             return
         }
             
         //优先加载下载好的预览视频
-        if let path = DownloadManager.getDownloadedPath(self.fm!.dliveVideoPreviewId){
-            self.dlivePlayer = AVPlayer(url: URL(fileURLWithPath:  path))
-            self.dlivePlayer?.play()
-            Task{@MainActor in
-                await Task.sleep(3_000_000_000)
-                self.dlivePlayer?.pause()
-                self.dlivePlayer?.replaceCurrentItem(with: nil)
-                self.dlivePlayer = nil
-                self.isShow = false
-            }
+        if let path = FileSdkUtil.cachedPath(fm.dliveVideoPreviewSource){
+            self.play(path)
             return
         }
-        DownloadManager.cache(self.fm!.dliveVideoPreviewId, self.fm!.dliveVideoPreview)
+        self.fetchTask = FileSdkUtil.fetch(fm.dliveVideoPreviewSource, progress: {
+            self.progress = "\($0)%"
+        }, finish: { path, error in
+            self.fetchTask = nil
+            self.progress = error ?? ""
+            if let path{
+                self.play(path)
+            }
+        })
+    }
+    
+    /// 播放视频,3秒之后结束
+    private func play(_ path: String){
+        self.dlivePlayer = AVPlayer(url: URL(fileURLWithPath:  path))
+        self.dlivePlayer?.play()
+        Task{@MainActor in
+            await Task.sleep(3_000_000_000)
+            self.clear()
+        }
     }
     
     func clear(){
+        self.fetchTask?.cancel()
+        self.fetchTask = nil
         self.dlivePlayer?.pause()
         self.dlivePlayer?.replaceCurrentItem(with: nil)
         self.dlivePlayer = nil
@@ -92,36 +101,6 @@ struct AlbumViewerDliveView: View {
                 Text(self.vm.progress)
                     .foregroundColor(.white)
                     .shadow(color: .black,radius: 3, x: 2, y: 2)
-                //加载原缩略图通知
-                    .onReceive(NotificationCenter.default.publisher(for: Notification.Name(self.vm.fm!.dliveVideoPreviewId)), perform: self.loadImageNotity)
-            }
-        }
-    }
-    
-    
-    /// 加载图片通知事件
-    private func loadImageNotity(npo: NotificationCenter.Publisher.Output){
-        let userInfo = npo.userInfo!
-        switch userInfo["key"] as! DownloadNotify{
-        case .progress:/// 进度回调
-            // 进度参数是一个数组,数组内容分别是 总大小,已下载大小,下载速度
-            let progress = userInfo["value"] as! [Int64]
-            self.vm.progress = String(Int(Float64(progress[1]) / Float64(progress[0]) * 100)) + "%"
-        case .pause:
-            break
-        case .finish:
-            guard let error = userInfo["value"] as? Error else{
-                
-                //刷新视图
-                self.vm.load()
-                return
-            }
-            if let error = error as? DownloaderError{
-                if case let .error(msg) = error {
-                    self.vm.progress = msg
-                }
-            } else {
-                self.vm.progress = error.localizedDescription
             }
         }
     }

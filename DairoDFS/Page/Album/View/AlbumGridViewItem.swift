@@ -27,7 +27,7 @@ struct AlbumGridViewItem: View {
     var body: some View {
         ZStack(alignment: .bottomTrailing){
             self.thumb
-            if let duration = Int(self.entity.fm.other1) , duration > 0{//如果有视频时间
+            if let duration = self.entity.fm.duration, duration > 0{//如果有视频时间
                 Text(duration.timeFormat)
                     .font(.subheadline)
                     .foregroundColor(.white)
@@ -55,10 +55,9 @@ struct AlbumGridViewItem: View {
     private var thumb: some View{
         Section{
             if self.entity.fm.hasThumb{//如果有缩略图
-                let thumbUrl = self.entity.fm.onlineThumb(width: Int(self.size) * 3, height: Int(self.size) * 3)
-                let thumbId = self.entity.fm.onlineThumbId(width: Int(self.size) * 3, height: Int(self.size) * 3)
-                CacheImage(thumbUrl, downloadId: thumbId)
+                DfsImage(self.entity.fm.onlineThumbSource(width: Int(self.size) * 3, height: Int(self.size) * 3))
                     .frame(width: self.size, height: self.size)
+                    .clipped()
             }else{//没有缩略图
                 Image(systemName: "document.fill")
                     .resizable()
@@ -83,7 +82,7 @@ private func getTestEntity() -> AlbumEntity{
             fileFlag: true,
             date: 123456,
             hasThumb: false,
-            other1:"12:00"
+            duration: 720000
         )
     )
     dfb.isSelected = true

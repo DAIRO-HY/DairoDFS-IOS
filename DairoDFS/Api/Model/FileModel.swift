@@ -1,4 +1,3 @@
-/*工具自动生成代码,请勿手动修改*/
 struct FileModel : Codable {
 
   	/** 文件id **/
@@ -13,15 +12,13 @@ struct FileModel : Codable {
   	/** 是否文件 **/
   var fileFlag: Bool
 
-  	/** 创建日期 **/
-	//Date string `json:"date"`
+  	/** 创建日期(毫秒) **/
   var date: Int64
 
   	/** 是否有缩略图 **/
   var hasThumb: Bool
 
-  	/** 其他属性1,视频时为视频总时长(毫秒) **/
-	//Other1 string `json:"other1"`
-  var other1: String
+  	/** 视频总时长(毫秒),只有相册列表有值 **/
+  var duration: Int64? = nil
 
 }

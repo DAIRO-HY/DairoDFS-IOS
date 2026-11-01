@@ -19,7 +19,7 @@ enum DfsFileShared {
     //  static String get cacheFolderPath => paths.normalize("${SyncVariable.supportPath}/$CACHE_FOLDER");
     
     ///请求文件列表的http请求
-    private static var _apiHttp: ApiHttp<[FileModel]>?
+    private static var _apiHttp: ApiHttp<FileListModel>?
     
     /**
      创建文件列表缓存目录
@@ -55,12 +55,13 @@ enum DfsFileShared {
         //Api请求文件列表
         DfsFileShared._apiHttp = FilesApi.getList(folder: folder).hide().finish{
             DfsFileShared._apiHttp = nil
-        }.post{
-            let isWrite = LocalObjectUtil.write($0, fileName)
+        }.send{
+            let list = $0.list
+            let isWrite = LocalObjectUtil.write(list, fileName)
             if (isWrite) {
                 
                 //文件列表有更新
-                callback($0);
+                callback(list);
             }
         }
     }

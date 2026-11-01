@@ -13,7 +13,7 @@ struct LoginPage: View {
     //登录信息
     @ObservedObject private var loginInfo : LoginViewModel
     
-    init(_ loginInfo: LoginViewModel = LoginViewModel(domain: "http://192.168.10.114:8031", name: "admin", pwd: "111111")) {
+    init(_ loginInfo: LoginViewModel = LoginViewModel(domain: "http://127.0.0.1:8031", name: "admin", pwd: "111111")) {
         self.loginInfo = loginInfo
     }
     
@@ -88,39 +88,12 @@ struct LoginPage: View {
         }
         
         //登录密码
-        var pwd = self.loginInfo.pwd
+        let pwd = self.loginInfo.pwd
         if pwd.isEmpty {
             Toast.show("密码必填")
             return
         }
-        if pwd.count != 32 {//如果密码已经是32位则无需再转md5
-            pwd = pwd.md5
-        }
-        
-        var loggedUserList = SettingShared.loggedUserList;
-        
-        //登录信息
-        let loginInfo = AccountInfo(domain: domain, name: self.loginInfo.name, pwd: pwd)
-        SettingShared.login(loginInfo, success:{
-            //          if (this.widget.type == LoginType.EDIT) {
-            //            //如果当前时编辑操作
-            //            for (var it in loggedUserList) {
-            //              //先取消内部所有登录状态
-            //              it.isLogining = false;
-            //            }
-            //
-            //            //取出当前要编辑的用户
-            //            var editUser = loggedUserList.firstWhere((it) {
-            //              return it.name == this.widget.account.name && it.domain == this.widget.account.domain;
-            //            });
-            //            editUser.domain = loginInfo.domain;
-            //            editUser.name = loginInfo.name;
-            //            editUser.pwd = loginInfo.pwd;
-            //            editUser.isLogining = true;
-            //
-            //            //重新保存列表，替换当前编辑的那一条数据
-            //            SettingShared.loggedUserList = loggedUserList;
-            //          }
+        SettingShared.login(domain: domain, name: self.loginInfo.name, pwd: pwd, success:{
             MinePage().relaunch()
         })
     }

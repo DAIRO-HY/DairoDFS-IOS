@@ -12,7 +12,7 @@ struct FileUploadSetPage: View {
     @State private var showDeleteAlert = false
     
     /// 同时上传文件数
-    @State private var maxUploadingCount = FileUploaderConfig.maxUploadingCount
+    @State private var maxUploadingCount = SettingShared.fileSdkMaxUploadingCount > 0 ? SettingShared.fileSdkMaxUploadingCount : 1
     
     /// 同时上传文件数模版
     private let uploadAsyncCountDemo = [1,2,3,4,5].map{
@@ -24,7 +24,8 @@ struct FileUploadSetPage: View {
             SettingPage(navigationTitleDisplayMode:.inline){
                 SettingGroup{
                     SettingPicker("同时上传文件数",data: self.uploadAsyncCountDemo, value: self.$maxUploadingCount){ value in
-                        FileUploaderConfig.maxUploadingCount = value
+                        SettingShared.fileSdkMaxUploadingCount = value
+                        (try? FileSdkUtil.get())?.setMaxUploadingCount(count: UInt32(value))
                         return true
                     }
                     .icon("square.and.arrow.down.fill", backgroundColor: Color.red)

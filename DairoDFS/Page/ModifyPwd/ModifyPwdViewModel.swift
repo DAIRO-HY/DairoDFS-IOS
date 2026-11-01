@@ -33,13 +33,9 @@ class ModifyPwdViewModel: ObservableObject {
             Toast.show("确认密码和新密码不一致")
             return
         }
-        ModifyApi.modify(oldPwd: self.oldPwd, pwd: self.pwd).post {
+        ModifyApi.modify(oldPwd: self.oldPwd, pwd: self.pwd).send {
             Toast.show("修改成功,请重新登录")
-            
-            //得到当前登录的账号信息
-            let loginAccount = SettingShared.loggedUserList.first{$0.isLogining}!
-            SettingShared.logout()
-            LoginPage(LoginViewModel(domain: loginAccount.domain, name: loginAccount.name, pwd: "")).relaunch()
+            SettingShared.toLoginPage()
         }
     }
 }

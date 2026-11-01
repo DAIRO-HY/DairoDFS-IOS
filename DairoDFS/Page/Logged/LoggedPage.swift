@@ -69,7 +69,8 @@ struct LoggedPage: View {
             Button("删除", role: .destructive) {
                 self.vm.onDeleteClick()
                 
-                //退出登录
+                //退出登录,让服务端删除这个票据
+                LoginApi.logout().hide().send{}
                 SettingShared.logout()
                 
                 //删除之后重新打开该页面
@@ -81,15 +82,11 @@ struct LoggedPage: View {
         }
         .confirmationDialog("请选择操作", isPresented: self.$showActionMenu, titleVisibility: .visible) {
                 Button("登录") {
-                    //点击登录
-                    SettingShared.login(self.vm.actionItem, success:{
-                        Toast.show("登录成功")
-                        FilePage().relaunch()
-                    })
+                    self.onSwitchAccount(self.vm.actionItem)
                 }
                 Button("编辑") {
                     let actionItem = self.vm.actionItem
-                    LoginPage(LoginViewModel(domain: actionItem.domain, name: actionItem.name, pwd: actionItem.pwd)).relaunch()
+                    LoginPage(LoginViewModel(domain: actionItem.domain, name: actionItem.name, pwd: "")).relaunch()
                 }
                 Button("移除") {
                     let actionItem = self.vm.actionItem
@@ -106,42 +103,16 @@ struct LoggedPage: View {
         }
     }
     
-    /// 列表模式
-    private var listView: SettingGroup{
-        return SettingGroup(header: "编辑", headerAction:{ self.isEdit = true }){
-            let logged = SettingShared.loggedUserList
-            for i in 0..<logged.count{
-                let item = logged[i]
-                SettingButton(id: i, item.name, tip: item.domain){
-                    
-                    //点击登录
-                    SettingShared.login(item, success:{
-                        Toast.show("登录成功")
-                        FilePage().relaunch()
-                    })
-                }.isVertical(true)
-            }
+    /// 切换到选择的账号
+    private func onSwitchAccount(_ account: AccountInfo){
+        if account.token.isEmpty{//账号已经退出登录,需要重新输入密码
+            LoginPage(LoginViewModel(domain: account.domain, name: account.name, pwd: "")).relaunch()
+            return
         }
-    }
-    
-    /// 列表模式
-    private var editView: SettingGroup{
-        return SettingGroup(header: "取消", headerAction:{ self.isEdit = false }){
-            let logged = SettingShared.loggedUserList
-            for i in 0..<logged.count{
-                let item = logged[i]
-                SettingButton(id: i, item.name, tip: item.domain){
-                    
-                    //跳转到登录页面
-                    let loginVm = LoginViewModel(domain: item.domain, name: item.name, pwd: item.pwd, editLoggedIndex: i)
-                    LoginPage(loginVm).relaunch()
-                }
-                .icon("trash.fill",  backgroundColor: Color.red)
-                .iconRadius(14)
-                .indicator("pencil.line")
-                .isVertical(true)
-            }
-        }
+        SettingShared.switchAccount(account, success:{
+            Toast.show("登录成功")
+            FilePage().relaunch()
+        })
     }
 }
 

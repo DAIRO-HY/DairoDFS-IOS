@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import DairoFileSDK
 
 struct SystemAlbumOptionView: View {
     
@@ -22,7 +23,7 @@ struct SystemAlbumOptionView: View {
                         Button(action: {
                             
                             //取消所有上传操作
-                            PHAssetUploadManager.cancel()
+                            self.vm.onCancelClick()
                         }){
                             Text("取消")
                         }
@@ -51,20 +52,8 @@ struct SystemAlbumOptionView: View {
                 }
                 UCOptionMenuButton("删除已上传", icon: "trash", disabled: self.vm.isUploading, action: self.vm.onDeleteClick)
             }
-        }.onReceive(NotificationCenter.default.publisher(for: Notification.Name(PHAssetUploadManager.NOTIFY_UPLOAD_COUNT))){
-            self.vm.uploadCountMsg = $0.object as! String
-        }.onReceive(NotificationCenter.default.publisher(for: Notification.Name(PHAssetUploadManager.NOTIFY_UPLOAD_PROGRESS))){
-            let values = $0.object as! Array<String>
-            let localIdentifier = values[0]
-            let uploadMsg = values[1]
-            
-            //当前文件所在序号
-            guard let index = self.vm.identifier2index[localIdentifier] else{
-                return
-            }
-            self.vm.albumList[index].uploadMsg = uploadMsg
-        }.onReceive(NotificationCenter.default.publisher(for: Notification.Name(PHAssetUploadManager.NOTIFY_UPLOAD_FINISH))){ _ in
-            self.vm.isUploading = false
+        }.onReceive(NotificationCenter.default.publisher(for: FileSdkUtil.EVENT)){
+            self.vm.onFileSdkEvent($0.object as! Event)
         }
     }
     

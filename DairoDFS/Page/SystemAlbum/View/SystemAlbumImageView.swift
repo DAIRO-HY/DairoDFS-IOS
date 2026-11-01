@@ -38,7 +38,9 @@ struct SystemAlbumImageView: View {
     
     var body: some View {
         ZStack(alignment: .topLeading){
-            if let uiImage = self.image {
+            
+            //相册列表刷新时,列表可能已经变短,而这个视图还没有被移除
+            if let uiImage = self.image, self.vm.albumList.indices.contains(self.index) {
                 Image(uiImage: uiImage)
                     .resizable()
                     .scaledToFill()
@@ -104,12 +106,15 @@ struct SystemAlbumImageView: View {
                 self.vm.loadAlbumInfo(self.index)
                 self.requestImage()
             }
-        }.onReceive(NotificationCenter.default.publisher(for: Notification.Name(PHAssetUploadManager.NOTIFY_UPLOAD_PROGRESS + self.localIdentifier))){
+        }.onReceive(NotificationCenter.default.publisher(for: Notification.Name(SystemAlbumViewModel.NOTIFY_UPLOAD_PROGRESS + self.localIdentifier))){
             self.progress = $0.object as! String
         }
     }
     
     private func requestImage(targetSize: CGSize = CGSize(width: 200, height: 200)) {
+        guard self.vm.albumList.indices.contains(self.index) else{
+            return
+        }
         let options = PHImageRequestOptions()
         options.deliveryMode = .highQualityFormat
         options.isSynchronous = false//用于控制图像请求是 同步执行 还是 异步执行。
@@ -120,8 +125,8 @@ struct SystemAlbumImageView: View {
             contentMode: .aspectFill,
             options: options) { image, _ in
                 Task{@MainActor in
-                    if self.progress.isEmpty{
-                        self.progress = self.vm.albumList[index].uploadMsg
+                    if self.progress.isEmpty, self.vm.albumList.indices.contains(self.index){
+                        self.progress = self.vm.albumList[self.index].uploadMsg
                     }
                     self.image = image
                 }

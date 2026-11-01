@@ -7,61 +7,60 @@
 
 import SwiftUI
 import DairoUI_IOS
+import DairoFileSDK
 
 struct FileUploadItemView: View {
     
-    private let isChecked: Bool
+    @ObservedObject private var vm: FileUploadViewModel
     
-    private let pageVm: FileUploadViewModel
+    ///上传信息
+    private let item: UploadInfo
     
-    ///文件信息
-    @ObservedObject private var vm: FileUploadItemViewModel
-    init(_ pageVm: FileUploadViewModel, _ id: Int64, _ isChecked: Bool) {
-        self.pageVm = pageVm
-        self.isChecked = isChecked
-        self.vm = FileUploadItemViewModel(id)
+    init(_ vm: FileUploadViewModel, _ item: UploadInfo) {
+        self.vm = vm
+        self.item = item
     }
+    
+    /// 是否已经结束,跳过表示服务器上已经有相同的文件
+    private var isFinish: Bool{
+        return self.item.state == .finish || self.item.state == .skipped
+    }
+    
     var body: some View {
         HStack{
             Button(action:{
-                self.pageVm.onCheckClick(self.vm.dto.id)
+                self.vm.onCheckClick(self.item.id)
             }){
-                if self.isChecked{
-                    Image(systemName: "checkmark.circle")
-                        .resizable()
-                        .frame(width: 20, height: 20)
-                        .shadow(color: .black.opacity(0.3), radius: 10, x: 5, y: 5)
-                } else {
-                    Image(systemName: "circle")
-                        .resizable()
-                        .frame(width: 20, height: 20)
-                        .shadow(color: .black.opacity(0.3), radius: 10, x: 5, y: 5)
-                }
+                Image(systemName: self.vm.checked.contains(self.item.id) ? "checkmark.circle" : "circle")
+                    .resizable()
+                    .frame(width: 20, height: 20)
             }
-            
-            //缩略图
-            self.thumb
             VStack{
-                Text(self.vm.dto.name)
+                Text(self.item.name)
                     .font(.body)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 HStack{
-                    Text(DateUtil.format(self.vm.dto.date))
+                    Text(Date(timeIntervalSince1970: Double(self.item.createDate) / 1000).format())
                         .font(.footnote)
                         .foregroundColor(.secondary)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                    if self.vm.total > 0{
-                        Text(self.vm.total.fileSize)
+                    if let size = self.item.size{
+                        Text(Int64(size).fileSize)
                             .font(.footnote)
                             .foregroundColor(.secondary)
                     }
                 }
-                if self.vm.uploadState != 10{
-                    ProgressView(value: Float64(self.vm.uploadedSize), total: Float64(self.vm.total))
+                if self.isFinish{
+                    Text(self.stateLabel)
+                        .font(.footnote)
+                        .foregroundColor(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                } else {
+                    ProgressView(value: Double(self.item.uploaded), total: Double(max(self.item.size ?? 0, max(self.item.uploaded, 1))))
                         .progressViewStyle(.linear)
                         .tint(.blue)
                     HStack{
-                        if let error = self.vm.error{
+                        if let error = self.item.error{
                             Button(action:{
                                 Toast.show(error)
                             }){
@@ -71,51 +70,22 @@ struct FileUploadItemView: View {
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
                         } else {
-                            Text(self.vm.progressInfo)
+                            Text(self.vm.progressInfo[self.item.id] ?? Int64(self.item.uploaded).fileSize)
                                 .font(.footnote)
                                 .foregroundColor(.secondary)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         }
-                        Text(self.vm.uploadStateLabel)
+                        Text(self.stateLabel)
                             .font(.footnote)
                             .foregroundColor(.secondary)
-                        //                            .frame(maxWidth: .infinity, alignment: .trailing)
                         Button(action:{
-                            self.vm.onUploadStateClick()
+                            self.vm.onStateClick(self.item)
                         }){
-                            let isDownloading = self.vm.uploadState == 0 || self.vm.uploadState == 1
-                            Image(systemName: isDownloading ? "pause.circle" : "play.circle")
+                            Image(systemName: self.item.state == .waiting || self.item.state == .uploading ? "pause.circle" : "play.circle")
                                 .resizable()
                                 .foregroundColor(.secondary)
                                 .frame(width: 15, height: 15)
                         }
-                    }
-                }
-            }.onReceive(NotificationCenter.default.publisher(for: Notification.Name(String(self.vm.dto.id)))){
-                let userInfo = $0.userInfo!
-                switch userInfo["key"] as! FileUploaderNotify{
-                case .progress:/// 进度回调
-                    let progress = userInfo["value"] as! [Int64]
-                    self.vm.total = progress[0]
-                    self.vm.uploadedSize = progress[1]
-                    //                    self.vm.speed = progress[2].fileSize + "/S"
-                    self.vm.progressInfo = "\(progress[1].fileSize)(\(progress[2].fileSize)/S)"
-                    
-                    //标记下载中
-                    self.vm.setUploadState(1)
-                case .pause:
-                    // 标记下载暂停
-                    self.vm.setUploadState(2)
-                case .finish:
-                    if let error = userInfo["value"] as? String{
-                        
-                        /// 标记下载失败
-                        self.vm.setUploadState(3)
-                        self.vm.error = error
-                    }else{
-                        
-                        // 标记下载完成
-                        self.vm.setUploadState(10)
                     }
                 }
             }
@@ -123,35 +93,15 @@ struct FileUploadItemView: View {
         .padding(.horizontal)
     }
     
-    ///缩略图
-    private var thumb: some View{
-        Section{
-            //                if self.dfsFile.fm.hasThumb{//如果有缩略图
-            //                    CacheImage(self.dfsFile.fm.thumbUrl)
-            //                        .frame(width: 50, height: 50)
-            //                        .cornerRadius(6)
-            //                } else {//没有缩略图
-            //                    Image(systemName: "questionmark.square.fill")
-            //                        .resizable()
-            //                        .frame(width: 50, height: 50)
-            //                        .foregroundColor(.white)
-            //                }
-            Image(systemName: "questionmark.square.fill")
-                .resizable()
-                .frame(width: 50, height: 50)
-                .foregroundColor(.white)
-                .shadow(color: .black.opacity(0.3), radius: 10, x: 5, y: 5)
+    /// 上传状态文字
+    private var stateLabel: String{
+        switch self.item.state{
+        case .waiting: return "等待上传"
+        case .uploading: return "上传中"
+        case .paused: return "已暂停"
+        case .error: return "上传失败"
+        case .finish: return "上传完成"
+        case .skipped: return "文件已存在"
         }
     }
 }
-
-//#Preview {
-//    DownloadItemView(FileUploadViewModel(), getID(), true)
-//}
-//
-//private func getID() -> String{
-//    let id = "3wedscv"
-//    try? DownloadDBUtil.addCache(id, "http://localhost:8031/d/oq8221/%E7%9B%B8%E5%86%8C/1753616814872371.heic?wait=100")
-//    return id
-//}
-

@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		5BBB6A272DA9301C00879EDD /* DairoUI_IOS in Frameworks */ = {isa = PBXBuildFile; productRef = 5BBB6A262DA9301C00879EDD /* DairoUI_IOS */; };
+		5BBB6A322DA9301C00879EDD /* DairoFileSDK in Frameworks */ = {isa = PBXBuildFile; productRef = 5BBB6A312DA9301C00879EDD /* DairoFileSDK */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -70,6 +71,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				5BBB6A272DA9301C00879EDD /* DairoUI_IOS in Frameworks */,
+				5BBB6A322DA9301C00879EDD /* DairoFileSDK in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -131,6 +133,7 @@
 			name = DairoDFS;
 			packageProductDependencies = (
 				5BBB6A262DA9301C00879EDD /* DairoUI_IOS */,
+				5BBB6A312DA9301C00879EDD /* DairoFileSDK */,
 			);
 			productName = DairoDFS;
 			productReference = 5BED0B282DA654D000CCB9F9 /* DairoDFS.app */;
@@ -217,6 +220,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				5BBB6A242DA9300900879EDD /* XCLocalSwiftPackageReference "../DairoUI_IOS" */,
+				5BBB6A302DA9301C00879EDD /* XCLocalSwiftPackageReference "../../java/idea/DairoDFS/dairo-file-sdk/platforms/ios" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 5BED0B292DA654D000CCB9F9 /* Products */;
@@ -606,6 +610,10 @@
 			isa = XCLocalSwiftPackageReference;
 			relativePath = ../DairoUI_IOS;
 		};
+		5BBB6A302DA9301C00879EDD /* XCLocalSwiftPackageReference "../../java/idea/DairoDFS/dairo-file-sdk/platforms/ios" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "../../java/idea/DairoDFS/dairo-file-sdk/platforms/ios";
+		};
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -613,6 +621,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 5BBB6A242DA9300900879EDD /* XCLocalSwiftPackageReference "../DairoUI_IOS" */;
 			productName = DairoUI_IOS;
+		};
+		5BBB6A312DA9301C00879EDD /* DairoFileSDK */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5BBB6A302DA9301C00879EDD /* XCLocalSwiftPackageReference "../../java/idea/DairoDFS/dairo-file-sdk/platforms/ios" */;
+			productName = DairoFileSDK;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

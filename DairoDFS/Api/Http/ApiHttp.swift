@@ -29,6 +29,9 @@ class ApiHttp<T: Codable> : ApiHttpBase{
     
     private let url: String
     
+    ///请求方式
+    private let method: String
+    
     ///API参数
     private let parameter: [String : Codable]
     
@@ -37,6 +40,9 @@ class ApiHttp<T: Codable> : ApiHttpBase{
     
     ///是否显示加载中的遮罩层
     private var isShowWaiting = true
+    
+    ///是否携带登录票据
+    private var isAuth = true
     
     /**
      * 失败时消息回调
@@ -53,24 +59,10 @@ class ApiHttp<T: Codable> : ApiHttpBase{
      */
     private var finishFunc: (() -> Void)?
     
-    init(_ url: String, parameter: [String : Codable] = [String : Codable]()) {
+    init(_ url: String, method: String, parameter: [String : Codable] = [String : Codable]()) {
         self.url = url
+        self.method = method
         self.parameter = parameter
-        
-        //        //超时设置
-        //        self.httpUtil.connectTimeout = 15000
-        //        self.httpUtil.readTimeout = 60000
-        //        self.httpUtil.method = "POST"
-        //
-        //        // 设置请求的Content-Type为application/x-www-form-urlencoded
-        //        self.httpUtil.setHeader("Content-Type","application/x-www-form-urlencoded")
-        //
-        //        self.httpUtil.addParam("_client",5)//IOS标识
-        //        self.httpUtil.addParam("_versionCode",Bundle.main.infoDictionary?["CFBundleVersion"] as! String)//版本号
-        //        self.httpUtil.addParam("_versionName",Bundle.main.infoDictionary?["CFBundleShortVersionString"] as! String)//版本名
-        //        if let token = UserShared.token {//携带登录信息
-        //            self.httpUtil.addParam("_token",token)
-        //        }
     }
     
     /**
@@ -106,6 +98,14 @@ class ApiHttp<T: Codable> : ApiHttpBase{
     }
     
     /**
+     * 不携带登录票据,用于登录等不需要登录的接口
+     */
+    func noAuth() -> ApiHttp {
+        self.isAuth = false
+        return self
+    }
+    
+    /**
      * 调用失败函数
      */
     private func callFail(_ failModel: ApiFailModel) {
@@ -136,10 +136,9 @@ class ApiHttp<T: Codable> : ApiHttpBase{
      * 带参回调
      * - paramter successFunc  成功的返回值
      */
-    func post(_ successFunc: @escaping (_ data: T) -> Void)  -> ApiHttp{
-        self.request("POST") {
-            successFunc($0!)
-        }
+    @discardableResult
+    func send(_ successFunc: @escaping (_ data: T) -> Void)  -> ApiHttp{
+        self.request(successFunc)
         return self
     }
     
@@ -148,8 +147,9 @@ class ApiHttp<T: Codable> : ApiHttpBase{
      * 无参回调
      * - paramter successFunc  成功的返回值
      */
-    func post(_ successFunc: @escaping () -> Void)  -> ApiHttp{
-        self.request("POST") {_ in
+    @discardableResult
+    func send(_ successFunc: @escaping () -> Void)  -> ApiHttp{
+        self.request{_ in
             successFunc()
         }
         return self
@@ -158,64 +158,44 @@ class ApiHttp<T: Codable> : ApiHttpBase{
     /**
      * 发起请求
      */
-    func request(_ method: String, _ successFunc: @escaping((_ data: T?) -> Void)) {
-        var request = URLRequest(url: URL(string: SettingShared.domainNotNull + self.url + "?_token=" + SettingShared.token)!)
-        request.httpMethod = method//请求方式
-        request.timeoutInterval = 15 // 设置超时(秒)
-        
-        //添加公共参数
-        var body = ""
-        for entry in self.parameter{
-            let bodyValue: String
-            if let value = entry.value as? String{//过滤掉空字符串的参数
-                if value.isEmpty{
-                    continue
-                }
-                bodyValue = value
-            } else if let value  = entry.value as? [String]{//如果是一个字符串数组
-                var joinStr = ""
-                value.forEach{
-                    
-                    //这里将逗号替换成_2c,服务器端再将其替换回去
-                    joinStr += $0.replacingOccurrences(of: ",", with: "_2c") + ","
-                }
-                if !joinStr.isEmpty{
-                    joinStr.removeLast()
-                }
-                bodyValue = "[" + joinStr + "]"
-            } else if let value  = entry.value as? [any Codable]{//如果是一个数组
-                bodyValue = "[" + value.map{"\($0)"}.joined(separator: ",") + "]"
-            } else {
-                bodyValue = "\(entry.value)"
-            }
-            body += "\(entry.key)=" + bodyValue + "&"
+    private func request(_ successFunc: @escaping((_ data: T) -> Void)) {
+        let parameterStr = self.parameterStr
+        var urlStr = SettingShared.domainNotNull + self.url
+        if self.method == "GET" && !parameterStr.isEmpty{
+            urlStr += "?" + parameterStr
         }
-        if !body.isEmpty{
-            body.removeLast()
-            request.httpBody = body.data(using: .utf8)
+        guard let url = URL(string: urlStr) else{
+            self.callError("服务器地址不正确:" + urlStr)
+            return
+        }
+        var request = URLRequest(url: url)
+        request.httpMethod = self.method//请求方式
+        request.timeoutInterval = 15 // 设置超时(秒)
+        if self.isAuth{
+            request.setValue("Bearer " + SettingShared.token, forHTTPHeaderField: "Authorization")
+        }
+        if self.method != "GET" && !parameterStr.isEmpty{
+            request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+            request.httpBody = parameterStr.data(using: .utf8)
         }
         let httpTask = URLSession.shared.dataTask(with: request){ data, response, error in
-            if self.isShowWaiting{
-                Loading.hide()
-            }
-            if let error = error {
-                self.callError(error.localizedDescription)
-                return
-            }
-            let httpResponse = response as! HTTPURLResponse
-            if httpResponse.statusCode != 200{
-                let responseText = String(data: data!, encoding: .utf8)!
-                if responseText.hasPrefix("{"){//这是一个json字符串
-                    let fm = try! JSONDecoder().decode(ApiFailModel.self, from: responseText.data(using: .utf8)!)
-                    self.callFail(fm)
-                }
-                self.callError(responseText)
-                return
-            }
-            let t = self.convert(data!)
+            
             //使回调函数运行在主线程上
             Task{@MainActor in
-                successFunc(t)
+                if self.isShowWaiting{
+                    Loading.hide()
+                }
+                if let error = error as? URLError, error.code == .cancelled{//请求被取消
+                    return
+                }
+                defer{
+                    self.finishFunc?()
+                }
+                if let error = error {
+                    self.callError(error.localizedDescription)
+                    return
+                }
+                self.onResponse(response as! HTTPURLResponse, data ?? Data(), successFunc)
             }
         }
         self.httpTask = httpTask
@@ -228,24 +208,77 @@ class ApiHttp<T: Codable> : ApiHttpBase{
     }
     
     /**
+     * 将参数拼接成字符串,数组参数使用重复的key
+     */
+    private var parameterStr: String{
+        var items = [String]()
+        for entry in self.parameter{
+            let values: [Any]
+            if let value = entry.value as? [any Codable]{
+                values = value
+            } else {
+                values = [entry.value]
+            }
+            for value in values{
+                items.append(ApiHttp.encode(entry.key) + "=" + ApiHttp.encode("\(value)"))
+            }
+        }
+        return items.joined(separator: "&")
+    }
+    
+    /**
+     * 对参数进行URL编码
+     */
+    private static func encode(_ value: String) -> String{
+        return value.addingPercentEncoding(withAllowedCharacters: CharacterSet(charactersIn: "-._~").union(.alphanumerics)) ?? value
+    }
+    
+    /**
+     * 处理服务器返回结果
+     * 200:成功 401:登录失效 其他:失败,返回内容是错误信息
+     */
+    private func onResponse(_ response: HTTPURLResponse, _ data: Data, _ successFunc: (_ data: T) -> Void){
+        if response.statusCode == 200{
+            guard let t = self.convert(data) else{
+                self.callError("服务器返回数据格式不正确")
+                return
+            }
+            successFunc(t)
+            return
+        }
+        if response.statusCode == 401 && self.isAuth && SettingShared.isLogin{
+            Toast.show("登录已失效,请重新登录")
+            SettingShared.toLoginPage()
+            return
+        }
+        self.callFail(self.makeFailModel(response.statusCode, data))
+    }
+    
+    /**
+     * 生成失败信息,表单验证失败时优先显示字段的错误信息
+     */
+    private func makeFailModel(_ statusCode: Int, _ data: Data) -> ApiFailModel{
+        if let formFail = try? JSONDecoder().decode(ApiFormFailModel.self, from: data){
+            let msg = formFail.data?.values.first{ !$0.isEmpty }?.first ?? formFail.msg
+            return ApiFailModel(code: statusCode, msg: msg)
+        }
+        let msg = String(data: data, encoding: .utf8) ?? ""
+        return ApiFailModel(code: statusCode, msg: msg.isEmpty ? nil : msg)
+    }
+    
+    /**
      * 将返回值转换成指定的类型
      */
-    private func convert(_ data: Data) -> T{
+    private func convert(_ data: Data) -> T?{
         switch(T.self){
         case is String.Type:
-            return String(data: data, encoding: .utf8) as! T
-        case is Data.Type:
-            return data as! T
-        case is Int.Type:
-            return Int(String(data: data, encoding: .utf8)!) as! T
-        case is Double.Type:
-            return Double(String(data: data, encoding: .utf8)!) as! T
+            return String(data: data, encoding: .utf8) as? T
         case is Bool.Type:
-            return (String(data: data, encoding: .utf8)!.lowercased() == "true") as! T
+            return (String(data: data, encoding: .utf8)?.lowercased() == "true") as? T
         case is EmptyModel.Type:
-            return EmptyModel() as! T
+            return EmptyModel() as? T
         default:
-            return try! JSONDecoder().decode(T.self, from: data)
+            return try? JSONDecoder().decode(T.self, from: data)
         }
     }
     
@@ -274,14 +307,30 @@ struct EmptyModel: Codable {
 struct ApiFailModel: Codable {
     
     /**
-     * 返回代码
+     * HTTP状态码
      */
     let code: Int
     
     /**
-     * 执行结果
+     * 错误信息
      */
     let msg: String?
+}
+
+/**
+ * 表单验证失败Model
+ */
+private struct ApiFormFailModel: Codable {
+    
+    /**
+     * 错误信息
+     */
+    let msg: String?
+    
+    /**
+     * 字段名 => 错误信息
+     */
+    let data: [String : [String]]?
 }
 
 

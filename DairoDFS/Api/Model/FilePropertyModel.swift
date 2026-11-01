@@ -1,5 +1,7 @@
-/*工具自动生成代码,请勿手动修改*/
 struct FilePropertyModel : Codable {
+
+  	/** 文件ID **/
+  var id: Int64
 
   	/** 名称 **/
   var name: String
@@ -22,14 +24,17 @@ struct FilePropertyModel : Codable {
   	/** 文件状态 **/
   var state: Int8
 
+  	/** 文件处理结果信息 **/
+  var stateMsg: String?
+
   	/** 是否文件 **/
   var isFile: Bool
 
   	/** 文件数(文件夹属性专用) **/
-  var fileCount: Int
+  var fileCount: Int?
 
   	/** 文件夹数(文件夹属性专用) **/
-  var folderCount: Int
+  var folderCount: Int?
 
   	/** 历史记录(文件属性专用) **/
   var historyList: [FilePropertyHistoryModel]

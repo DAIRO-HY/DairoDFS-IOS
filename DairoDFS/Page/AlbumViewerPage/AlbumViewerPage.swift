@@ -193,7 +193,7 @@ struct AlbumViewerPage: View {
     private func getThumb(_ index: Int) -> some View{
         return Section{
             if self.vm.fileModels.indices.contains(index){
-                CacheImage(self.vm.fileModels[index].thumbUrl, downloadId: self.vm.fileModels[index].thumbDownloadId).frame(width: self.vm.screenWidth, height: self.vm.screenHeight).aspectRatio(.fit).edgesIgnoringSafeArea(.all)//忽略安全区域
+                DfsImage(self.vm.fileModels[index].thumbSource, contentMode: .fit).frame(width: self.vm.screenWidth, height: self.vm.screenHeight).edgesIgnoringSafeArea(.all)//忽略安全区域
             }else{
                 Spacer().frame(width: self.vm.screenWidth, height: self.vm.screenHeight)
             }

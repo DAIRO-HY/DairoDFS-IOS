@@ -1,16 +1,17 @@
+import Foundation
 
 enum LoginApi {
 
-  //登录页面
-  static func _init() -> ApiHttp<EmptyModel>{
-    return ApiHttp<EmptyModel>(ApiConst.APP_LOGIN)
-  }
+  //iOS客户端标识
+  private static let CLIENT_FLAG = 2
 
+  //pwd 明文密码
   static func doLogin(name: String,pwd: String,deviceId: String) -> ApiHttp<LoginAppOutModel>{
-    return ApiHttp<LoginAppOutModel>(ApiConst.APP_LOGIN_DO_LOGIN,parameter: ["name":name,"pwd":pwd,"deviceId":deviceId])
+    let clientVersion = Int(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "") ?? 0
+    return ApiHttp<LoginAppOutModel>(ApiConst.LOGIN_DO_LOGIN,method: "POST",parameter: ["name":name,"pwd":pwd,"deviceId":deviceId,"clientFlag":CLIENT_FLAG,"clientVersion":clientVersion]).noAuth()
   }
 
   static func logout() -> ApiHttp<EmptyModel>{
-    return ApiHttp<EmptyModel>(ApiConst.APP_LOGIN_LOGOUT)
+    return ApiHttp<EmptyModel>(ApiConst.LOGIN_LOGOUT,method: "DELETE")
   }
 }

@@ -34,7 +34,7 @@ enum SettingShared {
         // if (!force && SettingShared.user != null){//非强制刷新的情况下,如果已经加载过,就不需要再加载数据
         //     return;
         // }
-        MineApi._init().post{
+        MineApi.info().send{
             SettingShared.user = $0;
         }
     }
@@ -151,99 +151,151 @@ enum SettingShared {
         }
     }
     
+    /// 集群ID
+    private static let KEY_CLUSTER_ID = "CLUSTER_ID"
+    
+    /// 集群ID,同一个集群的服务器共用文件缓存
+    static var clusterId: String {
+        get{
+            return UserDefaults.standard.string(forKey: KEY_CLUSTER_ID) ?? ""
+        }
+        set{
+            UserDefaults.standard.set(newValue, forKey: KEY_CLUSTER_ID)
+        }
+    }
+    
+    /*----------------------------------------------------------------------------------*/
+    
     /// 是否登录
-    static var isLogin: Bool{ !SettingShared.token.isEmpty }
+    static var isLogin: Bool{ !SettingShared.token.isEmpty && !SettingShared.clusterId.isEmpty }
     
     /// 退出登录
     static func logout() {
         var logined = SettingShared.loggedUserList
         for i in 0 ..< logined.count{
+            if logined[i].isLogining{
+                logined[i].token = ""
+            }
             logined[i].isLogining = false
         }
         SettingShared.loggedUserList = logined
         SettingShared.token = ""
+        FileSdkUtil.syncDfsAccount()
+    }
+    
+    /// 退出登录,并跳转到登录页面,自动填写当前账号的信息
+    static func toLoginPage() {
+        let account = SettingShared.loggedUserList.first{$0.isLogining}
+        SettingShared.logout()
+        if let account{
+            LoginPage(LoginViewModel(domain: account.domain, name: account.name, pwd: "")).relaunch()
+        } else {
+            LoginPage().relaunch()
+        }
     }
     
     /// 登录
-    static func login(_ accountInfo: AccountInfo, success: @escaping () -> Void) {
+    /// - Parameter pwd: 明文密码
+    static func login(domain: String, name: String, pwd: String, success: @escaping () -> Void) {
         
         //先记录登录之前的服务器，如果登录失败，则还原之前的服务器
         let oldDomain = SettingShared.domain
-        SettingShared.domain = accountInfo.domain;
-        LoginApi.doLogin(name: accountInfo.name, pwd: accountInfo.pwd, deviceId: Const.deviceId).fail{
-            
-            //登录失败，将服务器还原
+        let onFail = { (msg: String) in
             SettingShared.domain = oldDomain
-            Toast.show($0.msg!)
-        }.post{ loginInfo in//登录成功
-            var loggedUserList = SettingShared.loggedUserList
-            
-            //标记是否是已经登录过的账户
-            var isLogined = false
-            for i in 0 ..< loggedUserList.count{
-                let item = loggedUserList[i]
-                if item.domain == accountInfo.domain && item.name == accountInfo.name{
-                    isLogined = true
-                    loggedUserList[i].isLogining = true
-                }else{
-                    loggedUserList[i].isLogining = false
+            Toast.show(msg)
+        }
+        SettingShared.domain = domain
+        CommonApi.global().error(block: onFail).fail{
+            onFail($0.msg ?? "获取服务器信息失败")
+        }.send{ global in
+            LoginApi.doLogin(name: name, pwd: pwd, deviceId: Const.deviceId).error(block: onFail).fail{
+                onFail($0.msg ?? "登录失败")
+            }.send{ loginInfo in//登录成功
+                var loggedUserList = SettingShared.loggedUserList.filter{ $0.domain != domain || $0.name != name }
+                loggedUserList.indices.forEach{ loggedUserList[$0].isLogining = false }
+                let account = AccountInfo(domain: domain, name: name, token: loginInfo.token, clusterId: global.clusterId, isLogining: true)
+                loggedUserList.append(account)
+                SettingShared.loggedUserList = loggedUserList
+                SettingShared.clusterId = global.clusterId
+                SettingShared.token = loginInfo.token
+                
+                //加载用户信息,上传任务按用户区分,所以要等用户信息加载完成
+                let onUserFail = { (msg: String) in
+                    SettingShared.logout()
+                    Toast.show(msg)
+                }
+                MineApi.info().error(block: onUserFail).fail{
+                    onUserFail($0.msg ?? "获取用户信息失败")
+                }.send{
+                    SettingShared.user = $0
+                    FileSdkUtil.syncDfsAccount()
+                    FileSdkUtil.resumeFailedUploads()
+                    
+                    //清空缓存的文件列表
+                    DfsFileShared.clear()
+                    success()
                 }
             }
-            
-            var accountInfo = accountInfo
-            if !isLogined{//这是一个新登录用户
-                accountInfo.isLogining = true
-                loggedUserList.append(accountInfo)
-            }
-            SettingShared.loggedUserList = loggedUserList
-            SettingShared.token = loginInfo.token
-            
-            //后台加载用户信息
-            SettingShared.loadInBackground()
-            
-            //清空缓存的文件列表
+        }
+    }
+    
+    /// 切换到已经登录过的账号,票据失效时会跳转到登录页面
+    static func switchAccount(_ account: AccountInfo, success: @escaping () -> Void) {
+        let oldDomain = SettingShared.domain
+        let oldToken = SettingShared.token
+        let oldClusterId = SettingShared.clusterId
+        let oldLoggedUserList = SettingShared.loggedUserList
+        let onFail = { (msg: String) in
+            SettingShared.domain = oldDomain
+            SettingShared.loggedUserList = oldLoggedUserList
+            SettingShared.clusterId = oldClusterId
+            SettingShared.token = oldToken
+            Toast.show(msg)
+        }
+        var loggedUserList = oldLoggedUserList
+        loggedUserList.indices.forEach{
+            loggedUserList[$0].isLogining = loggedUserList[$0].domain == account.domain && loggedUserList[$0].name == account.name
+        }
+        SettingShared.domain = account.domain
+        SettingShared.loggedUserList = loggedUserList
+        SettingShared.clusterId = account.clusterId
+        SettingShared.token = account.token
+        MineApi.info().error(block: onFail).fail{
+            onFail($0.msg ?? "切换账号失败")
+        }.send{
+            SettingShared.user = $0
+            FileSdkUtil.syncDfsAccount()
             DfsFileShared.clear()
-            
-            //通知登录账户更新
-            //            EventUtil.post(EventCode.ACCOUNT_CHANGE)
             success()
         }
     }
     
     /*----------------------------------------------------------------------------------*/
     
-    /// 同时下载文件数
-    static var downloadSyncCount: Int{
-        get{
-            let value = UserDefaults.standard.integer(forKey: "DOWNLOAD_SYNC_COUNT")
-            if value == 0{
-                SettingShared.downloadSyncCount = 1
-                return 1
-            }
-            return value
-        }
-        
-        set {
-            UserDefaults.standard.set(newValue, forKey: "DOWNLOAD_SYNC_COUNT");
-        }
+    /// 同时下载文件数,0表示没有设置过
+    static var fileSdkMaxSavingCount: Int{
+        get{ UserDefaults.standard.integer(forKey: "FILE_SDK_MAX_SAVING_COUNT") }
+        set{ UserDefaults.standard.set(newValue, forKey: "FILE_SDK_MAX_SAVING_COUNT") }
+    }
+    
+    /// 同时缓存文件数,0表示没有设置过
+    static var fileSdkMaxCachingCount: Int{
+        get{ UserDefaults.standard.integer(forKey: "FILE_SDK_MAX_CACHING_COUNT") }
+        set{ UserDefaults.standard.set(newValue, forKey: "FILE_SDK_MAX_CACHING_COUNT") }
+    }
+    
+    /// 缓存文件保存天数,nil表示没有设置过,0表示永久
+    static var fileSdkCacheExpireDays: Int?{
+        get{ UserDefaults.standard.object(forKey: "FILE_SDK_CACHE_EXPIRE_DAYS") as? Int }
+        set{ UserDefaults.standard.set(newValue, forKey: "FILE_SDK_CACHE_EXPIRE_DAYS") }
     }
     
     /*----------------------------------------------------------------------------------*/
     
-    /// 同时上传文件数
-    static var uploadSyncCount: Int{
-        get {
-            let value = UserDefaults.standard.integer(forKey: "UPLOAD_SYNC_COUNT")
-            if value == 0{
-                SettingShared.uploadSyncCount = 1
-                return 1
-            }
-            return value
-        }
-        
-        set{
-            UserDefaults.standard.set(newValue, forKey: "UPLOAD_SYNC_COUNT");
-        }
+    /// 同时上传文件数,0表示没有设置过
+    static var fileSdkMaxUploadingCount: Int{
+        get{ UserDefaults.standard.integer(forKey: "FILE_SDK_MAX_UPLOADING_COUNT") }
+        set{ UserDefaults.standard.set(newValue, forKey: "FILE_SDK_MAX_UPLOADING_COUNT") }
     }
     
     /*----------------------------------------------------------------------------------*/

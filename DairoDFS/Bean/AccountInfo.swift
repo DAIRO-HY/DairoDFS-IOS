@@ -15,8 +15,11 @@ struct AccountInfo : Codable,Hashable{
     /// 用户名
     var name: String
     
-    /// 密码
-    var pwd: String
+    /// 登录票据,退出登录之后为空
+    var token: String
+    
+    /// 集群ID
+    var clusterId: String
     
     /// 是否当前登录的账号
     var isLogining: Bool  = false

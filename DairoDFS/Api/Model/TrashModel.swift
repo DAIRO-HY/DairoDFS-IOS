@@ -1,4 +1,3 @@
-/*工具自动生成代码,请勿手动修改*/
 struct TrashModel : Codable {
 
   	/** 文件id **/
@@ -13,10 +12,10 @@ struct TrashModel : Codable {
   	/** 是否文件 **/
   var fileFlag: Bool
 
-  	/** 删除日期 **/
+  	/** 剩余时间文字,例如:29天后删除 **/
   var date: String
 
-  	/** 缩率图 **/
-  var thumb: String
+  	/** 是否有缩略图 **/
+  var hasThumb: Bool
 
 }

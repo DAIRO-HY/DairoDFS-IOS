@@ -21,11 +21,11 @@ struct SystemAlbumPage: View {
     /// 上传模式
     private let uploadMode: UploadMode
     
-    @ObservedObject private var vm: SystemAlbumViewModel
+    @StateObject private var vm: SystemAlbumViewModel
     
     init(mode: UploadMode) {
         self.uploadMode = mode
-        self.vm = SystemAlbumViewModel(mode)
+        self._vm = StateObject(wrappedValue: SystemAlbumViewModel(mode))
     }
     
     var body: some View {
@@ -69,9 +69,7 @@ struct SystemAlbumPage: View {
             self.vm.fetchPhotos()
         }
         .onDisappear{
-            PHAssetUploadManager.cancel()
-            let identifierList = self.vm.albumList.map{$0.identifier}
-            PHAssetUploadManager.saveAlbumMd5(identifierList)
+            self.vm.saveMd5()
         }
     }
 }

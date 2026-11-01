@@ -6,14 +6,19 @@
 //
 
 import Foundation
+import DairoUI_IOS
+import DairoFileSDK
 
 class FileUploadViewModel : ObservableObject{
     
-    /// 加载的列表的保存方式
-    @Published var saveType: Int8 = 1
+    /// 列表最多显示的数量
+    private static let MAX_COUNT: UInt64 = 1000
     
-    /// 文件id列表
-    @Published var ids = [Int64]()
+    /// 上传列表
+    @Published var list = [UploadInfo]()
+    
+    /// 上传ID => 进度信息
+    @Published var progressInfo = [Int64 : String]()
     
     /// 当前选中的id
     @Published var checked = Set<Int64>()
@@ -23,7 +28,48 @@ class FileUploadViewModel : ObservableObject{
     
     /// 重新加载数据
     func reload(){
-        self.ids = FileUploaderDBUtil.selectAllId()
+        guard let account = FileSdkUtil.dfsAccount else{
+            self.list = []
+            return
+        }
+        do {
+            let query = UploadQuery(account: account, state: nil, offset: 0, limit: FileUploadViewModel.MAX_COUNT)
+            self.list = try FileSdkUtil.get().listUploads(query: query)
+        } catch {
+            Toast.show(error.fileSdkMessage)
+        }
+    }
+    
+    /// SDK事件
+    func onFileSdkEvent(_ event: Event){
+        switch event{
+        case let .uploadProgress(id, hashing, size, done, speed):
+            guard let index = (self.list.firstIndex{ $0.id == id }) else{
+                return
+            }
+            self.list[index].size = size
+            if hashing{
+                self.progressInfo[id] = "文件校验中 \(Int64(done).fileSize)"
+            } else {
+                self.list[index].uploaded = done
+                self.progressInfo[id] = "\(Int64(done).fileSize)(\(Int64(speed).fileSize)/S)"
+            }
+        case let .uploadStateChanged(id, state, error):
+            guard let index = (self.list.firstIndex{ $0.id == id }) else{
+                self.reload()
+                return
+            }
+            self.list[index].state = state
+            self.list[index].error = error
+            if state != .uploading{
+                self.progressInfo[id] = nil
+            }
+        case let .uploadRemoved(ids):
+            self.list.removeAll{ ids.contains($0.id) }
+            self.checked.subtract(ids)
+        default:
+            break
+        }
     }
     
     /// 选中状态点击事件
@@ -37,28 +83,53 @@ class FileUploadViewModel : ObservableObject{
     
     /// 选择所有点击事件
     func onCheckAllClick(){
-        self.ids.forEach{
-            self.checked.insert($0)
-        }
+        self.checked.formUnion(self.list.map{ $0.id })
     }
     
-    /// 删除点击事件
-    func onDeleteClick(){
-        FileUploaderManager.delete(Array(self.checked))
-        self.checked.removeAll()
-        self.reload()
+    /// 暂停/开始点击事件
+    func onStateClick(_ item: UploadInfo){
+        self.run{
+            if item.state == .waiting || item.state == .uploading{
+                try FileSdkUtil.get().pauseUploads(ids: [item.id])
+            } else {
+                try FileSdkUtil.get().resumeUploads(ids: [item.id])
+            }
+        }
     }
     
     /// 暂停所有点击事件
     func onPauseAllClick(){
-        FileUploaderManager.cancelAll()
-        self.reload()
+        self.run{ try FileSdkUtil.get().pauseAllUploads() }
     }
     
     /// 开始所有点击事件
     func onStartAllClick(){
-        FileUploaderManager.startAll()
-        FileUploaderManager.loopUpload()
+        self.run{ try FileSdkUtil.get().resumeAllUploads() }
+    }
+    
+    /// 删除点击事件,删除会等待任务停止,不能在主线程调用
+    func onDeleteClick(){
+        let ids = Array(self.checked)
+        self.checked.removeAll()
+        Task.detached{
+            do {
+                try FileSdkUtil.get().deleteUploads(ids: ids)
+            } catch {
+                Toast.show(error.fileSdkMessage)
+            }
+            Task{@MainActor in
+                self.reload()
+            }
+        }
+    }
+    
+    /// 执行操作之后刷新列表
+    private func run(_ action: () throws -> Void){
+        do {
+            try action()
+        } catch {
+            Toast.show(error.fileSdkMessage)
+        }
         self.reload()
     }
 }

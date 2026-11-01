@@ -57,11 +57,10 @@ class AlbumViewModel : ObservableObject{
         if let modelList = LocalObjectUtil.read([FileModel].self, AlbumViewModel.LOCAL_OBJ_KEY_ALBUM){
             self.toEntity(modelList)
         }
-        FilesApi.getAlbumList().hide().post(){ modelList in
+        FilesApi.getAlbumList().hide().send{ itemList in
+            let modelList = itemList.map{ $0.fileModel }
             if LocalObjectUtil.write(modelList, AlbumViewModel.LOCAL_OBJ_KEY_ALBUM){
-                Task{@MainActor in
-                    self.toEntity(modelList)
-                }
+                self.toEntity(modelList)
             }
         }
     }
@@ -128,7 +127,7 @@ class AlbumViewModel : ObservableObject{
             }
             deleteIds.append(item.fm.id)
         }
-        FilesApi.deleteByIds(ids: deleteIds).post{
+        FilesApi.delete(ids: deleteIds).send{
             Toast.show("删除成功")
             
             //删除数据缓存
@@ -139,16 +138,15 @@ class AlbumViewModel : ObservableObject{
     
     /// 下载按钮点击事件
     func onDownloadClick(){
-        var downloadIds = [(id: String, url: String)]()
-        for item in self.entityList{
-            if !item.isSelected{
-                continue
-            }
-            downloadIds.append((id: item.fm.downloadId, url: item.fm.download))
-        }
-        
         //将选中的文件添加到下载列表
-        DownloadManager.save(downloadIds)
+        do {
+            for item in self.entityList where item.isSelected{
+                try FileSdkUtil.download(item.fm.downloadSource)
+            }
+        } catch {
+            Toast.show(error.fileSdkMessage)
+            return
+        }
         Toast.show("已添加到下载列表")
     }
     

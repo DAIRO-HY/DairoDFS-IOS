@@ -7,6 +7,7 @@
 
 import SwiftUI
 import DairoUI_IOS
+import DairoFileSDK
 
 struct FileAddView: View {
     
@@ -61,14 +62,12 @@ struct FileAddView: View {
             }
             .sheet(isPresented: self.$showFilePicker) {//显示文件选择器
                 DocumentPicker(.data, true) { urls in
-                    let fileUploadDtoList = self.makeFileUploadDtoList(SettingShared.lastOpenFolder, urls)
-                    FileUploaderManager.upload(fileUploadDtoList)
+                    self.upload(urls)
                 }
             }
             .sheet(isPresented: self.$showFolderPicker) {//显示文件夹选择器
                 DocumentPicker(.folder, false) { urls in
-                    let fileUploadDtoList = self.makeFileUploadDtoList(SettingShared.lastOpenFolder, urls)
-                    FileUploaderManager.upload(fileUploadDtoList)
+                    self.upload(urls)
                 }
             }
             .sheet(isPresented: self.$showUpload){
@@ -83,7 +82,7 @@ struct FileAddView: View {
                     
                     //清空输入值,避免下次被显示
                     self.createFolder = ""
-                    FilesApi.createFolder(folder: SettingShared.lastOpenFolder + "/" + name).post {
+                    FilesApi.createFolder(folder: SettingShared.lastOpenFolder + "/" + name).send {
                         self.vm.reload()
                     }
                 }
@@ -94,9 +93,19 @@ struct FileAddView: View {
         }
     }
     
-    /// 生成文件上传Dto列表
-    private func makeFileUploadDtoList(_ folder: String, _ urls: [URL]) -> [FileUploaderDto] {
-        var dtoList = [FileUploaderDto]()
+    /// 添加上传任务
+    private func upload(_ urls: [URL]){
+        do {
+            let items = try self.makeUploadItems(SettingShared.lastOpenFolder, urls)
+            _ = try FileSdkUtil.get().addUploads(items: items)
+        } catch {
+            Toast.show(error.fileSdkMessage)
+        }
+    }
+    
+    /// 生成上传任务列表
+    private func makeUploadItems(_ folder: String, _ urls: [URL]) throws -> [UploadItem] {
+        var items = [UploadItem]()
         let fileManager = FileManager.default
         for url in urls {
             
@@ -104,95 +113,34 @@ struct FileAddView: View {
             let filename = url.lastPathComponent
             
             //开启访问权限
-            url.startAccessingSecurityScopedResource()
+            let isAccessing = url.startAccessingSecurityScopedResource()
+            defer{
+                if isAccessing{
+                    url.stopAccessingSecurityScopedResource()
+                }
+            }
             var isDir: ObjCBool = false
             if fileManager.fileExists(atPath: url.path, isDirectory: &isDir) {
                 
                 // 如果是目录，递归
                 if isDir.boolValue {
-                    let subUrls = try! fileManager.contentsOfDirectory(
+                    let subUrls = try fileManager.contentsOfDirectory(
                         at: url,
                         includingPropertiesForKeys: [.isDirectoryKey],
                         options: [.skipsHiddenFiles])
-                    let subDtoList = self.makeFileUploadDtoList(folder + "/" + filename,subUrls)
-                    dtoList.append(contentsOf: subDtoList)
+                    items.append(contentsOf: try self.makeUploadItems(folder + "/" + filename, subUrls))
                 }else{
-                    let size = FileUtil.getFileSize(url.path) ?? 0
                     
-                    //获取url的bookmarkData
-                    let bookmarkData = try! url.bookmarkData(options: [.withoutImplicitSecurityScope],
-                                                             includingResourceValuesForKeys: nil,
-                                                             relativeTo: nil)
-                    let dto = FileUploaderDto(
-                        id: 0,
-                        bookmarkData: bookmarkData,
-                        name: filename,
-                        size: size,
-                        uploadedSize: 0,
-                        md5: nil,
-                        dfsPath: folder + "/" + filename,
-                        state: 0,
-                        date: 0,
-                        error: nil
-                    )
-                    dtoList.append(dto)
+                    //获取url的bookmarkData,确保app退出后该文件依然能够访问
+                    let bookmarkData = try url.bookmarkData(options: [.withoutImplicitSecurityScope],
+                                                            includingResourceValuesForKeys: nil,
+                                                            relativeTo: nil)
+                    items.append(UploadItem(source: .custom(id: FileUploadSource.makeId(bookmark: bookmarkData)), dfsPath: folder + "/" + filename))
                 }
             }
-            
-            //停止访问权限
-            url.stopAccessingSecurityScopedResource()
         }
-        return dtoList
+        return items
     }
-    
-    //    private func makeFileUploadDto(_ folderURL: URL) -> [FileUploaderDto] {
-    //        var result = [FileUploaderDto]()
-    //        let fileManager = FileManager.default
-    //        do {
-    //            let items = try fileManager.contentsOfDirectory(
-    //                at: folderURL,
-    //                includingPropertiesForKeys: [.isDirectoryKey],
-    //                options: [.skipsHiddenFiles])
-    //            for item in items {
-    //                var isDir: ObjCBool = false
-    //                if fileManager.fileExists(atPath: item.path, isDirectory: &isDir) {
-    //                    item.startAccessingSecurityScopedResource()
-    //                    let size = FileUtil.getFileSize(item.path) ?? 0
-    //
-    //                    //获取url的bookmarkData
-    //                    let bookmarkData = try! item.bookmarkData(options: [.withoutImplicitSecurityScope],
-    //                                                              includingResourceValuesForKeys: nil,
-    //                                                              relativeTo: nil)
-    //                    item.stopAccessingSecurityScopedResource()
-    //
-    //                    let dfsPath = "/相册/" + item.lastPathComponent
-    //                    let dto = FileUploaderDto(
-    //                        id: 0,
-    //                        bookmarkData: bookmarkData,
-    //                        name: item.lastPathComponent,
-    //                        size: size,
-    //                        uploadedSize: 0,
-    //                        md5: nil,
-    //                        dfsPath: dfsPath,
-    //                        state: 0,
-    //                        date: 0,
-    //                        error: nil
-    //                    )
-    //                    result.append(dto)
-    //
-    //                    // 如果是目录，递归
-    //                    if isDir.boolValue {
-    //                        let subResult = makeFileUploadDto(item)
-    //                        result.append(contentsOf: subResult)
-    //                    }
-    //                }
-    //            }
-    //        } catch {
-    //            print("读取文件夹失败: \(error)")
-    //        }
-    //
-    //        return result
-    //    }
     
     ///全取消
     private func onUncheckAllClick() {
