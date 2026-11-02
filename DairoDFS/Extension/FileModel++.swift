@@ -112,6 +112,16 @@ extension FileModel{
         || lowerName.hasSuffix(".dlive")
     }
 
+    ///这是否是一个音频文件
+    var isAudio: Bool{
+        let lowerName = self.name.lowercased()
+        return lowerName.hasSuffix(".mp3")
+        || lowerName.hasSuffix(".m4a")
+        || lowerName.hasSuffix(".aac")
+        || lowerName.hasSuffix(".wav")
+        || lowerName.hasSuffix(".flac")
+    }
+
     ///这是否是实况照片
     var isDlive: Bool{
         let lowerName = self.name.lowercased()

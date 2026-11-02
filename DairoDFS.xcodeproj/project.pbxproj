@@ -428,7 +428,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = DairoDFS/Info.plist;
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "App需要访问您的照片用于展示相册内容";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "用于显示相册里的照片和视频，把你选择的内容上传到你连接的服务器，并在你确认后删除已上传的照片";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -440,8 +440,8 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = cn.dairo.test.DairoDFS;
+				MARKETING_VERSION = 2.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = cn.dairo.dfs;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -467,7 +467,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = DairoDFS/Info.plist;
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "App需要访问您的照片用于展示相册内容";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "用于显示相册里的照片和视频，把你选择的内容上传到你连接的服务器，并在你确认后删除已上传的照片";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -479,8 +479,8 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = cn.dairo.test.DairoDFS;
+				MARKETING_VERSION = 2.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = cn.dairo.dfs;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -502,7 +502,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = cn.dairo.test.DairoDFSTests;
+				PRODUCT_BUNDLE_IDENTIFIER = cn.dairo.dfs.DairoDFSTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
@@ -521,7 +521,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = cn.dairo.test.DairoDFSTests;
+				PRODUCT_BUNDLE_IDENTIFIER = cn.dairo.dfs.DairoDFSTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
@@ -538,7 +538,7 @@
 				DEVELOPMENT_TEAM = GSH7K3ZYLR;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = cn.dairo.test.DairoDFSUITests;
+				PRODUCT_BUNDLE_IDENTIFIER = cn.dairo.dfs.DairoDFSUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
@@ -555,7 +555,7 @@
 				DEVELOPMENT_TEAM = GSH7K3ZYLR;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = cn.dairo.test.DairoDFSUITests;
+				PRODUCT_BUNDLE_IDENTIFIER = cn.dairo.dfs.DairoDFSUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;

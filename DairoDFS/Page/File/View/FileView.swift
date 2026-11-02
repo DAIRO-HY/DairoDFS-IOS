@@ -32,6 +32,11 @@ struct FileView: View {
                 AlbumViewerPage(viewModel, self.$vm.showViewerPage)
             }
         }
+        .sheet(isPresented: Binding(get: { self.vm.audioFile != nil }, set: { if !$0 { self.vm.audioFile = nil } })) {
+            if let audioFile = self.vm.audioFile{
+                AudioPlayerPage(audioFile)
+            }
+        }
     }
 }
 //

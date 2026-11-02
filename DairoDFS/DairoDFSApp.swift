@@ -28,6 +28,9 @@ struct DairoDFSApp: App {
         //提前创建SDK实例,App重启后未完成的下载和上传会自动继续
         _ = try? FileSdkUtil.get()
         
+        //让上传和下载在App进入后台后尽量继续
+        FileBackgroundTransfer.shared.start()
+        
         //设置后台播放,否则在静音模式下,导致播放视频时没有声音
         let audioSession = AVAudioSession.sharedInstance()
         try? audioSession.setCategory(AVAudioSession.Category.playback)

@@ -2,6 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
     <dict>
+        <key>BGTaskSchedulerPermittedIdentifiers</key>
+        <array>
+            <string>cn.dairo.dfs.transfer.*</string>
+        </array>
         <key>CFBundleLocalizations</key>
         <array>
             <string>zh_CN</string>
@@ -12,11 +16,13 @@
         <dict>
             <key>NSAllowsArbitraryLoads</key>
             <true/>
-            <key>NSAllowsLocalNetworking</key>
-            <true/>
             <key>NSExceptionDomains</key>
             <dict/>
         </dict>
+        <key>NSLocalNetworkUsageDescription</key>
+        <string>用于连接你部署在局域网内的文件服务器</string>
+        <key>NSPhotoLibraryAddUsageDescription</key>
+        <string>用于把服务器上的照片和视频保存到相册</string>
         <key>UIBackgroundModes</key>
         <array>
             <string>audio</string>

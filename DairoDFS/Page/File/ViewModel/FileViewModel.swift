@@ -28,6 +28,9 @@ class FileViewModel : ObservableObject{
     /// 显示查看相册页面
     @Published var showViewerPage = false
     
+    /// 正在播放的音频文件,不为空时显示音频播放页面
+    @Published var audioFile: FileModel?
+    
     /// 剪切板中的文件ID
     var clipboardSet = Set<Int64>()
     
@@ -93,6 +96,10 @@ class FileViewModel : ObservableObject{
         if item.fm.isImage || item.fm.isVideo{//这个文件是图片或者视频
             self.currentClickFileId = item.fm.id
             self.showViewerPage = true
+            return
+        }
+        if item.fm.isAudio{
+            self.audioFile = item.fm
             return
         }
     }

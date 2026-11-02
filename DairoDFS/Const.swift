@@ -25,7 +25,7 @@ enum Const {
 
   ///获取设备唯一标识
     static var deviceId: String {
-        let uuid = UIDevice.current.identifierForVendor!.uuidString
+        let uuid = UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString
         return uuid.md5
   }
 }
