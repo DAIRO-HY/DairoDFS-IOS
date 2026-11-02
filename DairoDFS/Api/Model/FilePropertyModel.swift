@@ -21,6 +21,9 @@ struct FilePropertyModel : Codable {
   	/** 创建日期 **/
   var date: String
 
+  	/** 上传时间(毫秒),复制得到的文件是复制时的时间 **/
+  var uploadDate: Int64
+
   	/** 文件状态 **/
   var state: Int8
 

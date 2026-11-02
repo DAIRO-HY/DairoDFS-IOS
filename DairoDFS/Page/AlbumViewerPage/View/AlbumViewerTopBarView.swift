@@ -31,6 +31,16 @@ struct AlbumViewerTopBarView: View {
                     .frame(width: 40, height: 40)
                 }
                 Spacer()
+                if let fileTime = self.vm.fileTime{
+                    Text(fileTime)
+                        .font(.subheadline)
+                        .foregroundColor(Color.gl.black)
+                        .shadow(color: Color.gl.white, radius: 3, x: 2, y: 2)
+                }
+                Spacer()
+                
+                //和返回按钮同宽,使时间水平居中
+                Color.clear.frame(width: 40, height: 40)
             }
             Spacer()
         }

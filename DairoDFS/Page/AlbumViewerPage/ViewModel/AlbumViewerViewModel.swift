@@ -42,6 +42,9 @@ class AlbumViewerViewModel: ObservableObject{
     ///当前文件的一些标签（RAW、4K、4K60FPS......），显示在左上角
     @Published var tags = [String]()
 
+    ///当前文件的时间,显示在顶部,优先显示拍摄时间,没有拍摄时间时显示上传时间
+    @Published var fileTime: String? = nil
+
     ///当前选中的序号
     @Published var currentIndex = 0
     
@@ -228,6 +231,7 @@ class AlbumViewerViewModel: ObservableObject{
         self.zoomAmount = 1.0
 
         self.tags.removeAll()
+        self.fileTime = nil
         self.propertyApiHttp?.cancel()
         self.fileProperty = nil
         self.cancelFetch()
@@ -245,8 +249,10 @@ class AlbumViewerViewModel: ObservableObject{
 
         //停止实况视频播放
         self.dliveVm.clear()
-        if let path = FileSdkUtil.cachedPath(self.fm.propertySource), let data = FileUtil.readAll(path){//如果属性文件已经存在
-            self.fileProperty = try? JSONDecoder().decode(FilePropertyModel.self, from: data)
+        if let path = FileSdkUtil.cachedPath(self.fm.propertySource),
+           let data = FileUtil.readAll(path),
+           let fileProperty = try? JSONDecoder().decode(FilePropertyModel.self, from: data){//如果属性文件已经存在,解析失败时重新获取
+            self.fileProperty = fileProperty
             self.initView()
         } else {
             self.progress = "正在加载文件属性"
@@ -283,8 +289,12 @@ class AlbumViewerViewModel: ObservableObject{
         if FileSdkUtil.cachedPath(self.fm.downloadSource) != nil{
             self.tags.append("已下载")
         }
+        var fileDate = self.fileProperty?.uploadDate ?? 0
         if let propertyData = self.fileProperty?.property.data(using: .utf8),
            let property = try? JSONSerialization.jsonObject(with: propertyData, options: []) as? [String: Any]{
+            if let date = property["date"] as? Int64, date > 0{//拍摄时间(毫秒)
+                fileDate = date
+            }
             if let width = property["width"] as? Int, let height = property["height"] as? Int{
                 if width * height == 3840 * 2160{
                     self.tags.append("4K")
@@ -297,6 +307,9 @@ class AlbumViewerViewModel: ObservableObject{
                     self.tags.append("60FPS")
                 }
             }
+        }
+        if fileDate > 0{
+            self.fileTime = Date(timeIntervalSince1970: Double(fileDate) / 1000).format()
         }
         if self.fm.name.lowercased().hasSuffix(".cr3"){
             self.tags.append("RAW")
