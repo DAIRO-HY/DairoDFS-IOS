@@ -183,6 +183,16 @@ enum SettingShared {
         FileSdkUtil.syncDfsAccount()
     }
     
+    /// 获取当前账号的本地对象缓存名,不同账号的缓存互相隔离,没有账号信息时返回nil,此时不使用缓存
+    static func accountObjectName(_ name: String) -> String? {
+        guard let account = FileSdkUtil.dfsAccount else{
+            return nil
+        }
+        let folder = "account_cache/" + account.replacingOccurrences(of: ":", with: "_")
+        FileUtil.mkdirs(LocalObjectUtil.mFolder + "/" + folder)
+        return folder + "/" + name
+    }
+    
     /// 退出登录,并跳转到登录页面,自动填写当前账号的信息
     static func toLoginPage() {
         let account = SettingShared.loggedUserList.first{$0.isLogining}
@@ -228,9 +238,6 @@ enum SettingShared {
                     SettingShared.user = $0
                     FileSdkUtil.syncDfsAccount()
                     FileSdkUtil.resumeFailedUploads()
-                    
-                    //清空缓存的文件列表
-                    DfsFileShared.clear()
                     success()
                 }
             }
@@ -277,7 +284,6 @@ enum SettingShared {
         }.send{
             SettingShared.user = $0
             FileSdkUtil.syncDfsAccount()
-            DfsFileShared.clear()
             success()
         }
     }

@@ -67,6 +67,10 @@ struct MinePage: View {
                             .icon("die.face.4.fill", backgroundColor: Color.purple)
                         }
                         SettingGroup{
+                            SettingNavigationLink("个人资料",tip: "昵称、头像"){
+                                AnyView(ProfilePage())
+                            }.icon("person.crop.circle.fill", backgroundColor: Color.blue)
+                            
                             SettingNavigationLink("修改密码"){
                                 ModifyPwdPage().anyView
                             }.icon("lock.open.rotation", backgroundColor: Color.orange)
@@ -85,6 +89,7 @@ struct MinePage: View {
             }
             .navigationTitle("我的")
             .navigationBarHidden(true)
+            .onAppear(perform: self.vm.loadUser)
         }
         //iPad上默认是左右分栏,这里要全屏显示
         .navigationViewStyle(.stack)
@@ -93,12 +98,9 @@ struct MinePage: View {
     /// 顶部头像部分视图
     private var topLogoView: some View {
         HStack {
-                Image("logo")
-                .resizable()
-                .frame(width: 50, height: 50)
-                .cornerRadius(1000)
+            UserAvatar(self.vm.user, size: 50)
             VStack {
-                Text(self.vm.logged.name)
+                Text(self.vm.user?.displayName ?? self.vm.logged.name)
                     .foregroundColor(Color.gl.textPrimaryContent)
                     .font(.title2)
                     .frame(maxWidth: .infinity,alignment: .leading)

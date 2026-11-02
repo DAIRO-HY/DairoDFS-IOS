@@ -25,9 +25,6 @@ struct DairoDFSApp: App {
      */
     init(){
         
-        //创建文件列表缓存目录
-        DfsFileShared.makeDir()
-        
         //提前创建SDK实例,App重启后未完成的下载和上传会自动继续
         _ = try? FileSdkUtil.get()
         

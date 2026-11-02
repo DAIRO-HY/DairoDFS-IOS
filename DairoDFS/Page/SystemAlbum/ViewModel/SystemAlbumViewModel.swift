@@ -323,7 +323,7 @@ class SystemAlbumViewModel : ObservableObject{
         case .waiting: return "排队中"
         case .uploading: return "准备上传"
         case .paused: return "已暂停"
-        case .error: return "失败:\(error ?? "")"
+        case .error: return "失败:\(FileSdkUtil.friendlyError(error ?? ""))"
         case .finish, .skipped: return SystemAlbumViewModel.MSG_UPLOADED
         }
     }

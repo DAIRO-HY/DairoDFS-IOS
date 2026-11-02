@@ -24,4 +24,15 @@ struct MineModel : Codable {
   	/** 是否管理员 **/
   var isAdmin: Bool
 
+  	/** 昵称,本地保存的旧用户信息里没有这个字段 **/
+  var nickname: String?
+
+  	/** 头像的MD5,空表示没有头像,本地保存的旧用户信息里没有这个字段 **/
+  var avatar: String?
+
+  	/** 显示的名字,没有昵称时显示用户名 **/
+  var displayName: String {
+    return self.nickname?.isEmpty == false ? self.nickname! : self.name
+  }
+
 }

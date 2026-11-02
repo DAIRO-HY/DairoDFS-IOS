@@ -78,7 +78,7 @@ struct FileDownloadPage: View {
                         .progressViewStyle(.linear)
                     HStack{
                         if let error = item.error{
-                            Text(error).font(.footnote).foregroundColor(.red).lineLimit(1)
+                            Text(FileSdkUtil.friendlyError(error)).font(.footnote).foregroundColor(.red).lineLimit(1)
                         } else {
                             Text(self.progressInfo(item)).font(.footnote).foregroundColor(.secondary)
                         }

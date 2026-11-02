@@ -47,7 +47,7 @@ struct AlbumPage: View {
                 if self.vm.isNeedReloadData{
                     
                     //删除数据缓存
-                    LocalObjectUtil.delete(AlbumViewModel.LOCAL_OBJ_KEY_ALBUM)
+                    AlbumViewModel.deleteCache()
                     self.vm.loadData()
                 }
             }.onChange(of: self.vm.showAlbunSyncPage){
@@ -60,7 +60,7 @@ struct AlbumPage: View {
                 if self.vm.isNeedReloadData{
                     
                     //删除数据缓存
-                    LocalObjectUtil.delete(AlbumViewModel.LOCAL_OBJ_KEY_ALBUM)
+                    AlbumViewModel.deleteCache()
                     self.vm.loadData()
                 }
             }

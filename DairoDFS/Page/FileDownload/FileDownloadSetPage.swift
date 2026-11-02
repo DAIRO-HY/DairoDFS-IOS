@@ -93,6 +93,7 @@ struct FileDownloadSetPage: View {
         switch group{
         case "file": return "原文件"
         case "thumb": return "缩略图"
+        case "avatar": return "头像"
         case "preview": return "预览文件"
         case "preview-dlive": return "实况预览视频"
         case "dlive": return "实况视频"

@@ -12,9 +12,6 @@ import DairoUI_IOS
 
 class AlbumViewModel : ObservableObject{
     
-    /// 相册列表数据缓存key
-    static let LOCAL_OBJ_KEY_ALBUM = "albums"
-    
     /// 显示查看相册页面
     @Published var showViewerPage = false
     
@@ -53,15 +50,33 @@ class AlbumViewModel : ObservableObject{
     ///获取文件列表
     func loadData() {
         
-        //从本地缓存读取数据
-        if let modelList = LocalObjectUtil.read([FileModel].self, AlbumViewModel.LOCAL_OBJ_KEY_ALBUM){
+        //从本地缓存读取数据,不同账号的缓存互相隔离
+        let cacheName = AlbumViewModel.cacheName
+        if let cacheName, let modelList = LocalObjectUtil.read([FileModel].self, cacheName){
             self.toEntity(modelList)
         }
-        FilesApi.getAlbumList().hide().send{ itemList in
+        FilesApi.getAlbumList().hide().fail{
+            Toast.show($0.msg ?? "加载相册失败")
+        }.send{ itemList in
             let modelList = itemList.map{ $0.fileModel }
-            if LocalObjectUtil.write(modelList, AlbumViewModel.LOCAL_OBJ_KEY_ALBUM){
-                self.toEntity(modelList)
+            
+            //数据没有更新时不需要刷新
+            if let cacheName, !LocalObjectUtil.write(modelList, cacheName){
+                return
             }
+            self.toEntity(modelList)
+        }
+    }
+    
+    /// 相册列表数据缓存名
+    private static var cacheName: String? {
+        return SettingShared.accountObjectName("albums")
+    }
+    
+    /// 删除相册列表数据缓存
+    static func deleteCache(){
+        if let cacheName = AlbumViewModel.cacheName{
+            LocalObjectUtil.delete(cacheName)
         }
     }
     
@@ -131,7 +146,7 @@ class AlbumViewModel : ObservableObject{
             Toast.show("删除成功")
             
             //删除数据缓存
-            LocalObjectUtil.delete(AlbumViewModel.LOCAL_OBJ_KEY_ALBUM)
+            AlbumViewModel.deleteCache()
             self.loadData()
         }
     }

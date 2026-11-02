@@ -7,6 +7,9 @@ enum ApiConst {
   static let LOGIN_LOGOUT = "/api/login/logout"
 
   static let MINE_INFO = "/api/mine/info"
+  static let MINE_NICKNAME = "/api/mine/nickname"
+  static let MINE_AVATAR = "/api/mine/avatar"
+  static let AVATAR = "/api/avatar"
   static let MODIFY_PWD = "/api/modify_pwd"
 
   static let FILES_LIST = "/api/files/list"

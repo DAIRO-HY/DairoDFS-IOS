@@ -528,6 +528,10 @@ class AlbumViewerViewModel: ObservableObject{
                         self.videoPlayer?.play()
                         self.startVideoTimer()
                     }
+                } else if status == .failed {
+                    Task{ @MainActor in
+                        Toast.show("视频加载失败,请检查网络或访问权限")
+                    }
                 }
             }
         }
@@ -725,7 +729,7 @@ class AlbumViewerViewModel: ObservableObject{
                 self.progress = ""
                 self.downloadFinish()
             } else if state == .error{
-                self.progress = error ?? "下载失败"
+                self.progress = FileSdkUtil.friendlyError(error ?? "下载失败")
                 self.downloadFinish()
             }
         default:

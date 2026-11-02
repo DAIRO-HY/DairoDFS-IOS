@@ -162,6 +162,19 @@ enum FileSdkUtil {
     }
     
     /**
+     将SDK的错误信息转换成给用户看的提示,没有权限时SDK返回的是地址过期或文件不存在
+     */
+    static func friendlyError(_ msg: String) -> String {
+        if msg.hasPrefix("地址已过期或者没有权限"){
+            return "没有访问权限或登录已失效"
+        }
+        if msg == "文件不存在"{
+            return "文件不存在或没有访问权限"
+        }
+        return msg
+    }
+    
+    /**
      创建SDK实例,数据目录不能用Caches,否则会被系统清理
      */
     private static func create() throws -> FileSdk {
@@ -232,6 +245,19 @@ struct FileSource {
             name: "\(id)-thumb.jpg"
         )
     }
+    
+    /// 用户头像,没有头像时返回nil,头像的MD5放在缓存key里,换头像之后会重新下载
+    static func avatar(_ user: MineModel) -> FileSource? {
+        guard let avatar = user.avatar, !avatar.isEmpty else{
+            return nil
+        }
+        return FileSource(
+            url: SettingShared.domainNotNull + ApiConst.AVATAR + "/\(user.id)?v=\(avatar)",
+            cacheKey: ApiConst.AVATAR + "/\(user.id)/\(avatar)",
+            group: "avatar",
+            name: "\(user.id)-avatar.jpg"
+        )
+    }
 }
 
 /// SDK事件监听,转发到主线程的通知
@@ -288,10 +314,10 @@ extension Error {
         }
         switch error {
         case let .UrlExpired(_, msg), let .Http(_, msg):
-            return msg
+            return FileSdkUtil.friendlyError(msg)
         case let .NotFound(msg), let .Server(msg), let .Source(msg), let .Network(msg), let .Io(msg),
             let .Md5Mismatch(msg), let .InvalidUrl(msg), let .Db(msg), let .NoAccount(msg), let .Cancelled(msg):
-            return msg
+            return FileSdkUtil.friendlyError(msg)
         }
     }
 }

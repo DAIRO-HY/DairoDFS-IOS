@@ -12,25 +12,8 @@ import DairoUI_IOS
 /// </summary>
 enum DfsFileShared {
     
-    ///缓存目录
-    static let CACHE_FOLDER = "dfs_file_list";
-    
-    ///存储文件夹目录路径
-    //  static String get cacheFolderPath => paths.normalize("${SyncVariable.supportPath}/$CACHE_FOLDER");
-    
     ///请求文件列表的http请求
     private static var _apiHttp: ApiHttp<FileListModel>?
-    
-    /**
-     创建文件列表缓存目录
-     */
-    static func makeDir(){
-        let folderPath = LocalObjectUtil.mFolder + "/" + DfsFileShared.CACHE_FOLDER
-        let isOk = FileUtil.mkdirs(folderPath)
-        if !isOk{
-            print("文件夹:\(folderPath) 创建失败")
-        }
-    }
     
     ///获取文件列表
     static func getSubList(_ folder: String, callback: @escaping (_ files: [FileModel]) -> Void) {
@@ -41,11 +24,11 @@ enum DfsFileShared {
             fileName = fileName.replacingOccurrences(of: "/", with: "_")
         }
         
-        //缓存文件名
-        fileName = "\(CACHE_FOLDER)/root_\(fileName)";
+        //缓存文件名,不同账号的缓存互相隔离
+        let cacheName = SettingShared.accountObjectName("file_list_root_\(fileName)")
         
         //得到本地缓存的文件列表
-        if let cacheFileList = LocalObjectUtil.read([FileModel].self, fileName){
+        if let cacheName, let cacheFileList = LocalObjectUtil.read([FileModel].self, cacheName){
             callback(cacheFileList)
         }
         
@@ -53,24 +36,18 @@ enum DfsFileShared {
         DfsFileShared._apiHttp?.cancel()
         
         //Api请求文件列表
-        DfsFileShared._apiHttp = FilesApi.getList(folder: folder).hide().finish{
+        DfsFileShared._apiHttp = FilesApi.getList(folder: folder).hide().fail{
+            Toast.show($0.msg ?? "加载文件列表失败")
+        }.finish{
             DfsFileShared._apiHttp = nil
         }.send{
             let list = $0.list
-            let isWrite = LocalObjectUtil.write(list, fileName)
-            if (isWrite) {
-                
-                //文件列表有更新
-                callback(list);
+            
+            //文件列表没有更新时不需要回调
+            if let cacheName, !LocalObjectUtil.write(list, cacheName){
+                return
             }
+            callback(list);
         }
-    }
-    
-    ///清空缓存的文件列表
-    static func clear() {
-        //    let folder = Directory(DfsFileShared.cacheFolderPath);
-        //    if (folder.existsSync()) {
-        //      folder.deleteSync(recursive: true);
-        //    }
     }
 }

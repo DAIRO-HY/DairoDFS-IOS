@@ -60,7 +60,7 @@ struct FileUploadItemView: View {
                         .progressViewStyle(.linear)
                         .tint(.blue)
                     HStack{
-                        if let error = self.item.error{
+                        if let error = self.item.error.map(FileSdkUtil.friendlyError){
                             Button(action:{
                                 Toast.show(error)
                             }){

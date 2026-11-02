@@ -44,6 +44,9 @@ class ApiHttp<T: Codable> : ApiHttpBase{
     ///是否携带登录票据
     private var isAuth = true
     
+    ///要上传的文件
+    private var uploadFile: ApiUploadFile?
+    
     /**
      * 失败时消息回调
      */
@@ -102,6 +105,14 @@ class ApiHttp<T: Codable> : ApiHttpBase{
      */
     func noAuth() -> ApiHttp {
         self.isAuth = false
+        return self
+    }
+    
+    /**
+     * 以multipart方式上传文件
+     */
+    func file(name: String, fileName: String, mimeType: String, data: Data) -> ApiHttp {
+        self.uploadFile = ApiUploadFile(name: name, fileName: fileName, mimeType: mimeType, data: data)
         return self
     }
     
@@ -174,7 +185,11 @@ class ApiHttp<T: Codable> : ApiHttpBase{
         if self.isAuth{
             request.setValue("Bearer " + SettingShared.token, forHTTPHeaderField: "Authorization")
         }
-        if self.method != "GET" && !parameterStr.isEmpty{
+        if let uploadFile = self.uploadFile{
+            let boundary = UUID().uuidString
+            request.setValue("multipart/form-data; boundary=" + boundary, forHTTPHeaderField: "Content-Type")
+            request.httpBody = uploadFile.multipartBody(boundary: boundary)
+        } else if self.method != "GET" && !parameterStr.isEmpty{
             request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
             request.httpBody = parameterStr.data(using: .utf8)
         }
@@ -256,8 +271,15 @@ class ApiHttp<T: Codable> : ApiHttpBase{
     
     /**
      * 生成失败信息,表单验证失败时优先显示字段的错误信息
+     * 需要登录的接口没有权限时返回403或404,这两种情况的返回内容不适合直接显示给用户
      */
     private func makeFailModel(_ statusCode: Int, _ data: Data) -> ApiFailModel{
+        if self.isAuth && statusCode == 403{
+            return ApiFailModel(code: statusCode, msg: "没有操作权限")
+        }
+        if self.isAuth && statusCode == 404{
+            return ApiFailModel(code: statusCode, msg: "内容不存在或没有访问权限")
+        }
         if let formFail = try? JSONDecoder().decode(ApiFormFailModel.self, from: data){
             let msg = formFail.data?.values.first{ !$0.isEmpty }?.first ?? formFail.msg
             return ApiFailModel(code: statusCode, msg: msg)
@@ -294,6 +316,29 @@ class ApiHttp<T: Codable> : ApiHttpBase{
     }
 }
 
+
+/**
+ * 要上传的文件
+ */
+private struct ApiUploadFile {
+    let name: String
+    let fileName: String
+    let mimeType: String
+    let data: Data
+    
+    /**
+     * 生成multipart请求内容
+     */
+    func multipartBody(boundary: String) -> Data {
+        var body = Data()
+        body.append(Data("--\(boundary)\r\n".utf8))
+        body.append(Data("Content-Disposition: form-data; name=\"\(self.name)\"; filename=\"\(self.fileName)\"\r\n".utf8))
+        body.append(Data("Content-Type: \(self.mimeType)\r\n\r\n".utf8))
+        body.append(self.data)
+        body.append(Data("\r\n--\(boundary)--\r\n".utf8))
+        return body
+    }
+}
 
 /**
  * 不需要返回结果的Model
