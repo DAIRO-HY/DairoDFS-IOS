@@ -74,6 +74,7 @@ struct AlbumViewerPage: View {
             
             //为了实现懒加载,这里始终只显示上一张,本张,下一张共3张图片
             ZStack{
+                AlbumViewerBackdropView().environmentObject(self.vm)
                 HStack(spacing: 0) {
                     
                     //当前图片上一张之前的图片全部不显示,这些不显示的图片总宽度用这个占位
