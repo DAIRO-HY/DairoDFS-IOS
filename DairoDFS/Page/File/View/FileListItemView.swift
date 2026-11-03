@@ -60,6 +60,13 @@ struct FileListItemView: View {
                         .frame(width: CGFloat(width), height: CGFloat(width))
                         .clipped()
                         .cornerRadius(6)
+                }else if self.dfsFile.fm.isAudio{//音频文件
+                    Image(systemName: "music.note")
+                        .font(.title2)
+                        .foregroundColor(.white)
+                        .frame(width: 44, height: 44)
+                        .background(Color.pink)
+                        .cornerRadius(6)
                 }else{//没有缩略图
                     Image(systemName: "questionmark.square.fill")
                         .resizable()
