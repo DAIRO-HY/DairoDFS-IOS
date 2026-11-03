@@ -10,11 +10,11 @@ import DairoUI_IOS
 
 struct LoginPage: View {
     
-    //登录信息
-    @ObservedObject private var loginInfo : LoginViewModel
+    //登录信息,系统弹窗等导致App状态变化时,页面会重新创建,必须用StateObject才能保留已输入的内容
+    @StateObject private var loginInfo : LoginViewModel
     
     init(_ loginInfo: LoginViewModel = LoginViewModel(domain: "", name: "", pwd: "")) {
-        self.loginInfo = loginInfo
+        self._loginInfo = StateObject(wrappedValue: loginInfo)
     }
     
     var body: some View {
