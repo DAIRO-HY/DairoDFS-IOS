@@ -21,6 +21,12 @@ class AlbumViewerViewModel: ObservableObject{
     ///该时间也不宜过短,过短会让页面闪烁一下,看起来不爽
     static let ANIMATION_TIME: Double = 0.2
     
+    ///双击屏幕时视频快进、快退的秒数
+    static let VIDEO_SEEK_SECONDS: Double = 10
+    
+    ///按住屏幕时视频的播放倍速
+    static let VIDEO_SPEED_UP_RATE: Float = 2
+    
     //当前视图区域的尺寸
     @Published var screenWidth = CGFloat.zero
     
@@ -138,6 +144,18 @@ class AlbumViewerViewModel: ObservableObject{
     /// 标记当前播放的视频是否原画
     @Published var videoIsOriginal = false
     
+    /// 视频是否正在按住屏幕倍速播放
+    @Published var videoIsSpeedUp = false
+    
+    /// 快进、快退提示的秒数,负数代表快退,nil代表不显示
+    @Published var videoSeekTip: Double? = nil
+    
+    /// 用来让快进、快退提示自动消失的任务
+    private var videoSeekTipTask: Task<Void, Never>?
+    
+    /// 正在跳转的目标时间(秒),连续双击时要从这个时间继续计算,因为跳转完成之前播放器的当前时间还是旧的
+    private var videoSeekTarget: Double?
+    
     ///当前视频质量
     @Published var videoQualityLabel = SettingShared.videoQualityLabel
 
@@ -244,6 +262,10 @@ class AlbumViewerViewModel: ObservableObject{
         self.videoPlayer?.replaceCurrentItem(with: nil)
         self.videoPlayer = nil
         self.videoIsOriginal = false
+        self.videoIsSpeedUp = false
+        self.videoSeekTipTask?.cancel()
+        self.videoSeekTip = nil
+        self.videoSeekTarget = nil
 
         self.isVideo = self.fm.isVideo
 
@@ -445,13 +467,21 @@ class AlbumViewerViewModel: ObservableObject{
             }
             self.videoDuration = duration * 1000
             self.videoCurrentTime = item.currentTime().seconds * 1000
-            if self.videoDuration == self.videoCurrentTime{//播放结束
-                player.seek(to: .zero)
-                player.pause()
-                self.videoIsPlaying = false
-                self.videoTimer?.invalidate()
-            }
         }
+    }
+    
+    /// 视频播放结束,回到开头并暂停。计时器在控制栏隐藏时不运行,所以要通过系统通知来判断播放结束
+    /// - Parameter item 播放结束的视频,系统里其他播放器结束时也会收到通知,要判断是否当前视频
+    func onVideoPlayEnd(_ item: AVPlayerItem?){
+        guard let player = self.videoPlayer, item != nil, player.currentItem === item else{
+            return
+        }
+        self.videoTimer?.invalidate()
+        self.videoSeekTarget = nil
+        player.pause()
+        player.seek(to: .zero)
+        self.videoCurrentTime = 0
+        self.videoIsPlaying = false
     }
     
     /// 暂停视频播放
@@ -476,6 +506,56 @@ class AlbumViewerViewModel: ObservableObject{
             return
         }
         self.videoPlay()
+    }
+
+    /// 视频快进、快退
+    /// - Parameter seconds 跳转的秒数,负数代表快退
+    func onVideoSeek(_ seconds: Double){
+        guard let player = self.videoPlayer, let item = player.currentItem else{
+            return
+        }
+        let duration = item.duration.seconds
+        if duration.isNaN{//视频还没有加载好
+            return
+        }
+        let target = min(max((self.videoSeekTarget ?? item.currentTime().seconds) + seconds, 0), duration)
+        self.videoSeekTarget = target
+        self.videoDuration = duration * 1000
+        self.videoCurrentTime = target * 1000
+        self.showVideoSeekTip(seconds)
+        
+        //默认的跳转只会跳到附近的关键帧,关键帧间隔较大时跳转的时间不准,这里要求精确跳转
+        player.seek(to: CMTime(seconds: target, preferredTimescale: 600), toleranceBefore: .zero, toleranceAfter: .zero){ finished in
+            Task{ @MainActor in
+                guard self.videoSeekTarget == target else{//已经有新的跳转
+                    return
+                }
+                self.videoSeekTarget = nil
+                if finished && self.videoIsPlaying && player === self.videoPlayer{//播放到结尾时播放器会自动停止,跳回去之后要继续播放
+                    player.rate = self.videoIsSpeedUp ? AlbumViewerViewModel.VIDEO_SPEED_UP_RATE : 1
+                }
+            }
+        }
+    }
+    
+    /// 显示快进、快退提示,一段时间后自动消失
+    private func showVideoSeekTip(_ seconds: Double){
+        self.videoSeekTip = seconds
+        self.videoSeekTipTask?.cancel()
+        self.videoSeekTipTask = Task{ @MainActor in
+            try? await Task.sleep(nanoseconds: 800_000_000)
+            if !Task.isCancelled{
+                self.videoSeekTip = nil
+            }
+        }
+    }
+    
+    /// 按住屏幕倍速播放,松手恢复
+    func onVideoSpeedUpChange(_ isSpeedUp: Bool){
+        self.videoIsSpeedUp = isSpeedUp
+        if self.videoIsPlaying{
+            self.videoPlayer?.rate = isSpeedUp ? AlbumViewerViewModel.VIDEO_SPEED_UP_RATE : 1
+        }
     }
 
     /// 选择视频清晰度播放点击事件

@@ -65,6 +65,9 @@ struct AlbumViewerPage: View {
     ///正在拖拽中的偏移量
     @GestureState private var dragingOffset: CGFloat = 0
     
+    ///是否正在按住屏幕,手势结束或被系统取消时都会自动恢复
+    @GestureState private var isVideoPressing = false
+    
     @ObservedObject private var vm: AlbumViewerViewModel
     
     init(_ vm: AlbumViewerViewModel, _ showViewerPage: Binding<Bool>) {
@@ -95,13 +98,12 @@ struct AlbumViewerPage: View {
                 
                 //避免事件穿透,专门用一个视图来操作屏幕
                 //另外一个目的是禁止默认视频播放控件
-                Color.clear.contentShape(Rectangle()).frame(width: self.vm.screenWidth, height: self.vm.screenHeight)
-                    .onTapGesture(count: 2) {//双击事件
-                        self.vm.doubleClick()
-                    }
-                    .onTapGesture(count: 1) {//单击事件
-                        self.vm.showActionView.toggle()
-                    }
+                //分成左右两部分,用来区分视频双击的是哪一边(iOS16以下取不到点击位置)
+                HStack(spacing: 0){
+                    self.getTouchArea(-AlbumViewerViewModel.VIDEO_SEEK_SECONDS)
+                    self.getTouchArea(AlbumViewerViewModel.VIDEO_SEEK_SECONDS)
+                }
+                .frame(width: self.vm.screenWidth, height: self.vm.screenHeight)
                     .gesture(
                         MagnificationGesture()
                             .onChanged { amount in
@@ -163,10 +165,18 @@ struct AlbumViewerPage: View {
                             }
                         }
                     }
+                    self.videoTipView
                 }
             }
             //        .frame(maxHeight: .infinity)
             .edgesIgnoringSafeArea(.all)
+            //这个通知不一定在主线程发出
+            .onReceive(NotificationCenter.default.publisher(for: .AVPlayerItemDidPlayToEndTime).receive(on: DispatchQueue.main)){
+                self.vm.onVideoPlayEnd($0.object as? AVPlayerItem)
+            }
+            .onChange(of: self.isVideoPressing) {
+                self.vm.onVideoSpeedUpChange($0)
+            }
             .onChange(of: geometry.size) { newSize in
                 // 当屏幕尺寸发生变化时，更新 ViewModel
                 self.vm.onResize(newSize.width, newSize.height)
@@ -187,6 +197,65 @@ struct AlbumViewerPage: View {
             }
         }
         .edgesIgnoringSafeArea(.all)
+    }
+    
+    ///屏幕操作区域
+    /// - Parameter seekSeconds 视频时双击这个区域跳转的秒数
+    private func getTouchArea(_ seekSeconds: Double) -> some View{
+        return Color.clear.contentShape(Rectangle())
+            .onTapGesture(count: 2) {//双击事件
+                if self.vm.isVideo{
+                    self.vm.onVideoSeek(seekSeconds)
+                } else {
+                    self.vm.doubleClick()
+                }
+            }
+            .onTapGesture(count: 1) {//单击事件
+                self.vm.showActionView.toggle()
+            }
+            //按住屏幕时不响应外层的拖拽,否则手指稍微移动就会切换页面。只在视频播放时生效,其他情况不影响拖拽
+            .simultaneousGesture(self.videoSpeedUpGesture, including: self.vm.videoIsPlaying ? .all : .subviews)
+    }
+    
+    ///按住屏幕手势
+    private var videoSpeedUpGesture: some Gesture{
+        return LongPressGesture(minimumDuration: 0.4)
+            .sequenced(before: DragGesture(minimumDistance: 0))
+            .updating(self.$isVideoPressing){ value, state, _ in
+                if case .second(true, _) = value{
+                    state = true
+                }
+            }
+    }
+    
+    ///视频手势操作的提示
+    private var videoTipView: some View{
+        return ZStack(alignment: .top){
+            if self.vm.videoIsSpeedUp{
+                self.getVideoTip("2倍速播放", icon: "forward.fill")
+                    .padding(.top, 110)
+            }
+            if let seconds = self.vm.videoSeekTip{
+                self.getVideoTip("\(seconds < 0 ? "快退" : "快进")\(Int(abs(seconds)))秒", icon: seconds < 0 ? "backward.fill" : "forward.fill")
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: seconds < 0 ? .leading : .trailing)
+                    .padding(.horizontal, 40)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .allowsHitTesting(false)
+    }
+    
+    private func getVideoTip(_ label: String, icon: String) -> some View{
+        return HStack(spacing: 6){
+            Image(systemName: icon)
+            Text(label)
+        }
+        .font(.subheadline)
+        .foregroundColor(.white)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 8)
+        .background(Color.black.opacity(0.7))
+        .cornerRadius(20)
     }
     
     ///获取缩略图
