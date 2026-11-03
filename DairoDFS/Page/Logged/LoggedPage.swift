@@ -88,6 +88,10 @@ struct LoggedPage: View {
                     let actionItem = self.vm.actionItem
                     LoginPage(LoginViewModel(domain: actionItem.domain, name: actionItem.name, pwd: "", editLoggedIndex: self.vm.actionIndex)).relaunch()
                 }
+                Button("复制") {
+                    let actionItem = self.vm.actionItem
+                    LoginPage(LoginViewModel(domain: actionItem.domain, name: actionItem.name, pwd: "")).relaunch()
+                }
                 Button("移除") {
                     let actionItem = self.vm.actionItem
                     if actionItem.isLogining{
