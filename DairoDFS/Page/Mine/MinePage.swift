@@ -31,9 +31,8 @@ struct MinePage: View {
                 NavigationLink(destination: LoggedPage()){
                     self.topLogoView
                 }
-                Spacer().frame(height: 10)
                 SettingStack(embedInNavigationStack: false){
-                    SettingPage{
+                    SettingPage(verticalPadding: 16){
                         SettingGroup{
 //                            SettingButton("我的分享", tip:"点击查看"){
 //                            }

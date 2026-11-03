@@ -24,6 +24,8 @@ struct FileView: View {
                     .opacity(isMoveFlag ? 0.5 : 1)
                 }
             }
+            .padding(.top, 10)
+            .padding(.bottom)
         }
         .frame(maxHeight: .infinity)
         .fullScreenCover(isPresented: self.$vm.showViewerPage) {
