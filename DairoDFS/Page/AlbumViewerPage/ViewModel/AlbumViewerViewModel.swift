@@ -21,6 +21,27 @@ class AlbumViewerViewModel: ObservableObject{
     ///该时间也不宜过短,过短会让页面闪烁一下,看起来不爽
     static let ANIMATION_TIME: Double = 0.2
     
+    ///轻扫切换页面的速度(pt/秒),松手时超过这个速度就算轻扫
+    static let FLICK_VELOCITY: CGFloat = 500
+    
+    ///惯性滑动每毫秒的速度衰减,和系统UIScrollView的默认值一样
+    static let INERTIA_DECAY: Double = 0.998
+    
+    ///松手时速度低于这个值(pt/秒)时没有惯性滑动
+    static let INERTIA_MIN_VELOCITY: CGFloat = 100
+    
+    ///惯性滑动速度低于这个值(pt/秒)时停止
+    static let INERTIA_STOP_VELOCITY: CGFloat = 20
+    
+    ///拖动超出边界时的阻力,和系统UIScrollView的效果接近
+    static let RUBBER_BAND_RATE: CGFloat = 0.55
+    
+    ///惯性滑动超出边界时,弹回去的弹簧强度
+    static let BOUNCE_STIFFNESS: CGFloat = 300
+    
+    ///惯性滑动超出边界时,弹回去的阻尼,这个值刚好不会来回晃动
+    static let BOUNCE_DAMPING: CGFloat = 35
+    
     ///双击屏幕时视频快进、快退的秒数
     static let VIDEO_SEEK_SECONDS: Double = 10
     
@@ -63,17 +84,22 @@ class AlbumViewerViewModel: ObservableObject{
     ///未显示部分占位宽度
     @Published var notShowWidth = CGFloat(0)
     
-    ///正在缩放比例
-    @Published var zoomingAmount: CGFloat = 1
-    
     ///缩放比例
     @Published var zoomAmount: CGFloat = 1.0
     
-    /// 正在移动中的偏移位置
+    /// 图片的偏移位置
     @Published var currentOffsetPosition: CGSize = .zero
     
-    ///记录上一次移动的位置
-    @Published var preOffsetPosition: CGSize = .zero
+    /// 放大后拖动图片,松手之后的惯性滑动速度(pt/秒)
+    private var inertiaVelocity = CGSize.zero
+    
+    /// 惯性滑动的逐帧回调,不为nil时表示正在惯性滑动
+    private var inertiaLink: AlbumViewerInertiaLink?
+    
+    /// 是否正在惯性滑动
+    var isInertiaRunning: Bool{
+        return self.inertiaLink != nil
+    }
     
     ///当前图片
     @Published var uiImage: UIImage? = nil
@@ -197,10 +223,10 @@ class AlbumViewerViewModel: ObservableObject{
         self.screenWidth = screenWidth
         self.screenHeight = screenHeight
         self.screenWHRate = self.screenWidth / self.screenHeight
+        self.stopInertia()
         self.hStackOffset = -CGFloat(self.currentIndex + 1) * self.screenWidth
         self.notShowWidth = self.screenWidth * CGFloat(self.currentIndex)
         self.currentOffsetPosition = .zero
-        self.preOffsetPosition = .zero
         self.zoomAmount = 1.0
         
         //为了保证图片未加载时也能正常切换,默认将屏幕大小作为图片大小
@@ -208,7 +234,9 @@ class AlbumViewerViewModel: ObservableObject{
         self.computeDisplaySize()
     }
     
-    func fixPageViewPosition(){
+    /// 松手之后决定切换页面还是回弹
+    /// - Parameter velocity 松手时手指的水平速度,向右为正
+    func fixPageViewPosition(velocity: CGFloat = 0){
         
         //页面切换滑动距离
         let threshold = self.screenWidth / 4
@@ -217,8 +245,13 @@ class AlbumViewerViewModel: ObservableObject{
         let dragDistance = (-CGFloat(self.currentIndex + 1) * self.screenWidth) - self.hStackOffset
         var currentIndex = self.currentIndex
         
-        //如果移动的距离达到了页面切换的距离
-        if dragDistance < -threshold {
+        if abs(velocity) > AlbumViewerViewModel.FLICK_VELOCITY{//轻扫时看方向,距离再短也切换。往回扫时不切换
+            if dragDistance < 0 && velocity > 0{
+                currentIndex -= 1
+            } else if dragDistance > 0 && velocity < 0{
+                currentIndex += 1
+            }
+        } else if dragDistance < -threshold {//如果移动的距离达到了页面切换的距离
             currentIndex -= 1
         } else if dragDistance > threshold {
             currentIndex += 1
@@ -228,7 +261,9 @@ class AlbumViewerViewModel: ObservableObject{
         }
         
         if currentIndex != self.currentIndex{//如果页面要切换
-            self.hStackOffset = -CGFloat(currentIndex + 1) * self.screenWidth
+            withAnimation(.linear(duration: AlbumViewerViewModel.ANIMATION_TIME)){
+                self.hStackOffset = -CGFloat(currentIndex + 1) * self.screenWidth
+            }
             
             //等待动画结束之后再切换页面,防止页面跳闪
             Task{@MainActor in
@@ -236,12 +271,15 @@ class AlbumViewerViewModel: ObservableObject{
                 self.changePage(currentIndex)
             }
         } else if dragDistance != 0{//拖拽距离达不到页面迁移的标准,则回弹
-            self.hStackOffset = -CGFloat(currentIndex + 1) * self.screenWidth
+            withAnimation(.linear(duration: AlbumViewerViewModel.ANIMATION_TIME)){
+                self.hStackOffset = -CGFloat(currentIndex + 1) * self.screenWidth
+            }
         }
     }
     
     //页面切换
     private func changePage(_ index: Int){
+        self.stopInertia()
         self.isDownloadFlag = false
         self.isShowDownloaded = false
         self.isSaveToAlbum = false
@@ -471,30 +509,27 @@ class AlbumViewerViewModel: ObservableObject{
     
     /**
      双击事件
+     - Parameter center: 双击的位置,放大时以这个位置为中心
      */
-    func doubleClick(){
-        if self.zoomAmount > 1{
-            withAnimation{
+    func doubleClick(_ center: CGPoint){
+        withAnimation{
+            if self.zoomAmount > 1{
                 self.zoomAmount = 1
-                self.fixCropImage()
-            }
-        } else {
-            
-            // 适合屏幕宽度的倍率
-            let screenWidthZoom = self.screenWidth / self.displayW1
-            
-            // 适合屏幕高度的倍率
-            let screenHeightZoom = self.screenHeight / self.displayH1
-            
-            if screenWidthZoom == screenHeightZoom && screenWidthZoom == 1{//当前照片本身就是屏幕大小的比例
-                withAnimation{
-                    self.zoomAmount = 2
+            } else {
+                
+                // 适合屏幕宽度的倍率
+                let screenWidthZoom = self.screenWidth / self.displayW1
+                
+                // 适合屏幕高度的倍率
+                let screenHeightZoom = self.screenHeight / self.displayH1
+                
+                var zoom = max(screenWidthZoom, screenHeightZoom)
+                if screenWidthZoom == screenHeightZoom && screenWidthZoom == 1{//当前照片本身就是屏幕大小的比例
+                    zoom = 2
                 }
-            }else{//否则
-                withAnimation{
-                    self.zoomAmount = screenWidthZoom > screenHeightZoom ? screenWidthZoom : screenHeightZoom
-                }
+                self.onImagePinch(zoom / self.zoomAmount, center: center, translation: .zero)
             }
+            self.fixCropImage()
         }
     }
     
@@ -722,51 +757,162 @@ class AlbumViewerViewModel: ObservableObject{
         }
     }
     
-    /**
-     计算拖拽偏移位置
-     */
-    func computeDragPosition(_ value: DragGesture.Value) -> CGSize{
-        //        var width: Double
-        //        if self.displayW1 * self.zoomAmount < self.screenWidth{//如果缩放后的高小于屏幕高度,则Y轴方向不要偏移
-        //            width = self.preOffsetPosition.width
-        //        }else{
-        //            width = value.translation.width + self.preOffsetPosition.width
-        //        }
+    /// 手指拖动,图片放大时优先移动图片,到达图片边界之后带动页面移动。超出边界的方向有阻力
+    /// - Parameter delta 手指移动的距离
+    func onImageDrag(_ delta: CGSize){
+        let pageOffset = -CGFloat(self.currentIndex + 1) * self.screenWidth
+        let maxImageOffset = max((self.displayW1 * self.zoomAmount - self.screenWidth) / 2, 0)
         
+        //页面已经被带动时,反方向拖动要先把页面拖回来
+        let oldPageMove = self.hStackOffset - pageOffset
+        let width = self.currentOffsetPosition.width + oldPageMove + delta.width
+        let imageOffset = min(max(width, -maxImageOffset), maxImageOffset)
+        var pageMove = width - imageOffset
         
-        
-        let height: Double
-        if self.displayH1 * self.zoomAmount < self.screenHeight{//如果缩放后的高小于屏幕高度,则Y轴方向不要偏移
-            height = self.preOffsetPosition.height
-        }else{
-            height = value.translation.height + self.preOffsetPosition.height
+        //第一张和最后一张没有可以切换的页面
+        let isNoPage = (pageMove > 0 && self.currentIndex == 0) || (pageMove < 0 && self.currentIndex == self.fileModels.count - 1)
+        if isNoPage && abs(pageMove) > abs(oldPageMove){
+            pageMove = oldPageMove + (pageMove - oldPageMove) * self.rubberBandRate(abs(oldPageMove), self.screenWidth)
         }
+        self.hStackOffset = pageOffset + pageMove
         
-        //加上self.newPosition的目的是让图片从上次的位置开始移动
-        var offset = CGSize(width: value.translation.width + self.preOffsetPosition.width, height: height)
-        
-        let offsetMinWidth = (self.displayW1 * self.zoomAmount - self.screenWidth) / 2
-        if offset.width < -offsetMinWidth{//X轴右边越界
-            self.hStackOffset = -CGFloat(self.currentIndex + 1) * self.screenWidth + (offset.width - offsetMinWidth)
-            //            print("-->X轴左边越界")
+        var height = self.currentOffsetPosition.height
+        if self.zoomAmount > 1{//图片放大之后才能上下移动
+            let maxHeight = max((self.displayH1 * self.zoomAmount - self.screenHeight) / 2, 0)
+            let direction: CGFloat = delta.height > 0 ? 1 : -1
             
-            //X轴左边越界之后,禁止仅需拖拽,此时应该响应父控件的拖拽
-            offset.width = -offsetMinWidth
-        } else if offset.width > offsetMinWidth{//X轴左边越界
-            self.hStackOffset = -CGFloat(self.currentIndex + 1) * self.screenWidth + (offset.width - offsetMinWidth)
-            //            print("-->X轴右边越界:\(offset.width - offsetMinWidth)")
-            
-            //X轴左边越界之后,禁止仅需拖拽,此时应该响应父控件的拖拽
-            offset.width = offsetMinWidth
+            //到达边界之前的距离没有阻力,超出边界的部分有阻力
+            let distance = abs(delta.height)
+            let free = min(max(maxHeight - height * direction, 0), distance)
+            let overflow = max(height * direction - maxHeight, 0)
+            height += direction * (free + (distance - free) * self.rubberBandRate(overflow, self.screenHeight))
         }
-        return offset
-        //        return CGSize(width: value.translation.width + self.preOffsetPosition.width, height: value.translation.height + self.preOffsetPosition.height)
+        self.currentOffsetPosition = CGSize(width: imageOffset, height: height)
+    }
+    
+    /// 超出边界时手指移动和内容移动的比例,超出越多阻力越大
+    /// - Parameter overflow 已经超出边界的距离
+    /// - Parameter size 屏幕尺寸,内容最多超出这个距离
+    private func rubberBandRate(_ overflow: CGFloat, _ size: CGFloat) -> CGFloat{
+        let rate = 1 - min(overflow / size, 1)
+        return AlbumViewerViewModel.RUBBER_BAND_RATE * rate * rate
+    }
+    
+    /// 拖动结束,决定切换页面、回弹或者惯性滑动
+    /// - Parameter velocity 松手时手指的速度
+    func onImageDragEnd(_ velocity: CGSize){
+        
+        //页面被带动时说明图片已经到达边界,不需要惯性滑动
+        let isPageMoved = self.hStackOffset != -CGFloat(self.currentIndex + 1) * self.screenWidth
+        withAnimation{
+            self.fixCropImage(velocity: velocity.width)
+        }
+        if !isPageMoved{
+            self.startInertia(velocity)
+        }
+    }
+    
+    /// 开始惯性滑动,图片放大之后才有
+    func startInertia(_ velocity: CGSize){
+        self.stopInertia()
+        if self.zoomAmount <= 1 || hypot(velocity.width, velocity.height) < AlbumViewerViewModel.INERTIA_MIN_VELOCITY{
+            return
+        }
+        self.inertiaVelocity = velocity
+        self.inertiaLink = AlbumViewerInertiaLink{ [weak self] in
+            self?.stepInertia($0)
+        }
+    }
+    
+    /// 停止惯性滑动
+    func stopInertia(){
+        self.inertiaLink?.invalidate()
+        self.inertiaLink = nil
+    }
+    
+    /// 手指按下时停止惯性滑动,正在弹回时要回到边界内
+    func stopInertiaByTouch(){
+        self.stopInertia()
+        withAnimation{
+            self.fixCropImage()
+        }
+    }
+    
+    /// 惯性滑动一帧
+    /// - Parameter time 距离上一帧的时间(秒)
+    func stepInertia(_ time: TimeInterval){
+        let maxWidth = max((self.displayW1 * self.zoomAmount - self.screenWidth) / 2, 0)
+        let maxHeight = max((self.displayH1 * self.zoomAmount - self.screenHeight) / 2, 0)
+        let x = self.stepInertia(self.currentOffsetPosition.width, self.inertiaVelocity.width, maxWidth, time)
+        let y = self.stepInertia(self.currentOffsetPosition.height, self.inertiaVelocity.height, maxHeight, time)
+        self.currentOffsetPosition = CGSize(width: x.offset, height: y.offset)
+        self.inertiaVelocity = CGSize(width: x.velocity, height: y.velocity)
+        if x.velocity == 0 && y.velocity == 0{
+            self.stopInertia()
+        }
+    }
+    
+    /// 计算一个方向的惯性滑动。边界内速度逐渐衰减,超出边界后由弹簧拉回。这个方向结束时速度为0
+    private func stepInertia(_ offset: CGFloat, _ velocity: CGFloat, _ maxOffset: CGFloat, _ time: TimeInterval) -> (offset: CGFloat, velocity: CGFloat){
+        let overflow = offset - min(max(offset, -maxOffset), maxOffset)
+        if overflow == 0{
+            let newVelocity = velocity * CGFloat(pow(AlbumViewerViewModel.INERTIA_DECAY, time * 1000))
+            if abs(newVelocity) < AlbumViewerViewModel.INERTIA_STOP_VELOCITY{
+                return (offset, 0)
+            }
+            return (offset + newVelocity * CGFloat(time), newVelocity)
+        }
+        let acceleration = -AlbumViewerViewModel.BOUNCE_STIFFNESS * overflow - AlbumViewerViewModel.BOUNCE_DAMPING * velocity
+        let newVelocity = velocity + acceleration * CGFloat(time)
+        let newOffset = offset + newVelocity * CGFloat(time)
+        let bound = overflow > 0 ? maxOffset : -maxOffset
+        let isBack = overflow > 0 ? newOffset <= bound : newOffset >= bound
+        if isBack || (abs(overflow) < 0.5 && abs(newVelocity) < AlbumViewerViewModel.INERTIA_STOP_VELOCITY){
+            return (bound, 0)
+        }
+        return (newOffset, newVelocity)
+    }
+    
+    /// 双指缩放,以双指中心点为中心缩放,同时跟随中心点移动
+    /// - Parameter scale 相对上一次的缩放比例
+    /// - Parameter center 双指中心点在屏幕上的位置
+    /// - Parameter translation 相对上一次中心点移动的距离
+    func onImagePinch(_ scale: CGFloat, center: CGPoint, translation: CGSize){
+        let centerX = center.x - self.screenWidth / 2
+        let centerY = center.y - self.screenHeight / 2
+        self.zoomAmount *= scale
+        
+        //先跟随手指移动,再缩放,缩放之后中心点下的图片内容位置不变
+        let width = self.currentOffsetPosition.width + translation.width
+        let height = self.currentOffsetPosition.height + translation.height
+        self.currentOffsetPosition = CGSize(
+            width: centerX - (centerX - width) * scale,
+            height: centerY - (centerY - height) * scale
+        )
+    }
+    
+    /// 双指缩放结束,超出范围时回弹
+    func onImagePinchEnd(_ center: CGPoint){
+        withAnimation{
+            if self.zoomAmount > 8.0{//放大倍数不能大于8倍
+                self.onImagePinch(8.0 / self.zoomAmount, center: center, translation: .zero)
+            }
+            self.fixCropImage()
+        }
     }
     
     /**
      * 修复裁剪范围
      */
     func fixCropImage() {
+        self.fixCropImage(velocity: 0)
+    }
+    
+    /**
+     * 修复裁剪范围
+     * - Parameter velocity 松手时手指的水平速度,向右为正
+     */
+    func fixCropImage(velocity: CGFloat) {
         if self.zoomAmount < 1{//手动缩小比例不能小于最小缩小比例
             self.zoomAmount = 1
         }
@@ -798,9 +944,8 @@ class AlbumViewerViewModel: ObservableObject{
             }
         }
         self.currentOffsetPosition = offset
-        self.preOffsetPosition = offset
         
-        self.fixPageViewPosition()
+        self.fixPageViewPosition(velocity: velocity)
     }
     
     func recycle(){
@@ -972,5 +1117,30 @@ class AlbumViewerViewModel: ObservableObject{
     
     deinit{
         print("-->AlbumViewerViewModel.deinit")
+    }
+}
+
+/// 惯性滑动的逐帧回调,CADisplayLink的target必须是NSObject,而且它会强引用target,用完要调用invalidate
+private final class AlbumViewerInertiaLink: NSObject {
+    
+    private let onFrame: (_ time: TimeInterval) -> Void
+    
+    private var link: CADisplayLink?
+    
+    init(onFrame: @escaping (_ time: TimeInterval) -> Void) {
+        self.onFrame = onFrame
+        super.init()
+        let link = CADisplayLink(target: self, selector: #selector(self.onLink))
+        link.add(to: .main, forMode: .common)
+        self.link = link
+    }
+    
+    @objc private func onLink(_ link: CADisplayLink){
+        self.onFrame(link.targetTimestamp - link.timestamp)
+    }
+    
+    func invalidate(){
+        self.link?.invalidate()
+        self.link = nil
     }
 }

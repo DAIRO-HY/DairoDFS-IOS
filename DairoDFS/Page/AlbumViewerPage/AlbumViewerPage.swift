@@ -62,12 +62,6 @@ struct AlbumViewerPage: View {
     ///记录该页面是否已经被打开过
     private static var isInited = false
     
-    ///正在拖拽中的偏移量
-    @GestureState private var dragingOffset: CGFloat = 0
-    
-    ///是否正在按住屏幕,手势结束或被系统取消时都会自动恢复
-    @GestureState private var isVideoPressing = false
-    
     @ObservedObject private var vm: AlbumViewerViewModel
     
     init(_ vm: AlbumViewerViewModel, _ showViewerPage: Binding<Bool>) {
@@ -94,45 +88,10 @@ struct AlbumViewerPage: View {
                 }
                 .frame(width: self.vm.screenWidth, alignment: .leading)
                 .offset(x: self.vm.hStackOffset)
-                .animation(.linear(duration: AlbumViewerViewModel.ANIMATION_TIME), value: dragingOffset == 0)
                 
                 //避免事件穿透,专门用一个视图来操作屏幕
                 //另外一个目的是禁止默认视频播放控件
-                //分成左右两部分,用来区分视频双击的是哪一边(iOS16以下取不到点击位置)
-                HStack(spacing: 0){
-                    self.getTouchArea(-AlbumViewerViewModel.VIDEO_SEEK_SECONDS)
-                    self.getTouchArea(AlbumViewerViewModel.VIDEO_SEEK_SECONDS)
-                }
-                .frame(width: self.vm.screenWidth, height: self.vm.screenHeight)
-                    .gesture(
-                        MagnificationGesture()
-                            .onChanged { amount in
-                                //两手指放到屏幕上没有开始缩放时,amount的值是1,代表当前大小的1倍缩放
-                                self.vm.zoomingAmount = amount
-                            }
-                            .onEnded { amount in
-                                self.vm.zoomAmount *= self.vm.zoomingAmount
-                                if self.vm.zoomAmount > 8.0 {//放大倍数不能大于4倍
-                                    withAnimation {
-                                        self.vm.zoomAmount = 8.0
-                                    }
-                                }
-                                self.vm.zoomingAmount = 1
-                                withAnimation {
-                                    self.vm.fixCropImage()
-                                }
-                            }.simultaneously(with: DragGesture()
-                                .updating($dragingOffset){ value, state, _ in
-                                    state = value.translation.width
-                                    self.vm.currentOffsetPosition = self.vm.computeDragPosition(value)
-                                }
-                                .onEnded { value in
-                                    self.vm.currentOffsetPosition = self.vm.computeDragPosition(value)
-                                    self.vm.preOffsetPosition = self.vm.currentOffsetPosition
-                                    self.vm.fixCropImage()
-                                }
-                            )
-                    )
+                AlbumViewerTouchView(vm: self.vm).frame(width: self.vm.screenWidth, height: self.vm.screenHeight)
                 if self.vm.showActionView{//显示操作视图
                     AlbumViewerOptionView().environmentObject(self.vm)
                     AlbumViewerTopBarView(showViewerPage: self.$showViewerPage).environmentObject(self.vm)
@@ -180,9 +139,6 @@ struct AlbumViewerPage: View {
             .onReceive(NotificationCenter.default.publisher(for: .AVPlayerItemDidPlayToEndTime).receive(on: DispatchQueue.main)){
                 self.vm.onVideoPlayEnd($0.object as? AVPlayerItem)
             }
-            .onChange(of: self.isVideoPressing) {
-                self.vm.onVideoSpeedUpChange($0)
-            }
             .onChange(of: geometry.size) { newSize in
                 // 当屏幕尺寸发生变化时，更新 ViewModel
                 self.vm.onResize(newSize.width, newSize.height)
@@ -191,6 +147,7 @@ struct AlbumViewerPage: View {
                 self.vm.onAppear(geometry.size.width, geometry.size.height)
             }
             .onDisappear{
+                self.vm.stopInertia()
                 //            if AlbumViewerRecyclePage.isInited{//由于该页面是中转过来的,第一次打开时会调用onDisappear函数,如果此时将self.vm.uiImage = nil会导致第一次打开图片黑屏
                 self.vm.uiImage = nil
                 
@@ -203,35 +160,6 @@ struct AlbumViewerPage: View {
             }
         }
         .edgesIgnoringSafeArea(.all)
-    }
-    
-    ///屏幕操作区域
-    /// - Parameter seekSeconds 视频时双击这个区域跳转的秒数
-    private func getTouchArea(_ seekSeconds: Double) -> some View{
-        return Color.clear.contentShape(Rectangle())
-            .onTapGesture(count: 2) {//双击事件
-                if self.vm.isVideo{
-                    self.vm.onVideoSeek(seekSeconds)
-                } else {
-                    self.vm.doubleClick()
-                }
-            }
-            .onTapGesture(count: 1) {//单击事件
-                self.vm.showActionView.toggle()
-            }
-            //按住屏幕时不响应外层的拖拽,否则手指稍微移动就会切换页面。只在视频播放时生效,其他情况不影响拖拽
-            .simultaneousGesture(self.videoSpeedUpGesture, including: self.vm.videoIsPlaying ? .all : .subviews)
-    }
-    
-    ///按住屏幕手势
-    private var videoSpeedUpGesture: some Gesture{
-        return LongPressGesture(minimumDuration: 0.4)
-            .sequenced(before: DragGesture(minimumDistance: 0))
-            .updating(self.$isVideoPressing){ value, state, _ in
-                if case .second(true, _) = value{
-                    state = true
-                }
-            }
     }
     
     ///视频手势操作的提示

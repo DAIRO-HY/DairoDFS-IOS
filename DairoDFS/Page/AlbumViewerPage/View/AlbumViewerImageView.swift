@@ -21,7 +21,7 @@ struct AlbumViewerImageView: View {
             if let uiImage = self.vm.uiImage{
                 Image(uiImage: uiImage)
                     .resizable()
-                    .scaleEffect(self.vm.zoomAmount * self.vm.zoomingAmount)
+                    .scaleEffect(self.vm.zoomAmount)
                     .scaledToFill()
                     .aspectRatio(contentMode: .fit)
                     .offset(x: self.vm.currentOffsetPosition.width, y: self.vm.currentOffsetPosition.height)
