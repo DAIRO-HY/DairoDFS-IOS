@@ -59,21 +59,16 @@ extension FileModel{
         }
     }
 
+    /// 低分辨率的预览图,用于快速浏览,只有尺寸较大的图片才有
+    var previewSmallSource: FileSource{
+        return self.extraSource("preview-small", "jpg")
+    }
+
     /// 流畅画质的预览视频
     var previewVideoSource: FileSource{
         return self.extraSource("preview", "mp4")
     }
 
-    /// 在线生成的缩略图
-    func onlineThumbSource(width: Int, height: Int, maxSize: Int = 0) -> FileSource{
-        return FileSource(
-            url: SettingShared.domainNotNull + "/api/files/thumb_online/\(self.id)?width=\(width)&height=\(height)&maxSize=\(maxSize)",
-            cacheKey: "/api/files/thumb_online/\(self.id)/\(width)-\(height)-\(maxSize)",
-            group: "thumb",
-            name: "\(self.id)-\(width)-\(height)-\(maxSize).jpg"
-        )
-    }
-    
     /// 实况照片预览视频
     var dliveVideoPreviewSource: FileSource{
         return self.extraSource("preview-dlive", "mp4")

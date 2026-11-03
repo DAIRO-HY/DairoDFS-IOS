@@ -148,16 +148,16 @@ enum FileSdkUtil {
     /**
      下载并缓存文件,回调都在主线程,取消之后不会再回调
      - Parameter progress: 下载进度(0到100)
-     - Parameter finish: 下载结束,成功时返回文件路径,失败时返回错误信息
+     - Parameter finish: 下载结束,成功时返回文件路径,失败时返回错误
      */
     static func fetch(_ source: FileSource,
                       progress: @escaping (_ percent: Int) -> Void,
-                      finish: @escaping (_ path: String?, _ error: String?) -> Void) -> FetchTask? {
+                      finish: @escaping (_ path: String?, _ error: Error?) -> Void) -> FetchTask? {
         do {
             let listener = FileSdkFetchListener(progress: progress, finish: finish)
             return try FileSdkUtil.get().fetch(url: source.url, options: source.options(), listener: listener)
         } catch {
-            finish(nil, error.fileSdkMessage)
+            finish(nil, error)
             return nil
         }
     }
@@ -288,9 +288,9 @@ private final class FileSdkEventListener: EventListener, @unchecked Sendable {
 /// 下载回调,转发到主线程
 private final class FileSdkFetchListener: FetchListener, @unchecked Sendable {
     private let progress: (_ percent: Int) -> Void
-    private let finish: (_ path: String?, _ error: String?) -> Void
+    private let finish: (_ path: String?, _ error: Error?) -> Void
     
-    init(progress: @escaping (_ percent: Int) -> Void, finish: @escaping (_ path: String?, _ error: String?) -> Void) {
+    init(progress: @escaping (_ percent: Int) -> Void, finish: @escaping (_ path: String?, _ error: Error?) -> Void) {
         self.progress = progress
         self.finish = finish
     }
@@ -316,7 +316,7 @@ private final class FileSdkFetchListener: FetchListener, @unchecked Sendable {
             return
         }
         DispatchQueue.main.async {
-            self.finish(nil, error.fileSdkMessage)
+            self.finish(nil, error)
         }
     }
 }

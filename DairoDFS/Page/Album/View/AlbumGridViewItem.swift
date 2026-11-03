@@ -59,9 +59,11 @@ struct AlbumGridViewItem: View {
     private var thumb: some View{
         Section{
             if self.entity.fm.hasThumb{//如果有缩略图
-                DfsImage(self.entity.fm.onlineThumbSource(width: Int(self.size) * 3, height: Int(self.size) * 3))
+                //和查看页面用同一张缩略图,这样打开图片时不用走网络就能先显示缩略图
+                DfsImage(self.entity.fm.thumbSource)
                     .frame(width: self.size, height: self.size)
                     .clipped()
+                    .contentShape(Rectangle())//clipped只裁剪显示,不限制点击范围,否则会点到相邻的图片
             }else{//没有缩略图
                 Image(systemName: "document.fill")
                     .font(.largeTitle)

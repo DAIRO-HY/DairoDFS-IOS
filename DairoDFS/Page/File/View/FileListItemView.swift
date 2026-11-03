@@ -56,10 +56,12 @@ struct FileListItemView: View {
             if self.dfsFile.fm.isFile{
                 if self.dfsFile.fm.hasThumb{//如果有缩略图
                     let width = 44
-                    DfsImage(self.dfsFile.fm.onlineThumbSource(width: width * 3, height: width * 3))
+                    //和查看页面用同一张缩略图,这样打开图片时不用走网络就能先显示缩略图
+                    DfsImage(self.dfsFile.fm.thumbSource)
                         .frame(width: CGFloat(width), height: CGFloat(width))
                         .clipped()
                         .cornerRadius(6)
+                        .contentShape(Rectangle())//clipped只裁剪显示,不限制点击范围
                 }else if self.dfsFile.fm.isAudio{//音频文件
                     Image(systemName: "music.note")
                         .font(.title2)

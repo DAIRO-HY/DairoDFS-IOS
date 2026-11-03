@@ -140,7 +140,13 @@ struct AlbumViewerPage: View {
                 }
                 
                 if self.vm.isVideo{
-                    if !self.vm.videoIsPlaying{//视频为暂停状态时,始终显示播放按钮
+                    if self.vm.videoIsLoading{//视频加载中,不能点击播放
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            .scaleEffect(1.5)
+                            .shadow(color: .black, radius: 3, x: 2, y: 2)
+                            .allowsHitTesting(false)
+                    } else if !self.vm.videoIsPlaying{//视频为暂停状态时,始终显示播放按钮
                         
                         //播放按钮
                         Button(action: {

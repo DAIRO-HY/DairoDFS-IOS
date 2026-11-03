@@ -41,6 +41,9 @@ class AlbumViewerViewModel: ObservableObject{
     
     /// 当前图片的下载任务
     private var fetchTask: FetchTask?
+    
+    /// 当前图片缩略图的下载任务,和图片同时下载
+    private var thumbFetchTask: FetchTask?
 
     /// 当前文件属性
     private var fileProperty: FilePropertyModel?
@@ -143,6 +146,9 @@ class AlbumViewerViewModel: ObservableObject{
     
     /// 标记当前播放的视频是否原画
     @Published var videoIsOriginal = false
+    
+    /// 视频是否正在加载(等待文件属性或者视频信息),这时不能点击播放
+    @Published var videoIsLoading = false
     
     /// 视频是否正在按住屏幕倍速播放
     @Published var videoIsSpeedUp = false
@@ -262,6 +268,7 @@ class AlbumViewerViewModel: ObservableObject{
         self.videoPlayer?.replaceCurrentItem(with: nil)
         self.videoPlayer = nil
         self.videoIsOriginal = false
+        self.videoIsLoading = false
         self.videoIsSpeedUp = false
         self.videoSeekTipTask?.cancel()
         self.videoSeekTip = nil
@@ -271,37 +278,55 @@ class AlbumViewerViewModel: ObservableObject{
 
         //停止实况视频播放
         self.dliveVm.clear()
+        self.progress = ""
+        
+        //图片和已下载的视频不依赖文件属性,不用等它加载完成,否则网络较差时要一直等待
+        if !self.isVideo{
+            self.loadPicture()
+        } else if FileSdkUtil.cachedPath(self.fm.downloadSource) != nil{
+            self.onVideoPlayClick()
+        }
         if let path = FileSdkUtil.cachedPath(self.fm.propertySource),
            let data = FileUtil.readAll(path),
            let fileProperty = try? JSONDecoder().decode(FilePropertyModel.self, from: data){//如果属性文件已经存在,解析失败时重新获取
             self.fileProperty = fileProperty
             self.initView()
         } else {
-            self.progress = "正在加载文件属性"
-
-            //加载文件属性
-            let fm = self.fm
-            self.propertyApiHttp = FilesApi.getProperty(ids: [fm.id]).hide().error{
-                self.progress = $0
-            }.fail{
-                self.progress = $0.msg ?? "加载文件属性失败"
-            }.send{
-                self.progress = ""
-                self.fileProperty = $0
-                if $0.state == 1, let jsonData = try? JSONEncoder().encode($0){//如果文件已经处理完成,则将文件属性信息缓存起来
-                    FileSdkUtil.putData(fm.propertySource, jsonData)
-                }
-                self.initView()
+            self.loadProperty()
+        }
+    }
+    
+    /// 加载文件属性,图片加载失败时只是不显示时间和标签,不提示错误
+    private func loadProperty(){
+        if self.isVideo && self.videoPlayer == nil{
+            self.videoIsLoading = true
+        }
+        let fm = self.fm
+        self.propertyApiHttp = FilesApi.getProperty(ids: [fm.id]).hide().error{
+            self.onLoadPropertyFail($0)
+        }.fail{
+            self.onLoadPropertyFail($0.msg ?? "加载文件属性失败")
+        }.send{
+            self.fileProperty = $0
+            if $0.state == 1, let jsonData = try? JSONEncoder().encode($0){//如果文件已经处理完成,则将文件属性信息缓存起来
+                FileSdkUtil.putData(fm.propertySource, jsonData)
             }
+            self.initView()
+        }
+    }
+    
+    /// 文件属性加载失败,视频没有属性不知道该播放哪个清晰度,恢复播放按钮,点击时重新加载
+    private func onLoadPropertyFail(_ msg: String){
+        if self.isVideo && self.videoIsLoading{
+            self.videoIsLoading = false
+            Toast.show(msg)
         }
     }
 
     /// 初始化页面
     private func initView(){
-        if self.isVideo{//视频时
+        if self.isVideo && self.videoPlayer == nil{//视频时,已下载的视频已经开始播放
             self.onVideoPlayClick()
-        } else {//图片时
-            self.loadPicture()
         }
         self.showTag()
     }
@@ -344,45 +369,94 @@ class AlbumViewerViewModel: ObservableObject{
     func loadPicture(){
         if self.fm.isDlive{//如果这是实况照片
             self.dliveVm.setFm(self.fm)
-            if let path = FileSdkUtil.cachedPath(self.fm.downloadSource){//如果文件已经下载
-                let dliveInfo = DliveUtil.getInfo(path)
-                if let uiImage = UIImage(data: dliveInfo.photoData){
-                    self.isShowDownloaded = true
-                    self.initImage(uiImage)
-                }
-                return
-            }
         }
-        
-        //优先加载下载好的预览图片
-        if let path = FileSdkUtil.cachedPath(self.fm.previewImageSource){
-            if let uiImage = UIImage(contentsOfFile: path){
-                self.isShowDownloaded = true
-                self.initImage(uiImage)
-            }
+        if self.showCachedOriginal(){
             return
         }
         
-        //先显示缩略图
+        //先显示缩略图,避免网络较差时黑屏,再加载清晰的图片
+        self.loadThumb()
+        self.loadPreviewSmall()
+    }
+    
+    /// 显示已下载或已缓存的原图
+    /// - Returns: 没有可以显示的图片时返回false
+    private func showCachedOriginal() -> Bool{
+        var uiImage: UIImage?
+        if let path = FileSdkUtil.cachedPath(self.fm.downloadSource){
+            if self.fm.isDlive{//如果这是实况照片
+                uiImage = UIImage(data: DliveUtil.getInfo(path).photoData)
+            } else {
+                uiImage = UIImage(contentsOfFile: path)
+            }
+        }
+        
+        //RAW等格式没有下载原文件时,或者原文件无法显示时,看大图预览有没有缓存
+        if uiImage == nil, let path = FileSdkUtil.cachedPath(self.fm.previewImageSource){
+            uiImage = UIImage(contentsOfFile: path)
+        }
+        guard let uiImage else{
+            return false
+        }
+        self.isShowDownloaded = true
+        self.initImage(uiImage)
+        return true
+    }
+    
+    /// 加载缩略图,更清晰的图片已经显示时不再显示
+    private func loadThumb(){
         if let path = FileSdkUtil.cachedPath(self.fm.thumbSource){
             if let uiImage = UIImage(contentsOfFile: path){
                 self.initImage(uiImage)
             }
-        } else if self.fm.hasThumb{//取加载缩略图
-            self.fetch(self.fm.thumbSource)
+        } else if self.fm.hasThumb{
+            self.thumbFetchTask = FileSdkUtil.fetch(self.fm.thumbSource, progress: { _ in }, finish: { path, _ in
+                self.thumbFetchTask = nil
+                if self.uiImage == nil, let path, let uiImage = UIImage(contentsOfFile: path){
+                    self.initImage(uiImage)
+                }
+            })
         }
     }
     
-    /// 下载图片,完成之后刷新视图
-    private func fetch(_ source: FileSource){
-        self.cancelFetch()
+    /// 加载预览图,图片尺寸较小时服务器不会生成预览图,这时直接加载原图
+    /// 这里不通过文件属性判断有没有预览图,因为文件属性被缓存之后不会更新
+    private func loadPreviewSmall(){
+        let source = self.fm.previewSmallSource
+        if let path = FileSdkUtil.cachedPath(source), let uiImage = UIImage(contentsOfFile: path){
+            self.initImage(uiImage)
+            return
+        }
+        self.fetch(source, notFound: self.loadOriginal){ path in
+            if let uiImage = UIImage(contentsOfFile: path){
+                self.initImage(uiImage)
+            }
+        }
+    }
+    
+    /// 加载原图
+    private func loadOriginal(){
+        self.fetch(self.fm.previewImageSource){ _ in
+            _ = self.showCachedOriginal()
+        }
+    }
+    
+    /// 下载图片
+    /// - Parameter notFound: 文件不存在时执行,没有指定时显示错误信息
+    /// - Parameter success: 下载成功时执行
+    private func fetch(_ source: FileSource, notFound: (() -> Void)? = nil, success: @escaping (_ path: String) -> Void){
+        self.fetchTask?.cancel()
         self.fetchTask = FileSdkUtil.fetch(source, progress: {
             self.progress = "\($0)%"
-        }, finish: { _, error in
+        }, finish: { path, error in
             self.fetchTask = nil
-            self.progress = error ?? ""
-            if error == nil{
-                self.loadPicture()
+            self.progress = ""
+            if let path{
+                success(path)
+            } else if let notFound, case .NotFound = error as? SdkError{
+                notFound()
+            } else {
+                self.progress = error?.fileSdkMessage ?? ""
             }
         })
     }
@@ -391,6 +465,8 @@ class AlbumViewerViewModel: ObservableObject{
     func cancelFetch(){
         self.fetchTask?.cancel()
         self.fetchTask = nil
+        self.thumbFetchTask?.cancel()
+        self.thumbFetchTask = nil
     }
     
     /**
@@ -493,6 +569,10 @@ class AlbumViewerViewModel: ObservableObject{
 
     /// 视频播放按钮点击事件
     func onVideoPlayClick(){
+        if self.fileProperty == nil && FileSdkUtil.cachedPath(self.fm.downloadSource) == nil{//文件属性之前加载失败,重新加载,成功后自动播放
+            self.loadProperty()
+            return
+        }
         if self.isVideoReplay{//强制重新播放
             self.videoPlay()
             return
@@ -583,6 +663,7 @@ class AlbumViewerViewModel: ObservableObject{
             self.isShowDownloaded = true
             self.videoIsOriginal = true
             self.videoIsPlaying = true
+            self.videoIsLoading = false
             return
         }
         guard self.fileProperty != nil else{
@@ -596,6 +677,7 @@ class AlbumViewerViewModel: ObservableObject{
             Toast.show("视频加载失败")
             return
         }
+        self.videoIsLoading = true
         Task.detached{ //网络视频应该通过异步任务加载,否则可能导致UI卡顿
             self.videoPlayer = AVPlayer(playerItem: AVPlayerItem(asset: asset))
             self.videoPlayer?.currentItem?.asset.loadValuesAsynchronously(forKeys: ["duration"]){
@@ -603,6 +685,7 @@ class AlbumViewerViewModel: ObservableObject{
                 let status = self.videoPlayer?.currentItem?.asset.statusOfValue(forKey: "duration", error: &error)
                 if status == .loaded {//视频缓冲完成
                     Task{ @MainActor in
+                        self.videoIsLoading = false
                         self.videoIsPlaying = true
                         self.videoPlayer?.seek(to: currentTime)
                         self.videoPlayer?.play()
@@ -610,6 +693,9 @@ class AlbumViewerViewModel: ObservableObject{
                     }
                 } else if status == .failed {
                     Task{ @MainActor in
+                        self.videoIsLoading = false
+                        self.isVideoReplay = true//再次点击播放时重新加载
+                        self.videoIsPlayed = false//恢复显示缩略图
                         Toast.show("视频加载失败,请检查网络或访问权限")
                     }
                 }
@@ -880,7 +966,7 @@ class AlbumViewerViewModel: ObservableObject{
     func onLoadOriginalClick(){
         
         //请求加载原图
-        self.fetch(self.fm.previewImageSource)
+        self.loadOriginal()
     }
     
     

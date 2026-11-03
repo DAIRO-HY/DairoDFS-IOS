@@ -55,7 +55,7 @@ class AlbumViewerDliveViewModel: ObservableObject{
             self.progress = "\($0)%"
         }, finish: { path, error in
             self.fetchTask = nil
-            self.progress = error ?? ""
+            self.progress = error?.fileSdkMessage ?? ""
             if let path{
                 self.play(path)
             }
