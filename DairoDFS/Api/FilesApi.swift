@@ -28,6 +28,13 @@ enum FilesApi {
     return ApiHttp<EmptyModel>(ApiConst.FILES_RENAME,method: "PUT",parameter: ["id":id,"name":name])
   }
 
+  //修改拍摄时间
+  //id 文件ID
+  //date 拍摄时间(毫秒),0表示恢复成照片本身的拍摄时间
+  static func updateCaptureTime(id: Int64,date: Int64) -> ApiHttp<FilePropertyModel>{
+    return ApiHttp<FilePropertyModel>(ApiConst.FILES_CAPTURE_TIME,method: "PUT",parameter: ["id":id,"date":date])
+  }
+
   //文件复制
   //ids 文件ID列表
   //targetFolder 目标文件夹

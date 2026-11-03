@@ -6,7 +6,7 @@ struct AlbumViewerTagView: View {
     @EnvironmentObject var vm: AlbumViewerViewModel
     var body: some View {
         VStack{
-            Spacer().frame(height: 85)
+            Spacer().frame(height: 92)
             HStack(alignment: .top, spacing: 5){
                 ForEach(self.vm.tags, id: \.self){
                     Text($0)

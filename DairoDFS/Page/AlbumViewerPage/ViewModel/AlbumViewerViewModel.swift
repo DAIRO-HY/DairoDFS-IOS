@@ -67,7 +67,13 @@ class AlbumViewerViewModel: ObservableObject{
     private var thumbFetchTask: FetchTask?
 
     /// 当前文件属性
-    private var fileProperty: FilePropertyModel?
+    @Published private(set) var fileProperty: FilePropertyModel?
+    
+    /// 文件属性是否正在加载
+    @Published private(set) var propertyIsLoading = false
+    
+    /// 属性面板是否显示
+    @Published var showInfo = false
 
     ///当前文件的一些标签（RAW、4K、4K60FPS......），显示在左上角
     @Published var tags = [String]()
@@ -295,6 +301,7 @@ class AlbumViewerViewModel: ObservableObject{
         self.tags.removeAll()
         self.fileTime = nil
         self.propertyApiHttp?.cancel()
+        self.propertyIsLoading = false
         self.fileProperty = nil
         self.cancelFetch()
 
@@ -339,18 +346,26 @@ class AlbumViewerViewModel: ObservableObject{
         if self.isVideo && self.videoPlayer == nil{
             self.videoIsLoading = true
         }
+        self.propertyIsLoading = true
         let fm = self.fm
-        self.propertyApiHttp = FilesApi.getProperty(ids: [fm.id]).hide().error{
+        self.propertyApiHttp = FilesApi.getProperty(ids: [fm.id]).hide().finish{
+            self.propertyIsLoading = false
+        }.error{
             self.onLoadPropertyFail($0)
         }.fail{
             self.onLoadPropertyFail($0.msg ?? "加载文件属性失败")
         }.send{
-            self.fileProperty = $0
-            if $0.state == 1, let jsonData = try? JSONEncoder().encode($0){//如果文件已经处理完成,则将文件属性信息缓存起来
-                FileSdkUtil.putData(fm.propertySource, jsonData)
-            }
-            self.initView()
+            self.onPropertyLoaded(fm, $0)
         }
+    }
+    
+    /// 文件属性加载完成
+    private func onPropertyLoaded(_ fm: FileModel, _ fileProperty: FilePropertyModel){
+        self.fileProperty = fileProperty
+        if fileProperty.state == 1, let jsonData = try? JSONEncoder().encode(fileProperty){//如果文件已经处理完成,则将文件属性信息缓存起来
+            FileSdkUtil.putData(fm.propertySource, jsonData)
+        }
+        self.initView()
     }
     
     /// 文件属性加载失败,视频没有属性不知道该播放哪个清晰度,恢复播放按钮,点击时重新加载
@@ -361,6 +376,36 @@ class AlbumViewerViewModel: ObservableObject{
         }
     }
 
+    /// 属性按钮点击事件
+    func onInfoClick(){
+        if !self.propertyIsLoading{//缓存的属性可能已经过期(服务端补充了字段、其他设备改了拍摄时间),这里重新加载,失败时继续显示缓存
+            self.loadProperty()
+        }
+        self.showInfo = true
+    }
+    
+    /// 修改拍摄时间
+    /// - Parameter date 拍摄时间(毫秒),0代表恢复成照片本身的拍摄时间
+    /// - Parameter finish 请求结束,失败时返回错误信息
+    func updateCaptureTime(_ date: Int64, finish: @escaping (_ error: String?) -> Void){
+        
+        //避免正在进行的加载覆盖修改结果
+        self.propertyApiHttp?.cancel()
+        self.propertyIsLoading = false
+        let fm = self.fm
+        FilesApi.updateCaptureTime(id: fm.id, date: date).hide().error{
+            finish($0)
+        }.fail{
+            finish($0.msg ?? "修改拍摄时间失败")
+        }.send{
+            self.onPropertyLoaded(fm, $0)
+            
+            //拍摄时间决定相册排序,通知相册列表页面更新
+            NotificationCenter.default.post(name: Notification.Name(AlbumPage.ALBUM_PAGE_RELOAD_DATA), object: nil)
+            finish(nil)
+        }
+    }
+    
     /// 初始化页面
     private func initView(){
         if self.isVideo && self.videoPlayer == nil{//视频时,已下载的视频已经开始播放
@@ -371,6 +416,7 @@ class AlbumViewerViewModel: ObservableObject{
 
     /// 显示标签
     private func showTag(){
+        self.tags.removeAll()
         if FileSdkUtil.cachedPath(self.fm.downloadSource) != nil{
             self.tags.append("已下载")
         }

@@ -21,26 +21,26 @@ struct AlbumViewerTopBarView: View {
                 Button(action: {
                     self.showViewerPage = false
                 }){
-                    ZStack{
-                        Image(systemName: "chevron.left")
-                            .resizable()
-                            .foregroundColor(Color.gl.black)
-                            .frame(width: 11, height: 20)
-                            .shadow(color: Color.gl.white, radius: 3, x: 2, y: 2)
-                    }
-                    .frame(width: 40, height: 40)
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundColor(.primary)
+                        .frame(width: 40, height: 40)
+                        .background(.regularMaterial, in: Circle())
                 }
+                .padding(.leading, 8)
                 Spacer()
                 if let fileTime = self.vm.fileTime{
                     Text(fileTime)
                         .font(.subheadline)
-                        .foregroundColor(Color.gl.black)
-                        .shadow(color: Color.gl.white, radius: 3, x: 2, y: 2)
+                        .foregroundColor(.primary)
+                        .padding(.horizontal, 14)
+                        .frame(height: 40)
+                        .background(.regularMaterial, in: Capsule())
                 }
                 Spacer()
                 
                 //和返回按钮同宽,使时间水平居中
-                Color.clear.frame(width: 40, height: 40)
+                Color.clear.frame(width: 40, height: 40).padding(.trailing, 8)
             }
             Spacer()
         }

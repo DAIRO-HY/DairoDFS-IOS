@@ -17,6 +17,7 @@ enum ApiConst {
   static let FILES_CREATE_FOLDER = "/api/files/create_folder"
   static let FILES_DELETE = "/api/files/delete"
   static let FILES_RENAME = "/api/files/rename"
+  static let FILES_CAPTURE_TIME = "/api/files/capture_time"
   static let FILES_COPY = "/api/files/copy"
   static let FILES_MOVE = "/api/files/move"
   static let FILES_PROPERTY = "/api/files/property"

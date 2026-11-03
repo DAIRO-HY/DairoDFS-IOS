@@ -90,6 +90,7 @@ struct AlbumViewerOptionView: View {
                         self.showVideoResolutionActionMenu.toggle()
                     }
                 }
+                OptionButton("属性", icon: "info.circle", action: self.vm.onInfoClick)
             }
             Color.clear.frame(height: 40)
         }

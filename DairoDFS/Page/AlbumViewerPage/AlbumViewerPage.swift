@@ -135,6 +135,9 @@ struct AlbumViewerPage: View {
             }
             //        .frame(maxHeight: .infinity)
             .edgesIgnoringSafeArea(.all)
+            .sheet(isPresented: self.$vm.showInfo){
+                AlbumViewerInfoView().environmentObject(self.vm)
+            }
             //这个通知不一定在主线程发出
             .onReceive(NotificationCenter.default.publisher(for: .AVPlayerItemDidPlayToEndTime).receive(on: DispatchQueue.main)){
                 self.vm.onVideoPlayEnd($0.object as? AVPlayerItem)

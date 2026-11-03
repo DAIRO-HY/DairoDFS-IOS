@@ -23,9 +23,6 @@ struct AlbumPage: View {
                 NavigationLink(destination: SystemAlbumPage(mode: .album), isActive: self.$vm.showAlbunSyncPage){
                     EmptyView()
                 }
-                
-                //撑开内部控件,使功能按钮初始化时就显示在右上角
-//                Spacer().frame(maxWidth: .infinity, maxHeight: .infinity)
                 AlbumGridView().environmentObject(self.vm)
                 AlbumOptionBarView().environmentObject(self.vm)
                 AlbumOptionView().environmentObject(self.vm)
