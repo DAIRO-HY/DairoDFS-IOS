@@ -64,9 +64,10 @@ struct AlbumGridViewItem: View {
                     .clipped()
             }else{//没有缩略图
                 Image(systemName: "document.fill")
-                    .resizable()
+                    .font(.largeTitle)
+                    .foregroundColor(.secondary)
                     .frame(width: self.size, height: self.size)
-                    .foregroundColor(.white)
+                    .background(Color(uiColor: .secondarySystemBackground))
             }
         }
     }

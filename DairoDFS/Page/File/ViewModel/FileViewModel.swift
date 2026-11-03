@@ -19,6 +19,9 @@ class FileViewModel : ObservableObject{
     
     @Published var entities = [FileEntity]()
     
+    ///正在等待服务器返回文件列表,本地有缓存时不需要等待
+    @Published var isLoading = false
+    
     ///选择模式
     @Published var isSelectMode = false
     
@@ -56,7 +59,17 @@ class FileViewModel : ObservableObject{
         //记录最后打开的文件夹
         SettingShared.lastOpenFolder = folderPath
         self.currentFolder = folderPath.isEmpty ? "根目录" : folderPath
-        DfsFileShared.getSubList(folderPath){list in
+        DfsFileShared.getSubList(folderPath, noCache: {
+            
+            //不能继续显示上一个文件夹的内容
+            self.entities = []
+            self.clearSelected()
+            self.isSelectMode = false
+            self.isLoading = true
+        }, failed: {
+            self.isLoading = false
+        }){list in
+            self.isLoading = false
             //        if (this.filePageState.isFinish) {
             //          //如果页面已经关闭，那就什么也不做。防止异步操作时，页面被关闭报错
             //          return;

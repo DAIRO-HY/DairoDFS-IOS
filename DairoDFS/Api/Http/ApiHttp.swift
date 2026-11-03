@@ -195,6 +195,9 @@ class ApiHttp<T: Codable> : ApiHttpBase{
         }
         let httpTask = URLSession.shared.dataTask(with: request){ data, response, error in
             
+            //数据量可能很大,解析不能放在主线程
+            let result = (response as? HTTPURLResponse)?.statusCode == 200 ? self.convert(data ?? Data()) : nil
+            
             //使回调函数运行在主线程上
             Task{@MainActor in
                 if self.isShowWaiting{
@@ -210,7 +213,7 @@ class ApiHttp<T: Codable> : ApiHttpBase{
                     self.callError(error.localizedDescription)
                     return
                 }
-                self.onResponse(response as! HTTPURLResponse, data ?? Data(), successFunc)
+                self.onResponse(response as! HTTPURLResponse, data ?? Data(), result, successFunc)
             }
         }
         self.httpTask = httpTask
@@ -252,9 +255,9 @@ class ApiHttp<T: Codable> : ApiHttpBase{
      * 处理服务器返回结果
      * 200:成功 401:登录失效 其他:失败,返回内容是错误信息
      */
-    private func onResponse(_ response: HTTPURLResponse, _ data: Data, _ successFunc: (_ data: T) -> Void){
+    private func onResponse(_ response: HTTPURLResponse, _ data: Data, _ result: T?, _ successFunc: (_ data: T) -> Void){
         if response.statusCode == 200{
-            guard let t = self.convert(data) else{
+            guard let t = result else{
                 self.callError("服务器返回数据格式不正确")
                 return
             }

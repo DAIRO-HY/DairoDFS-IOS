@@ -21,7 +21,9 @@ struct AlbumGridView: View {
     }
     
     var body: some View {
-        if self.vm.entityList.isEmpty{
+        if self.vm.isLoading{
+            ProgressView("加载中")
+        } else if self.vm.entityList.isEmpty{
             Button(action:{
                 self.vm.showAlbunSyncPage = true
             }){

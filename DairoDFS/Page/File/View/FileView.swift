@@ -28,6 +28,11 @@ struct FileView: View {
             .padding(.bottom)
         }
         .frame(maxHeight: .infinity)
+        .overlay{
+            if self.vm.isLoading{
+                ProgressView("加载中")
+            }
+        }
         .fullScreenCover(isPresented: self.$vm.showViewerPage) {
             let viewModel = self.vm.getAlbumViewerViewModel()
             RootView{

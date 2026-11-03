@@ -12,6 +12,9 @@ import DairoUI_IOS
 
 class AlbumViewModel : ObservableObject{
     
+    ///相册列表加载器
+    private static let loader = CachedListLoader()
+    
     /// 显示查看相册页面
     @Published var showViewerPage = false
     
@@ -22,6 +25,9 @@ class AlbumViewModel : ObservableObject{
     @Published var selectedCount = 0
     
     @Published var entityList = [AlbumEntity]()
+    
+    ///正在等待服务器返回相册列表,本地有缓存时不需要等待
+    @Published var isLoading = false
     
     ///  剪切板模式
     @Published var clipboardType = 0
@@ -50,20 +56,22 @@ class AlbumViewModel : ObservableObject{
     ///获取文件列表
     func loadData() {
         
-        //从本地缓存读取数据,不同账号的缓存互相隔离
-        let cacheName = AlbumViewModel.cacheName
-        if let cacheName, let modelList = LocalObjectUtil.read([FileModel].self, cacheName){
-            self.toEntity(modelList)
-        }
-        FilesApi.getAlbumList().hide().fail{
-            Toast.show($0.msg ?? "加载相册失败")
-        }.send{ itemList in
-            let modelList = itemList.map{ $0.fileModel }
-            
-            //数据没有更新时不需要刷新
-            if let cacheName, !LocalObjectUtil.write(modelList, cacheName){
-                return
+        //不同账号的缓存互相隔离
+        AlbumViewModel.loader.load(
+            cacheName: AlbumViewModel.cacheName,
+            http: FilesApi.getAlbumList().hide(),
+            failMsg: "加载相册失败",
+            toList: { $0.map{ $0.fileModel } },
+            noCache: {
+                
+                //已经有内容时,继续显示旧内容,等服务器返回后再刷新
+                self.isLoading = self.entityList.isEmpty
+            },
+            failed: {
+                self.isLoading = false
             }
+        ){ modelList in
+            self.isLoading = false
             self.toEntity(modelList)
         }
     }
@@ -76,7 +84,7 @@ class AlbumViewModel : ObservableObject{
     /// 删除相册列表数据缓存
     static func deleteCache(){
         if let cacheName = AlbumViewModel.cacheName{
-            LocalObjectUtil.delete(cacheName)
+            CachedListLoader.deleteCache(cacheName)
         }
     }
     
