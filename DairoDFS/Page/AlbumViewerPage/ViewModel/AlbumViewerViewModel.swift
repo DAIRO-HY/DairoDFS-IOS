@@ -592,12 +592,12 @@ class AlbumViewerViewModel: ObservableObject{
 
         let videoSource = self.videoOnlineSource
         self.videoIsOriginal = videoSource.cacheKey == self.fm.downloadSource.cacheKey
-        guard let videoUrl = FileSdkUtil.open(videoSource) else{
+        guard let asset = videoSource.directAsset else{
             Toast.show("视频加载失败")
             return
         }
         Task.detached{ //网络视频应该通过异步任务加载,否则可能导致UI卡顿
-            self.videoPlayer = AVPlayer(url: videoUrl)
+            self.videoPlayer = AVPlayer(playerItem: AVPlayerItem(asset: asset))
             self.videoPlayer?.currentItem?.asset.loadValuesAsynchronously(forKeys: ["duration"]){
                 var error: NSError?
                 let status = self.videoPlayer?.currentItem?.asset.statusOfValue(forKey: "duration", error: &error)
@@ -628,7 +628,7 @@ class AlbumViewerViewModel: ObservableObject{
         case SettingShared.VIDEO_QUALITY_SMOOTH://播放流畅视频
             return self.fm.previewVideoSource
         default://自动
-            if SettingShared.domainNotNull.hasPrefix("http://192.168") || SettingShared.domainNotNull.hasPrefix("http://localhost"){//如果是局域网,则优先原画
+            if SettingShared.isLanServer{//如果是局域网,则优先原画
                 return self.fm.downloadSource
             } else {//播放流畅视频
                 return self.fm.previewVideoSource

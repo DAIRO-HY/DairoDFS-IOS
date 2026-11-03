@@ -119,6 +119,39 @@ enum SettingShared {
         return SettingShared.domain ?? ""
     }
     
+    /// 当前服务器是否局域网
+    static var isLanServer: Bool{
+        return SettingShared.isLanDomain(SettingShared.domainNotNull)
+    }
+    
+    /// 判断服务器地址是否局域网,只看主机名,不区分http和https
+    /// - Parameter domain 服务器地址,例如:http://192.168.1.100:8031
+    static func isLanDomain(_ domain: String) -> Bool{
+        guard let host = URL(string: domain)?.host?.lowercased() else{
+            return false
+        }
+        if host == "localhost" || host.hasSuffix(".local"){
+            return true
+        }
+        if host.contains(":"){//IPv6:本机、唯一本地地址(fc00::/7)、链路本地地址(fe80::/10)
+            let ipv6 = host.trimmingCharacters(in: CharacterSet(charactersIn: "[]"))
+            return ipv6 == "::1"
+                || ipv6.hasPrefix("fc") || ipv6.hasPrefix("fd")
+                || ipv6.hasPrefix("fe8") || ipv6.hasPrefix("fe9") || ipv6.hasPrefix("fea") || ipv6.hasPrefix("feb")
+        }
+        
+        //IPv4,要完整解析,否则192.168.example.com这样的域名也会被当成局域网
+        let parts = host.split(separator: ".", omittingEmptySubsequences: false).map{ UInt8($0) }
+        guard parts.count == 4, let a = parts[0], let b = parts[1], parts[2] != nil, parts[3] != nil else{
+            return false
+        }
+        return a == 10
+            || a == 127
+            || (a == 172 && (16...31).contains(b))
+            || (a == 192 && b == 168)
+            || (a == 169 && b == 254)
+    }
+    
     static var domain: String?{
         get {
             if SettingShared._domain == nil{

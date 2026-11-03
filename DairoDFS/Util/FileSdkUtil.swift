@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import AVFoundation
 import DairoFileSDK
 
 /// <summary>
@@ -234,6 +235,21 @@ struct FileSource {
             headers: ["Authorization": "Bearer " + SettingShared.token],
             name: self.name
         )
+    }
+    
+    /// 让播放器直接播放服务器上的文件,不经过SDK,所以不会产生缓存
+    /// AVPlayer没有设置请求头的公开API,这里通过Cookie传登录票据
+    var directAsset: AVURLAsset? {
+        guard let url = URL(string: self.url), let host = url.host else{
+            return nil
+        }
+        let cookie = HTTPCookie(properties: [
+            .name: "token",
+            .value: SettingShared.token,
+            .domain: host,
+            .path: "/"
+        ])
+        return AVURLAsset(url: url, options: [AVURLAssetHTTPCookiesKey: cookie.map{ [$0] } ?? []])
     }
     
     /// 缩略图
