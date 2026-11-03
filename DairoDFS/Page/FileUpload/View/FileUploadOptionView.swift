@@ -21,15 +21,18 @@ struct FileUploadOptionView: View {
             NavigationLink(destination: FileUploadSetPage(), isActive: self.$isShowSet){
                 EmptyView()
             }
-            Divider()
             HStack{
-                Text("已选择:\(self.vm.checked.count)").foregroundColor(.secondary)
+                Text("已选择:\(self.vm.checked.count)")
+                    .font(.footnote)
+                    .foregroundColor(.primary)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .liquidGlassBackground(in: Capsule())
                 Spacer()
-            }.padding(.horizontal, 5)
-            Divider()
+            }.padding(.horizontal)
             HStack{
-                BottomOptionButton("全选", icon: "checklist.checked", action: self.vm.onCheckAllClick)
-                BottomOptionButton("删除", icon: "trash", disabled: self.vm.checked.isEmpty){
+                OptionButton("全选", icon: "checklist.checked", action: self.vm.onCheckAllClick)
+                OptionButton("删除", icon: "trash", disabled: self.vm.checked.isEmpty){
                     self.showDeleteAlert = true
                 }
                 .alert("确认删除吗？", isPresented: self.$showDeleteAlert) {
@@ -40,13 +43,14 @@ struct FileUploadOptionView: View {
                 } message: {
                     Text("此操作无法撤销")
                 }
-                BottomOptionButton("全暂停", icon: "pause.circle", action: self.vm.onPauseAllClick)
-                BottomOptionButton("全开始", icon: "play.circle", action: self.vm.onStartAllClick)
-                BottomOptionButton("设置", icon: "gearshape"){
+                OptionButton("全暂停", icon: "pause.circle", action: self.vm.onPauseAllClick)
+                OptionButton("全开始", icon: "play.circle", action: self.vm.onStartAllClick)
+                OptionButton("设置", icon: "gearshape"){
                     self.isShowSet = true
                 }
             }
         }
+        .padding(.vertical, 8)
     }
 }
 

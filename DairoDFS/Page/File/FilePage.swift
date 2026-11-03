@@ -15,11 +15,19 @@ struct FilePage: View {
     var body: some View {
         NavigationView{
             VStack(spacing: 0){
-                FileOptionBarView().environmentObject(self.vm)
+                
+                //顶部和底部的按钮都浮在列表上面
                 FileView().environmentObject(self.vm)
-                FileOptionView().environmentObject(self.vm)
-                FileAddView().environmentObject(self.vm)
-                HomeTabView(.FILE_PAGE)
+                    .scrollTopBar{
+                        FileOptionBarView().environmentObject(self.vm)
+                    }
+                    .safeAreaInset(edge: .bottom, spacing: 0){
+                        VStack(spacing: 0){
+                            FileOptionView().environmentObject(self.vm)
+                            FileAddView().environmentObject(self.vm)
+                            HomeTabView(.FILE_PAGE)
+                        }
+                    }
             }
             .onReceive(NotificationCenter.default.publisher(for: Notification.Name(FileAddView.FILE_ADD_VIEW_SHOW_FLAG))){_ in
                 self.vm.isSelectMode = false

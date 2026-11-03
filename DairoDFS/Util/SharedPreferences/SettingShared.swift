@@ -363,33 +363,6 @@ enum SettingShared {
     }
     /*----------------------------------------------------------------------------------*/
     
-    /// 排列方式
-    static var sortType: Int{
-        get{
-            return UserDefaults.standard.integer(forKey: "SORT_TYPE")
-        }
-        
-        set{
-            UserDefaults.standard.set(newValue, forKey: "SORT_TYPE")
-        }
-    }
-    
-    /*----------------------------------------------------------------------------------*/
-    
-    
-    /// 排列升降序
-    static var sortOrderBy: Int{
-        get{
-            return UserDefaults.standard.integer(forKey: "SORT_ORDER_BY")
-        }
-        
-        set{
-            UserDefaults.standard.set(newValue, forKey: "SORT_ORDER_BY")
-        }
-    }
-    
-    /*----------------------------------------------------------------------------------*/
-    
     /// 文件列表或表格显示类型
     static var viewType: Int{
         get {

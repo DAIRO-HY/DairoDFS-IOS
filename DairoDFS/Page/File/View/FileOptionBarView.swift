@@ -16,10 +16,17 @@ struct FileOptionBarView: View {
             self.optionBtn("house.fill"){//加载首页数据
                 self.vm.loadSubFile("")
             }
-            Text(self.vm.currentFolder)
-                .font(.body)
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity,alignment: .leading)
+            if !self.vm.currentFolder.isEmpty{//页面刚打开还没有路径
+                Text(self.vm.currentFolder)
+                    .font(.subheadline)
+                    .foregroundColor(.primary)
+                    .lineLimit(1)
+                    .truncationMode(.head)//路径太长时优先显示当前文件夹
+                    .padding(.horizontal, 14)
+                    .frame(height: 36)
+                    .liquidGlassBackground(in: Capsule())
+            }
+            Spacer()
 //            self.optionBtn("arrow.trianglehead.2.counterclockwise"){
 //                self.vm.isShowAddView = false
 //                self.vm.isSelectMode.toggle()
@@ -33,7 +40,6 @@ struct FileOptionBarView: View {
             Spacer().frame(width: 10)
         }
         .padding(.bottom, 5)
-        .background(Color.gl.bgPrimary)
     }
     
     /// 功能按钮
@@ -41,13 +47,12 @@ struct FileOptionBarView: View {
         return HStack{
             Button(action: action){
                 Image(systemName: icon)
-                    .foregroundColor(.white)
+                    .foregroundColor(.primary)
                     .frame(width: 36,height: 36)
                     .animation(nil, value: self.vm.isSelectMode)//禁止过渡动画
+                    .liquidGlassBackground(in: Circle(), interactive: true)
             }
-            .background(Color.black.opacity(0.5))
-            .clipShape(.circle)
-            .buttonStyle(.row)
+            .buttonStyle(.plain)
         }
     }
     

@@ -25,7 +25,7 @@ struct AlbumViewerTopBarView: View {
                         .font(.system(size: 17, weight: .semibold))
                         .foregroundColor(.primary)
                         .frame(width: 40, height: 40)
-                        .background(.regularMaterial, in: Circle())
+                        .liquidGlassBackground(in: Circle(), interactive: true)
                 }
                 .padding(.leading, 8)
                 Spacer()
@@ -35,7 +35,7 @@ struct AlbumViewerTopBarView: View {
                         .foregroundColor(.primary)
                         .padding(.horizontal, 14)
                         .frame(height: 40)
-                        .background(.regularMaterial, in: Capsule())
+                        .liquidGlassBackground(in: Capsule())
                 }
                 Spacer()
                 

@@ -28,11 +28,16 @@ struct MinePage: View {
     var body: some View {
         NavigationView{
             VStack(spacing: 0){
-                NavigationLink(destination: LoggedPage()){
-                    self.topLogoView
-                }
                 SettingStack(embedInNavigationStack: false){
                     SettingPage(verticalPadding: 16){
+                        SettingGroup{
+                            SettingCustomView{
+                                NavigationLink(destination: LoggedPage()){
+                                    self.topLogoView
+                                }
+                                .buttonStyle(.row)
+                            }
+                        }
                         SettingGroup{
 //                            SettingButton("我的分享", tip:"点击查看"){
 //                            }
@@ -84,7 +89,9 @@ struct MinePage: View {
                         }
                     }
                 }
-                HomeTabView(.MINE_PAGE)
+                .safeAreaInset(edge: .bottom, spacing: 0){
+                    HomeTabView(.MINE_PAGE)
+                }
             }
             .navigationTitle("我的")
             .navigationBarHidden(true)
@@ -98,22 +105,20 @@ struct MinePage: View {
     private var topLogoView: some View {
         HStack {
             UserAvatar(self.vm.user, size: 50)
-            VStack {
+            VStack(alignment: .leading, spacing: 2){
                 Text(self.vm.user?.displayName ?? self.vm.logged.name)
-                    .foregroundColor(Color.gl.textPrimaryContent)
-                    .font(.title2)
-                    .frame(maxWidth: .infinity,alignment: .leading)
-                HStack{
-                    Text(self.vm.logged.domain).font(.footnote).frame(maxWidth: .infinity,alignment: .leading)
-                        .foregroundColor(Color.gl.textPrimarySecondary)
-                }
-            }.padding(.leading,10)
-            Image(systemName: "chevron.right").foregroundColor(.white)
+                    .foregroundColor(.primary)
+                    .font(.title3)
+                Text(self.vm.logged.domain)
+                    .font(.footnote)
+                    .foregroundColor(.secondary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.leading, 6)
+            Image(systemName: "chevron.forward").foregroundColor(.secondary)
         }
         .padding(.horizontal)
-        .padding(.bottom, 10)
-        .background(Color.gl.bgPrimary)
-        
+        .padding(.vertical, 12)
     }
 }
 

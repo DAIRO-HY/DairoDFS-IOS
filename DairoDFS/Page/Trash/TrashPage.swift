@@ -28,7 +28,11 @@ struct TrashPage: View {
                 }
             }
             .frame(maxHeight: .infinity)
-            TrashOptionView().environmentObject(self.vm)
+            
+            //操作按钮浮在列表上面
+            .safeAreaInset(edge: .bottom, spacing: 0){
+                TrashOptionView().environmentObject(self.vm)
+            }
         }
         .navigationTitle("回收站")
     }

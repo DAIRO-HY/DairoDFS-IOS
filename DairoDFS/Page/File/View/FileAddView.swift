@@ -43,23 +43,22 @@ struct FileAddView: View {
                 NavigationLink(destination: SystemAlbumPage(mode: .file), isActive: self.$showAlbunSyncPage){
                     EmptyView()
                 }
-                
-                Divider()
                 HStack{
-                    BottomOptionButton("上传文件", icon: "arrow.up.document"){
+                    OptionButton("上传文件", icon: "arrow.up.document"){
                         self.showFilePicker = true
                     }
-                    BottomOptionButton("上传文件夹", icon: "square.grid.3x1.folder.badge.plus"){
+                    OptionButton("上传文件夹", icon: "square.grid.3x1.folder.badge.plus"){
                         self.showFolderPicker = true
                     }
-                    BottomOptionButton("图片/视频", icon: "rectangle.stack.badge.plus"){
+                    OptionButton("图片/视频", icon: "rectangle.stack.badge.plus"){
                         self.showAlbunSyncPage = true
                     }
-                    BottomOptionButton("创建文件夹", icon: "folder.badge.plus"){
+                    OptionButton("创建文件夹", icon: "folder.badge.plus"){
                         self.showCreateFolderAlter = true
                     }
                 }
             }
+            .padding(.vertical, 8)
             .sheet(isPresented: self.$showFilePicker) {//显示文件选择器
                 DocumentPicker(.data, true) { urls in
                     self.upload(urls)

@@ -25,13 +25,12 @@ struct AlbumOptionBarView: View {
     private func optionBtn(_ icon: String, action: @escaping () -> Void) -> some View{
         return HStack{
             Button(action: action){
-                Image(systemName: icon).foregroundColor(Color.gl.white)
+                Image(systemName: icon).foregroundColor(.primary)
                     .frame(width: 36,height: 36)
                     .animation(nil, value: self.fileVm.isSelectMode)//禁止过渡动画
+                    .liquidGlassBackground(in: Circle(), interactive: true)
             }
-            .background(Color.primary)
-            .clipShape(.circle)
-            .buttonStyle(.row)
+            .buttonStyle(.plain)
         }
     }
 }

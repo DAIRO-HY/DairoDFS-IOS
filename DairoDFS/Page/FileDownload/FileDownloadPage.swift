@@ -15,6 +15,9 @@ struct FileDownloadPage: View {
     
     @State private var showDeleteAlert = false
     
+    /// 是否跳转设置页面
+    @State private var isShowSet = false
+    
     var body: some View {
         VStack(spacing: 0){
             Picker("", selection: Binding(get: { self.vm.mode }, set: { self.vm.onModeClick($0) })){
@@ -31,21 +34,11 @@ struct FileDownloadPage: View {
                 }
             }
             .frame(maxHeight: .infinity)
-            Divider()
-            HStack{
-                Button("全选", action: self.vm.onCheckAllClick)
-                Spacer()
-                Button("全暂停", action: self.vm.onPauseAllClick).disabled(self.vm.mode != .save)
-                Spacer()
-                Button("全开始", action: self.vm.onStartAllClick).disabled(self.vm.mode != .save)
-                Spacer()
-                Button("删除(\(self.vm.checked.count))"){
-                    self.showDeleteAlert = true
-                }.disabled(self.vm.checked.isEmpty)
-                Spacer()
-                NavigationLink("设置", destination: FileDownloadSetPage())
+            
+            //操作按钮浮在列表上面
+            .safeAreaInset(edge: .bottom, spacing: 0){
+                self.optionView
             }
-            .padding()
         }
         .navigationTitle("下载管理")
         .onReceive(NotificationCenter.default.publisher(for: FileSdkUtil.EVENT)){
@@ -57,6 +50,25 @@ struct FileDownloadPage: View {
         } message: {
             Text("此操作无法撤销")
         }
+    }
+    
+    /// 底部操作按钮
+    private var optionView: some View{
+        HStack{
+            NavigationLink(destination: FileDownloadSetPage(), isActive: self.$isShowSet){
+                EmptyView()
+            }
+            OptionButton("全选", icon: "checklist.checked", action: self.vm.onCheckAllClick)
+            OptionButton("全暂停", icon: "pause.circle", disabled: self.vm.mode != .save, action: self.vm.onPauseAllClick)
+            OptionButton("全开始", icon: "play.circle", disabled: self.vm.mode != .save, action: self.vm.onStartAllClick)
+            OptionButton("删除(\(self.vm.checked.count))", icon: "trash", disabled: self.vm.checked.isEmpty){
+                self.showDeleteAlert = true
+            }
+            OptionButton("设置", icon: "gearshape"){
+                self.isShowSet = true
+            }
+        }
+        .padding(.vertical, 8)
     }
     
     /// 一行文件信息

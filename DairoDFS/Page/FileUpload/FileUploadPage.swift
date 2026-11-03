@@ -24,9 +24,13 @@ public struct FileUploadPage: View {
                     }
                 }
             }
-            FileUploadOptionView().environmentObject(self.vm)
+            
+            //操作按钮浮在列表上面
+            .safeAreaInset(edge: .bottom, spacing: 0){
+                FileUploadOptionView().environmentObject(self.vm)
+            }
         }
-        .navigationTitle("上传")
+        .navigationTitle("上传管理")
         .onReceive(NotificationCenter.default.publisher(for: FileSdkUtil.EVENT)){
             self.vm.onFileSdkEvent($0.object as! Event)
         }

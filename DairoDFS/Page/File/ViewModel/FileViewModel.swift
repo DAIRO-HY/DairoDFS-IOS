@@ -74,7 +74,6 @@ class FileViewModel : ObservableObject{
             //          //如果页面已经关闭，那就什么也不做。防止异步操作时，页面被关闭报错
             //          return;
             //        }
-            //        this.sortFile(list);
             
             var dfsFileList = [FileEntity]()
             for item in list{
@@ -115,52 +114,6 @@ class FileViewModel : ObservableObject{
             self.audioFile = item.fm
             return
         }
-    }
-    
-    ///文件排列
-    private func sortFile(dfsList: [FileModel]) {
-        
-        //      //排序方式
-        //      final sortType = SettingShared.sortType;
-        //
-        //      //升降序方式
-        //      final sortOrderBy = SettingShared.sortOrderBy;
-        //
-        //      //排序
-        //      dfsList.sort((p1, p2) {
-        //        final int compareValue;
-        //        if (sortType == FileSortType.NAME) {
-        //          compareValue = p1.name.toLowerCase().compareTo(p2.name.toLowerCase());
-        //        } else if (sortType == FileSortType.DATE) {
-        //          compareValue = p1.date.compareTo(p2.date);
-        //        } else if (sortType == FileSortType.SIZE) {
-        //          compareValue = p1.size.compareTo(p2.size);
-        //        } else if (sortType == FileSortType.EXT) {
-        //          compareValue = p1.name.fileExt
-        //              .toLowerCase()
-        //              .compareTo(p2.name.fileExt.toLowerCase());
-        //        } else {
-        //          return 0;
-        //        }
-        //        if (sortOrderBy == FileOrderBy.UP) {
-        //          //升降序方式
-        //          return compareValue;
-        //        }
-        //        return compareValue * -1;
-        //      });
-        //
-        //      //使文件夹始终在最上面
-        //      dfsList.sort((p1, p2) {
-        //        if (p1.fileFlag && !p2.fileFlag) {
-        //          //都是文件夹
-        //          return 1;
-        //        } else if (!p1.fileFlag && p2.fileFlag) {
-        //          //都是文件夹
-        //          return -1;
-        //        } else {
-        //          return 0;
-        //        }
-        //      });
     }
     
     /**

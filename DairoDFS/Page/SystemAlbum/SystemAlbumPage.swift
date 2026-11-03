@@ -60,6 +60,11 @@ struct SystemAlbumPage: View {
                         }
                     }
                 }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            
+            //操作按钮浮在照片上面
+            .safeAreaInset(edge: .bottom, spacing: 0){
                 SystemAlbumOptionView().environmentObject(self.vm)
             }
         }

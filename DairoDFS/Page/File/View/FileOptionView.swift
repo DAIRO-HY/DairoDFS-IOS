@@ -26,32 +26,19 @@ struct FileOptionView: View {
             EmptyView()
         } else {
             VStack(spacing: 8){
-//                Divider()
-//                HStack{
-//                    Text("排序:").foregroundColor(.secondary)
-//                    self.sortBtn("名称")
-//                    self.sortBtn("时间")
-//                    self.sortBtn("大小")
-//                    self.sortBtn("类型")
-//                    Spacer()
-//                    Button(action:{}){
-//                        Image(systemName: "square.grid.2x2")
-//                    }.buttonStyle(.row)
-//                }.padding(.horizontal, 5)
-                Divider()
                 HStack{
-                    BottomOptionButton("全选", icon: "checklist.checked", action: self.vm.selectAll)
-                    BottomOptionButton("复制", icon: "document.on.document", disabled: self.vm.selectedCount == 0, action: {
+                    OptionButton("全选", icon: "checklist.checked", action: self.vm.selectAll)
+                    OptionButton("复制", icon: "document.on.document", disabled: self.vm.selectedCount == 0, action: {
                         self.vm.toClipboard(2)
                     })
-                    BottomOptionButton("剪切", icon: "scissors", disabled: self.vm.selectedCount == 0, action: {
+                    OptionButton("剪切", icon: "scissors", disabled: self.vm.selectedCount == 0, action: {
                         self.vm.toClipboard(1)
                     })
-                    BottomOptionButton("粘贴", icon: "document.on.clipboard", disabled: self.vm.clipboardType == 0, action: self.vm.onPasteClick)
-//                    BottomOptionButton("分享", icon: "square.and.arrow.up", disabled: self.vm.selectedCount == 0, action: self.onShareClick)
+                    OptionButton("粘贴", icon: "document.on.clipboard", disabled: self.vm.clipboardType == 0, action: self.vm.onPasteClick)
+//                    OptionButton("分享", icon: "square.and.arrow.up", disabled: self.vm.selectedCount == 0, action: self.onShareClick)
                 }
                 HStack{
-                    BottomOptionButton("删除", icon: "trash", disabled: self.vm.selectedCount == 0){
+                    OptionButton("删除", icon: "trash", disabled: self.vm.selectedCount == 0){
                         self.showDeleteAlert = true
                     }
                     .alert("确认删除吗？", isPresented: $showDeleteAlert) {
@@ -62,9 +49,9 @@ struct FileOptionView: View {
                     } message: {
                         Text("此操作无法撤销")
                     }
-                    BottomOptionButton("下载", icon: "square.and.arrow.down", disabled: self.vm.selectedCount == 0, action: self.vm.onDownloadClick)
-                    BottomOptionButton("刷新", icon: "repeat", action: self.vm.reload)
-                    BottomOptionButton("重命名", icon: "pencil", disabled: self.vm.selectedCount != 1){
+                    OptionButton("下载", icon: "square.and.arrow.down", disabled: self.vm.selectedCount == 0, action: self.vm.onDownloadClick)
+                    OptionButton("刷新", icon: "repeat", action: self.vm.reload)
+                    OptionButton("重命名", icon: "pencil", disabled: self.vm.selectedCount != 1){
                         
                         //当前选中文件名
                         let name = self.vm.entities.first{$0.isSelected}!.fm.name
@@ -83,25 +70,13 @@ struct FileOptionView: View {
                             Button("取消", role: .cancel) {
                             }
                         }
-//                    BottomOptionButton("属性", icon: "info", disabled: self.vm.selectedCount == 0, action: self.onPropertyClick)
+//                    OptionButton("属性", icon: "info", disabled: self.vm.selectedCount == 0, action: self.onPropertyClick)
                 }
             }
+            .padding(.vertical, 8)
             //        this.redrawVN.value++;
         }
     }
-    
-    /**
-     排序按钮
-     */
-    private func sortBtn(_ label: String) -> some View{
-        return Button(action:{
-            
-        }){
-            Text(label)
-        }.buttonStyle(.row)
-    }
-    
-    
     
     ///全选
     private func onCheckAllClick() {

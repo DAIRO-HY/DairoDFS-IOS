@@ -45,13 +45,13 @@ struct AlbumViewerOptionView: View {
                             Spacer()
                             Text(self.vm.videoDuration.timeFormat).font(.subheadline)
                         }
-                        .foregroundColor(.white)
+                        .foregroundColor(.primary)
                         
                         Spacer().frame(height: 10)
                     }
                     .padding(.horizontal, 8)
-                    .background(Color.black.opacity(0.7))
-                    .cornerRadius(20)       // 圆角半径
+                    .liquidGlassBackground(in: RoundedRectangle(cornerRadius: 20))
+                    .environment(\.colorScheme, .dark)//视频背景是黑色的,浅色模式下也使用深色
                 }
                 .padding()
             }
@@ -118,54 +118,6 @@ struct AlbumViewerOptionView: View {
         }
     }
 }
-
-struct OptionButton: View {
-    
-    ///标题
-    private let label: String
-    
-    ///图标
-    private let icon: String
-    
-    ///字体颜色
-    //    final Color? color;
-    
-    ///是否禁用
-    private let disabled: Bool
-    
-    ///点击回调事件
-    private let action: () -> Void
-    
-    public init(_ label: String, icon: String, disabled: Bool = false, action: @escaping () -> Void) {
-        self.label = label
-        self.icon = icon
-        self.disabled = disabled
-        self.action = action
-    }
-    
-    public var body: some View {
-        Button(action: self.action){
-            VStack(spacing: 0){
-                Image(systemName: self.icon)
-                Text(self.label)
-                    .font(.footnote)
-                    .padding(.top, 1)
-            }
-            .foregroundColor(.white)
-            .frame(width: 50, height: 50)
-            .opacity(self.disabled ? 0.4 : 1)
-        }
-        .frame(maxWidth: .infinity)
-        .background(
-            Circle()
-                .fill(Color.black.opacity(0.7)) // 圆形背景颜色
-        )
-        .buttonStyle(.row)
-        .disabled(self.disabled)
-    }
-}
-
-
 
 #Preview {
     AlbumViewerOptionTestView()

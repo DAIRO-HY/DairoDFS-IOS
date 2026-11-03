@@ -19,15 +19,14 @@ struct AlbumOptionView: View {
         if self.vm.isSelectMode{
             VStack(spacing: 0){
                 Spacer()
-                Divider()
                 HStack{
-                    BottomOptionButton("刷新", icon: "arrow.trianglehead.2.clockwise"){
+                    OptionButton("刷新", icon: "arrow.trianglehead.2.clockwise"){
                         self.vm.loadData()
                     }
-                    BottomOptionButton("删除", icon: "trash", disabled: self.vm.selectedCount == 0){
+                    OptionButton("删除", icon: "trash", disabled: self.vm.selectedCount == 0){
                         self.showDeleteAlert = true
                     }
-                    BottomOptionButton("添加", icon: "plus.app"){
+                    OptionButton("添加", icon: "plus.app"){
                         self.vm.showAlbunSyncPage = true
                     }
                     .alert("确认删除选中的\(self.vm.selectedCount)个文件吗？", isPresented: $showDeleteAlert) {
@@ -38,12 +37,12 @@ struct AlbumOptionView: View {
                     } message: {
                         Text("此操作无法撤销")
                     }
-                    BottomOptionButton("下载", icon: "square.and.arrow.down", disabled: self.vm.selectedCount == 0, action: self.vm.onDownloadClick)
-                    BottomOptionButton("退出", icon: "arrow.right.to.line.square"){
+                    OptionButton("下载", icon: "square.and.arrow.down", disabled: self.vm.selectedCount == 0, action: self.vm.onDownloadClick)
+                    OptionButton("退出", icon: "arrow.right.to.line.square"){
                         FilePage().relaunch()
                     }
-                }.background(Color.gl.bgPrimary)
-                Color.gl.bgPrimary.frame(height: 30)
+                }
+                Color.clear.frame(height: 30)
             }
             .frame(maxHeight: .infinity)
             .edgesIgnoringSafeArea(.all)
