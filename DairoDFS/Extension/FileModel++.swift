@@ -5,6 +5,8 @@
 //  Created by zhoulq on 2025/07/31.
 //
 
+import UIKit
+
 extension FileModel{
     
     /// 附属文件
@@ -35,6 +37,33 @@ extension FileModel{
         return FileSource.thumb(id: self.id)
     }
 
+    /// 在线生成的图片,从中间裁剪成指定的大小
+    /// - Parameter width 宽度,单位是像素
+    /// - Parameter height 高度,单位是像素
+    func thumbOnlineSource(width: CGFloat, height: CGFloat) -> FileSource{
+        let width = Int(width.rounded(.up))
+        let height = Int(height.rounded(.up))
+        return self.thumbOnlineSource(query: "width=\(width)&height=\(height)", name: "\(width)x\(height)")
+    }
+
+    /// 在线生成的图片,按比例缩放
+    /// - Parameter maxSize 最大边,单位是像素
+    func thumbOnlineSource(maxSize: CGFloat) -> FileSource{
+        let maxSize = Int(maxSize.rounded(.up))
+        return self.thumbOnlineSource(query: "max_size=\(maxSize)", name: "max\(maxSize)")
+    }
+
+    /// 在线生成的图片,不同大小要分开缓存
+    private func thumbOnlineSource(query: String, name: String) -> FileSource{
+        let path = "/api/files/thumb_online/\(self.id)?\(query)"
+        return FileSource(
+            url: SettingShared.domainNotNull + path,
+            cacheKey: path,
+            group: "thumb-online",
+            name: "\(self.id)-\(name).jpg"
+        )
+    }
+
     /// 文件属性
     var propertySource: FileSource{
         return FileSource(
@@ -48,20 +77,22 @@ extension FileModel{
     /// 图片预览
     var previewImageSource: FileSource{
         let lowerName = self.name.lowercased()
-        if lowerName.hasSuffix(".jpg")
-            || lowerName.hasSuffix(".jpeg")
-            || lowerName.hasSuffix(".png")
-            || lowerName.hasSuffix(".heic")
-            || lowerName.hasSuffix(".hif"){//这些格式的预览图和原图都是一样的
-            return self.downloadSource
-        } else {
+        if lowerName.hasSuffix(".psd")
+            || lowerName.hasSuffix(".psb")
+            || lowerName.hasSuffix(".ai")
+            || lowerName.hasSuffix(".cr3")
+            || lowerName.hasSuffix(".cr2")
+            || lowerName.hasSuffix(".dlive"){//这些格式不能直接显示,要使用服务器生成的预览图
             return self.extraSource("preview", "jpg")
+        } else {
+            return self.downloadSource
         }
     }
 
-    /// 低分辨率的预览图,用于快速浏览,只有尺寸较大的图片才有
-    var previewSmallSource: FileSource{
-        return self.extraSource("preview-small", "jpg")
+    /// 适合当前屏幕的图片,用于快速浏览
+    var screenImageSource: FileSource{
+        let screenSize = UIScreen.main.nativeBounds.size
+        return self.thumbOnlineSource(maxSize: max(screenSize.width, screenSize.height))
     }
 
     /// 流畅画质的预览视频

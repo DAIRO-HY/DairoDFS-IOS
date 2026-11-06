@@ -20,6 +20,9 @@ struct AlbumGridViewItem: View {
     /// 是否选中,AlbumEntity是引用类型,要以值的方式传入,否则选中状态变化时视图不会刷新
     private let isSelected: Bool
     
+    /// 屏幕的缩放比例,用来计算照片的实际像素大小
+    @Environment(\.displayScale) private var displayScale
+    
     init(_ entity: AlbumEntity, size: CGFloat, isSelected: Bool, isSelectMode: Bool) {
         self.entity = entity
         self.size = size
@@ -59,8 +62,8 @@ struct AlbumGridViewItem: View {
     private var thumb: some View{
         Section{
             if self.entity.fm.hasThumb{//如果有缩略图
-                //和查看页面用同一张缩略图,这样打开图片时不用走网络就能先显示缩略图
-                DfsImage(self.entity.fm.thumbSource)
+                //按实际像素请求在线生成的图片,生成期间先显示缩略图。查看页面用的也是这张缩略图,打开图片时不用走网络就能先显示
+                DfsImage(self.entity.fm.thumbOnlineSource(width: self.size * self.displayScale, height: self.size * self.displayScale), fallback: self.entity.fm.thumbSource)
                     .frame(width: self.size, height: self.size)
                     .clipped()
                     .contentShape(Rectangle())//clipped只裁剪显示,不限制点击范围,否则会点到相邻的图片

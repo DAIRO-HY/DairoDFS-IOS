@@ -113,8 +113,24 @@ class AlbumViewerViewModel: ObservableObject{
     ///缩略图
     @Published var thumbImage1: UIImage? = nil
 
-    /// 下载进度信息
-    @Published var progress = ""
+    /// 图片加载失败的错误信息
+    @Published var errorMsg = ""
+
+    /// 大图、原图加载中的进度,比如:35%,还没有进度时是空字符串,没有加载时为nil
+    @Published private var loadingTip: String?
+
+    /// 下载、保存的进度,格式和loadingTip一样,没有下载时为nil
+    @Published private var downloadTip: String?
+
+    /// 加载提示里显示的进度,正在下载时优先显示下载进度
+    var progressTip: String?{
+        return self.downloadTip ?? self.loadingTip
+    }
+
+    /// 是否正在下载、保存
+    var isDownloading: Bool{
+        return self.downloadTip != nil
+    }
 
     /// 标记文件是否已经下载
 //    @Published var isDownload = false
@@ -145,9 +161,6 @@ class AlbumViewerViewModel: ObservableObject{
     
    /// 标记当前加载的图片或者视频是否已经下载
    @Published var isShowDownloaded = false
-    
-    /// 标记是否下载文件
-    @Published var isDownloadFlag = false
     
     /// 下载完成之后是否保存到系统相册
     private var isSaveToAlbum = false
@@ -286,7 +299,7 @@ class AlbumViewerViewModel: ObservableObject{
     //页面切换
     private func changePage(_ index: Int){
         self.stopInertia()
-        self.isDownloadFlag = false
+        self.downloadTip = nil
         self.isShowDownloaded = false
         self.isSaveToAlbum = false
         self.currentIndex = index
@@ -323,7 +336,7 @@ class AlbumViewerViewModel: ObservableObject{
 
         //停止实况视频播放
         self.dliveVm.clear()
-        self.progress = ""
+        self.errorMsg = ""
         
         //图片和已下载的视频不依赖文件属性,不用等它加载完成,否则网络较差时要一直等待
         if !self.isVideo{
@@ -460,7 +473,7 @@ class AlbumViewerViewModel: ObservableObject{
         
         //先显示缩略图,避免网络较差时黑屏,再加载清晰的图片
         self.loadThumb()
-        self.loadPreviewSmall()
+        self.loadScreenImage()
     }
     
     /// 显示已下载或已缓存的原图
@@ -503,10 +516,9 @@ class AlbumViewerViewModel: ObservableObject{
         }
     }
     
-    /// 加载预览图,图片尺寸较小时服务器不会生成预览图,这时直接加载原图
-    /// 这里不通过文件属性判断有没有预览图,因为文件属性被缓存之后不会更新
-    private func loadPreviewSmall(){
-        let source = self.fm.previewSmallSource
+    /// 加载适合当前屏幕的图片,服务器无法生成时直接加载原图
+    private func loadScreenImage(){
+        let source = self.fm.screenImageSource
         if let path = FileSdkUtil.cachedPath(source), let uiImage = UIImage(contentsOfFile: path){
             self.initImage(uiImage)
             return
@@ -524,23 +536,25 @@ class AlbumViewerViewModel: ObservableObject{
             _ = self.showCachedOriginal()
         }
     }
-    
+
     /// 下载图片
     /// - Parameter notFound: 文件不存在时执行,没有指定时显示错误信息
     /// - Parameter success: 下载成功时执行
     private func fetch(_ source: FileSource, notFound: (() -> Void)? = nil, success: @escaping (_ path: String) -> Void){
         self.fetchTask?.cancel()
+        self.loadingTip = ""
         self.fetchTask = FileSdkUtil.fetch(source, progress: {
-            self.progress = "\($0)%"
+            self.loadingTip = "\($0)%"
         }, finish: { path, error in
             self.fetchTask = nil
-            self.progress = ""
+            self.errorMsg = ""
+            self.loadingTip = nil
             if let path{
                 success(path)
             } else if let notFound, case .NotFound = error as? SdkError{
                 notFound()
             } else {
-                self.progress = error?.fileSdkMessage ?? ""
+                self.errorMsg = error?.fileSdkMessage ?? ""
             }
         })
     }
@@ -549,6 +563,7 @@ class AlbumViewerViewModel: ObservableObject{
     func cancelFetch(){
         self.fetchTask?.cancel()
         self.fetchTask = nil
+        self.loadingTip = nil
         self.thumbFetchTask?.cancel()
         self.thumbFetchTask = nil
     }
@@ -582,7 +597,7 @@ class AlbumViewerViewModel: ObservableObject{
     ///初始化图片显示
     /// - Paramter uiImage 图片数据
     private func initImage(_ uiImage: UIImage){
-        self.progress = ""
+        self.errorMsg = ""
         self.uiImage = uiImage
         
         //图片宽高比
@@ -1052,14 +1067,13 @@ class AlbumViewerViewModel: ObservableObject{
     /// 仅下载点击事件
     func onDownloadOnlyClick(_ isSaveToAlbum: Bool = false){
         self.isSaveToAlbum = isSaveToAlbum
-        self.isDownloadFlag = true
-        
+        self.downloadTip = ""
+
         //添加下载,如果文件在缓存中,则将缓存标记为永久保存
         do {
             try FileSdkUtil.download(self.fm.downloadSource)
         } catch {
-            self.progress = error.fileSdkMessage
-            self.downloadFinish()
+            self.downloadFinish(error.fileSdkMessage)
             return
         }
         if FileSdkUtil.cachedPath(self.fm.downloadSource) != nil{// 文件已经被下载
@@ -1067,35 +1081,34 @@ class AlbumViewerViewModel: ObservableObject{
             return
         }
     }
-    
+
     /// SDK事件,更新当前文件的下载进度
     func onFileSdkEvent(_ event: Event){
-        guard self.isDownloadFlag, let id = FileSdkUtil.cacheId(self.fm.downloadSource) else{
+        guard self.isDownloading, let id = FileSdkUtil.cacheId(self.fm.downloadSource) else{
             return
         }
         switch event{
         case let .progress(eventId, _, size, downloaded, _):
             if eventId == id, let size, size > 0{
-                self.progress = "\(Int(Double(downloaded) / Double(size) * 100))%"
+                self.downloadTip = "\(Int(Double(downloaded) / Double(size) * 100))%"
             }
         case let .stateChanged(eventId, _, state, error):
             if eventId != id{
                 return
             }
             if state == .finish{
-                self.progress = ""
                 self.downloadFinish()
             } else if state == .error{
-                self.progress = FileSdkUtil.friendlyError(error ?? "下载失败")
-                self.downloadFinish()
+                self.downloadFinish(FileSdkUtil.friendlyError(error ?? "下载失败"))
             }
         default:
             break
         }
     }
-    
+
     /// 文件下载完成后的操作
-    func downloadFinish(){
+    /// - Parameter errorMsg: 下载失败时的错误信息
+    func downloadFinish(_ errorMsg: String = ""){
         if let path = FileSdkUtil.cachedPath(self.fm.downloadSource){ //文件不一定下载成功,所以这里要加判断
             if self.isSaveToAlbum{// 下载完成之后保存到相册
                 PHPhotoLibrary.shared().performChanges({
@@ -1145,11 +1158,11 @@ class AlbumViewerViewModel: ObservableObject{
                 }
             }
         } else {
-            Toast.show("下载失败:\(self.progress)")
+            Toast.show("下载失败:\(errorMsg)")
         }
-        
+
         //取消下载模式
-        self.isDownloadFlag = false
+        self.downloadTip = nil
         self.isSaveToAlbum = false
     }
     

@@ -31,8 +31,8 @@ struct AlbumViewerImageView: View {
             if self.vm.fm.isDlive{
                 AlbumViewerDliveView(self.vm.dliveVm)
             }
-            if !self.vm.progress.isEmpty{
-                Text(self.vm.progress)
+            if !self.vm.errorMsg.isEmpty{
+                Text(self.vm.errorMsg)
                     .foregroundColor(.white)
                     .shadow(color: .black,radius: 3, x: 2, y: 2)
             }

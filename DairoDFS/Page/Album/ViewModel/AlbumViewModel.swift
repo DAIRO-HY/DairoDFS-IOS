@@ -26,6 +26,18 @@ class AlbumViewModel : ObservableObject{
     
     @Published var entityList = [AlbumEntity]()
     
+    ///相册的显示方式
+    @Published var viewMode = AlbumViewMode.all
+    
+    ///按年显示的分组
+    @Published var yearGroups = [AlbumGroup]()
+    
+    ///按月显示的分组
+    @Published var monthGroups = [AlbumGroup]()
+    
+    ///显示全部照片时要定位到的文件ID,没有时定位到最底部
+    var scrollToId: Int64?
+    
     ///正在等待服务器返回相册列表,本地有缓存时不需要等待
     @Published var isLoading = false
     
@@ -97,6 +109,14 @@ class AlbumViewModel : ObservableObject{
         }
         
         self.entityList = entityList
+        self.yearGroups = AlbumGroupBuilder.buildYearGroups(modelList)
+        self.monthGroups = AlbumGroupBuilder.buildMonthGroups(modelList)
+    }
+    
+    /// 分组里的照片点击事件,回到全部照片并定位到这张照片
+    func onGroupPhotoClick(_ fm: FileModel){
+        self.scrollToId = fm.id
+        self.viewMode = .all
     }
     
     /**

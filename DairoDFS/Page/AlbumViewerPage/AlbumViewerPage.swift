@@ -99,6 +99,9 @@ struct AlbumViewerPage: View {
                     AlbumViewerTagView().environmentObject(self.vm)
                 }
                 
+                //操作视图隐藏时也要显示
+                AlbumViewerLoadingView().environmentObject(self.vm)
+                
                 if self.vm.isVideo{
                     if self.vm.videoIsLoading{//视频加载中,不能点击播放
                         ProgressView()

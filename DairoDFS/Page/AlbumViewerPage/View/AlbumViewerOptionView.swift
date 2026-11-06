@@ -70,14 +70,12 @@ struct AlbumViewerOptionView: View {
                 } message: {
                     Text("此操作无法撤销")
                 }
-                if self.vm.isDownloadFlag{//下载模式
-                    OptionButton(self.vm.progress, icon: "square.and.arrow.down"){}
-                } else {
-                    OptionButton("下载", icon: "square.and.arrow.down"){
-                        self.vm.onDownloadOnlyClick()
-                    }
+
+                //下载进度显示在加载提示里,下载期间不能再次点击
+                OptionButton("下载", icon: "square.and.arrow.down", disabled: self.vm.isDownloading){
+                    self.vm.onDownloadOnlyClick()
                 }
-                OptionButton("保存", icon: "rectangle.stack.badge.plus"){
+                OptionButton("保存", icon: "rectangle.stack.badge.plus", disabled: self.vm.isDownloading){
                     self.vm.onDownloadOnlyClick(true)
                 }
                 

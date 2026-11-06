@@ -59,7 +59,12 @@ struct AlbumGridView: View {
                         //让底部有一定控件显示操作按钮
                         Color.clear.frame(height: 80).id("BOTTOM")
                     }.onAppear {
-                        proxy.scrollTo("BOTTOM", anchor: .bottomTrailing)
+                        if let scrollToId = self.vm.scrollToId{//从分组点击照片进来时,把这张照片定位到屏幕中间
+                            self.vm.scrollToId = nil
+                            proxy.scrollTo(scrollToId, anchor: .center)
+                        } else {
+                            proxy.scrollTo("BOTTOM", anchor: .bottomTrailing)
+                        }
                     }
                 }
             }.ignoresSafeArea(.all)

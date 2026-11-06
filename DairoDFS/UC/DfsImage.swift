@@ -18,10 +18,16 @@ struct DfsImage: View {
     private static let memoryCache: NSCache<NSString, UIImage> = {
         let cache = NSCache<NSString, UIImage>()
         cache.countLimit = 300
+        
+        //分组列表的大图占用内存较多,这里同时限制总大小
+        cache.totalCostLimit = 200 * 1024 * 1024
         return cache
     }()
     
     private let source: FileSource
+    
+    ///图片加载中或加载失败时显示的图片
+    private let fallback: FileSource?
     
     //填充模式
     private let contentMode: ContentMode
@@ -31,8 +37,9 @@ struct DfsImage: View {
     ///图片是否加载失败
     @State private var isFail = false
     
-    init(_ source: FileSource, contentMode: ContentMode = .fill) {
+    init(_ source: FileSource, fallback: FileSource? = nil, contentMode: ContentMode = .fill) {
         self.source = source
+        self.fallback = fallback
         self.contentMode = contentMode
     }
     
@@ -42,6 +49,8 @@ struct DfsImage: View {
                 Image(uiImage: uiImage)
                     .resizable()
                     .aspectRatio(contentMode: self.contentMode)
+            } else if let fallback = self.fallback{
+                DfsImage(fallback, contentMode: self.contentMode)
             } else if self.isFail{
                 Image(systemName: "photo")
                     .resizable()
@@ -83,7 +92,8 @@ struct DfsImage: View {
                 self.isFail = true
                 return
             }
-            DfsImage.memoryCache.setObject(uiImage, forKey: key)
+            let cost = Int(uiImage.size.width * uiImage.size.height * uiImage.scale * uiImage.scale * 4)
+            DfsImage.memoryCache.setObject(uiImage, forKey: key, cost: cost)
             self.uiImage = uiImage
         } catch {
             if !Task.isCancelled{

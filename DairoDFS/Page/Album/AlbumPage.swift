@@ -23,9 +23,21 @@ struct AlbumPage: View {
                 NavigationLink(destination: SystemAlbumPage(mode: .album), isActive: self.$vm.showAlbunSyncPage){
                     EmptyView()
                 }
-                AlbumGridView().environmentObject(self.vm)
-                AlbumOptionBarView().environmentObject(self.vm)
-                AlbumOptionView().environmentObject(self.vm)
+                
+                //分组显示时没有操作按钮
+                if self.vm.viewMode == .all || self.vm.entityList.isEmpty{
+                    AlbumGridView().environmentObject(self.vm)
+                    AlbumOptionBarView().environmentObject(self.vm)
+                    AlbumOptionView().environmentObject(self.vm)
+                } else {
+                    //按年和按月的列表高度相差很大,这里要重新创建列表,否则会沿用上一个列表的滚动位置,导致页面显示空白
+                    AlbumGroupView(self.vm.viewMode == .year ? self.vm.yearGroups : self.vm.monthGroups)
+                        .id(self.vm.viewMode)
+                        .environmentObject(self.vm)
+                }
+                if !self.vm.isSelectMode && !self.vm.entityList.isEmpty{
+                    AlbumModeBarView().environmentObject(self.vm)
+                }
             }
             .navigationTitle("相册")
             .navigationBarHidden(true)
