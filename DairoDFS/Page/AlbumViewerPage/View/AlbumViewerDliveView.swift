@@ -23,6 +23,9 @@ class AlbumViewerDliveViewModel: ObservableObject{
     // 实况照片视频播放器
     @Published var dlivePlayer: AVPlayer?
     
+    /// 是否播放声音
+    @Published var isSoundOn = AudioSessionUtil.isDliveSoundOn
+    
     func setFm(_ fm: FileModel){
         self.isShow = true
         self.fm = fm
@@ -64,20 +67,41 @@ class AlbumViewerDliveViewModel: ObservableObject{
     
     /// 播放视频,3秒之后结束
     private func play(_ path: String){
-        self.dlivePlayer = AVPlayer(url: URL(fileURLWithPath:  path))
-        self.dlivePlayer?.play()
+        AudioSessionUtil.dlive()
+        let player = AVPlayer(url: URL(fileURLWithPath:  path))
+        player.isMuted = !self.isSoundOn
+        self.dlivePlayer = player
+        player.play()
         Task{@MainActor in
             await Task.sleep(3_000_000_000)
+            if self.dlivePlayer === player{//已经切换到其他照片或者重新播放时不要结束
+                self.clear()
+            }
+        }
+    }
+    
+    /// 声音开关点击事件,打开时重新播放一次
+    func onSoundClick(){
+        self.isSoundOn.toggle()
+        AudioSessionUtil.isDliveSoundOn = self.isSoundOn
+        if self.isSoundOn, let fm = self.fm{
             self.clear()
+            self.setFm(fm)
+        } else if let dlivePlayer{
+            dlivePlayer.isMuted = true
+            AudioSessionUtil.dlive()
         }
     }
     
     func clear(){
         self.fetchTask?.cancel()
         self.fetchTask = nil
-        self.dlivePlayer?.pause()
-        self.dlivePlayer?.replaceCurrentItem(with: nil)
-        self.dlivePlayer = nil
+        if let dlivePlayer{
+            dlivePlayer.pause()
+            dlivePlayer.replaceCurrentItem(with: nil)
+            self.dlivePlayer = nil
+            AudioSessionUtil.release()
+        }
         self.isShow = false
     }
 }

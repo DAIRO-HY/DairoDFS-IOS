@@ -158,8 +158,8 @@ struct AlbumViewerPage: View {
                 //            if AlbumViewerRecyclePage.isInited{//由于该页面是中转过来的,第一次打开时会调用onDisappear函数,如果此时将self.vm.uiImage = nil会导致第一次打开图片黑屏
                 self.vm.uiImage = nil
                 
-                self.vm.videoPlayer?.pause() // 离开时暂停
-                self.vm.videoPlayer = nil
+                self.vm.stopVideoPlayer() // 离开时停止播放
+                self.vm.dliveVm.clear()
                 //                NotificationCenter.default.post(name: Notification.Name("BACK_IMAGE_VIEW"), object: nil)
                 //            }else{
                 //                AlbumViewerRecyclePage.isInited = true

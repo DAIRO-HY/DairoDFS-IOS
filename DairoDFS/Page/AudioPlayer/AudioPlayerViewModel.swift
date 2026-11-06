@@ -51,6 +51,7 @@ class AudioPlayerViewModel: ObservableObject {
         self.player = player
         self.observe(player, item)
         self.setupRemoteCommands()
+        AudioSessionUtil.exclusive()
         player.play()
     }
     
@@ -158,5 +159,6 @@ class AudioPlayerViewModel: ObservableObject {
         self.remoteCommandTargets.removeAll()
         MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
         self.player = nil
+        AudioSessionUtil.release()
     }
 }

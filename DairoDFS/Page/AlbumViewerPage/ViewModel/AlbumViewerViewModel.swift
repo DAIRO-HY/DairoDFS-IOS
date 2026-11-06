@@ -322,9 +322,7 @@ class AlbumViewerViewModel: ObservableObject{
         self.videoTimer?.invalidate()
         self.videoIsPlaying = false
         self.videoIsPlayed = false
-        self.videoPlayer?.pause()
-        self.videoPlayer?.replaceCurrentItem(with: nil)
-        self.videoPlayer = nil
+        self.stopVideoPlayer()
         self.videoIsOriginal = false
         self.videoIsLoading = false
         self.videoIsSpeedUp = false
@@ -674,6 +672,7 @@ class AlbumViewerViewModel: ObservableObject{
             return
         }
         if let videoPlayer{//如果播放器仅仅是暂停，直接播放即可
+            AudioSessionUtil.exclusive()
             self.videoPlayer?.play()
 
             //开启播放进度计时器
@@ -684,6 +683,17 @@ class AlbumViewerViewModel: ObservableObject{
         self.videoPlay()
     }
 
+    /// 停止播放视频,释放音频,让其他App恢复播放
+    func stopVideoPlayer(){
+        guard let videoPlayer else{
+            return
+        }
+        videoPlayer.pause()
+        videoPlayer.replaceCurrentItem(with: nil)
+        self.videoPlayer = nil
+        AudioSessionUtil.release()
+    }
+    
     /// 视频快进、快退
     /// - Parameter seconds 跳转的秒数,负数代表快退
     func onVideoSeek(_ seconds: Double){
@@ -741,6 +751,7 @@ class AlbumViewerViewModel: ObservableObject{
     
     /// 播放点击事件
     private func videoPlay(){
+        AudioSessionUtil.exclusive()
         self.videoIsPlayed = true//标记视频播放过
         self.isVideoReplay = false
         var currentTime = CMTime.zero//记录当前播放时间，方便切换清晰度之后继续播放
