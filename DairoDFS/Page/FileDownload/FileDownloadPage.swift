@@ -58,7 +58,7 @@ struct FileDownloadPage: View {
             NavigationLink(destination: FileDownloadSetPage(), isActive: self.$isShowSet){
                 EmptyView()
             }
-            OptionButton("全选", icon: "checklist.checked", action: self.vm.onCheckAllClick)
+            OptionButton("全选", icon: SFSymbol.name("checklist.checked", fallback: "checklist"), action: self.vm.onCheckAllClick)
             OptionButton("全暂停", icon: "pause.circle", disabled: self.vm.mode != .save, action: self.vm.onPauseAllClick)
             OptionButton("全开始", icon: "play.circle", disabled: self.vm.mode != .save, action: self.vm.onStartAllClick)
             OptionButton("删除(\(self.vm.checked.count))", icon: "trash", disabled: self.vm.checked.isEmpty){

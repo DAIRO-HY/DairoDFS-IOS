@@ -31,7 +31,7 @@ struct FileUploadOptionView: View {
                 Spacer()
             }.padding(.horizontal)
             HStack{
-                OptionButton("全选", icon: "checklist.checked", action: self.vm.onCheckAllClick)
+                OptionButton("全选", icon: SFSymbol.name("checklist.checked", fallback: "checklist"), action: self.vm.onCheckAllClick)
                 OptionButton("删除", icon: "trash", disabled: self.vm.checked.isEmpty){
                     self.showDeleteAlert = true
                 }

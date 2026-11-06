@@ -44,7 +44,7 @@ struct FileAddView: View {
                     EmptyView()
                 }
                 HStack{
-                    OptionButton("上传文件", icon: "arrow.up.document"){
+                    OptionButton("上传文件", icon: "arrow.up.doc"){
                         self.showFilePicker = true
                     }
                     OptionButton("上传文件夹", icon: "square.grid.3x1.folder.badge.plus"){

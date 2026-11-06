@@ -20,7 +20,7 @@ struct AlbumOptionView: View {
             VStack(spacing: 0){
                 Spacer()
                 HStack{
-                    OptionButton("刷新", icon: "arrow.trianglehead.2.clockwise"){
+                    OptionButton("刷新", icon: SFSymbol.name("arrow.trianglehead.2.clockwise", fallback: "arrow.triangle.2.circlepath")){
                         self.vm.loadData()
                     }
                     OptionButton("删除", icon: "trash", disabled: self.vm.selectedCount == 0){
@@ -38,7 +38,7 @@ struct AlbumOptionView: View {
                         Text("此操作无法撤销")
                     }
                     OptionButton("下载", icon: "square.and.arrow.down", disabled: self.vm.selectedCount == 0, action: self.vm.onDownloadClick)
-                    OptionButton("退出", icon: "arrow.right.to.line.square"){
+                    OptionButton("退出", icon: SFSymbol.name("arrow.right.to.line.square", fallback: "rectangle.portrait.and.arrow.right")){
                         FilePage().relaunch()
                     }
                 }

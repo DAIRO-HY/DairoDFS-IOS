@@ -77,7 +77,7 @@ struct MinePage: View {
                             
                             SettingNavigationLink("修改密码"){
                                 ModifyPwdPage().anyView
-                            }.icon("lock.open.rotation", backgroundColor: Color.orange)
+                            }.icon("lock.rotation.open", backgroundColor: Color.orange)
                         }
                         SettingGroup{
                             SettingButtonSingle("退出登录"){

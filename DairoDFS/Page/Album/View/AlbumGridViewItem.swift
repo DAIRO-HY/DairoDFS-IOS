@@ -68,7 +68,7 @@ struct AlbumGridViewItem: View {
                     .clipped()
                     .contentShape(Rectangle())//clipped只裁剪显示,不限制点击范围,否则会点到相邻的图片
             }else{//没有缩略图
-                Image(systemName: "document.fill")
+                Image(systemName: "doc.fill")
                     .font(.largeTitle)
                     .foregroundColor(.secondary)
                     .frame(width: self.size, height: self.size)

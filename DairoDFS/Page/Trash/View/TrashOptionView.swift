@@ -20,8 +20,8 @@ struct TrashOptionView: View {
     
     var body: some View {
         HStack{
-            OptionButton("全选", icon: "checklist.checked", action: self.vm.selectAll)
-            OptionButton("还原", icon: "checkmark.arrow.trianglehead.counterclockwise", disabled: self.vm.selectedCount == 0){
+            OptionButton("全选", icon: SFSymbol.name("checklist.checked", fallback: "checklist"), action: self.vm.selectAll)
+            OptionButton("还原", icon: SFSymbol.name("checkmark.arrow.trianglehead.counterclockwise", fallback: "arrow.uturn.backward"), disabled: self.vm.selectedCount == 0){
                 self.showRecoverAlert = true
             }
             .alert("确认还原选中的吗？", isPresented: $showRecoverAlert) {

@@ -90,7 +90,7 @@ struct AlbumGroupCardView: View {
                         .frame(width: width, height: height)
                         .clipped()
                 } else {
-                    Image(systemName: "document.fill")
+                    Image(systemName: "doc.fill")
                         .font(.largeTitle)
                         .foregroundColor(.secondary)
                         .frame(width: width, height: height)

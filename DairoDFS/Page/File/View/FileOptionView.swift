@@ -27,14 +27,14 @@ struct FileOptionView: View {
         } else {
             VStack(spacing: 8){
                 HStack{
-                    OptionButton("全选", icon: "checklist.checked", action: self.vm.selectAll)
-                    OptionButton("复制", icon: "document.on.document", disabled: self.vm.selectedCount == 0, action: {
+                    OptionButton("全选", icon: SFSymbol.name("checklist.checked", fallback: "checklist"), action: self.vm.selectAll)
+                    OptionButton("复制", icon: "doc.on.doc", disabled: self.vm.selectedCount == 0, action: {
                         self.vm.toClipboard(2)
                     })
                     OptionButton("剪切", icon: "scissors", disabled: self.vm.selectedCount == 0, action: {
                         self.vm.toClipboard(1)
                     })
-                    OptionButton("粘贴", icon: "document.on.clipboard", disabled: self.vm.clipboardType == 0, action: self.vm.onPasteClick)
+                    OptionButton("粘贴", icon: "doc.on.clipboard", disabled: self.vm.clipboardType == 0, action: self.vm.onPasteClick)
 //                    OptionButton("分享", icon: "square.and.arrow.up", disabled: self.vm.selectedCount == 0, action: self.onShareClick)
                 }
                 HStack{

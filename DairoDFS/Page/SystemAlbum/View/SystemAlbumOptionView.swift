@@ -39,7 +39,7 @@ struct SystemAlbumOptionView: View {
                 }.padding(.horizontal)
             }
             HStack{
-                OptionButton("全选", icon: "checklist.checked", action: self.vm.onCheckAllClick)
+                OptionButton("全选", icon: SFSymbol.name("checklist.checked", fallback: "checklist"), action: self.vm.onCheckAllClick)
                 OptionButton("上传", icon: "square.and.arrow.up", disabled: self.vm.checkedCount == 0 || self.vm.isUploading){
                     self.vm.onUploadClick(false)
                 }

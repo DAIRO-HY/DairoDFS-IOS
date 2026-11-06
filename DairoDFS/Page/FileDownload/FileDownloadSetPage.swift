@@ -63,7 +63,7 @@ struct FileDownloadSetPage: View {
                         (try? FileSdkUtil.get())?.setCacheExpireDays(days: UInt32(value))
                         return true
                     }
-                    .icon("timer.circle.fill", backgroundColor: Color.orange)
+                    .icon(SFSymbol.name("timer.circle.fill", fallback: "timer"), backgroundColor: Color.orange)
                 }
                 SettingGroup{
                     for it in self.stats{
