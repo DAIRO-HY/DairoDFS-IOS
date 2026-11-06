@@ -203,6 +203,11 @@ class SystemAlbumViewModel : ObservableObject{
         }
         do {
             let ids = try FileSdkUtil.get().addUploads(items: items)
+
+            //上一次的上传已经全部结束时,重新计算进度,否则上一次的文件也会算在总数里
+            if self.uploadingIds.isEmpty{
+                self.uploadId2identifier.removeAll()
+            }
             for (id, asset) in zip(ids, assetList){
                 self.uploadId2identifier[id] = asset.localIdentifier
                 self.uploadingIds.insert(id)
