@@ -41,15 +41,17 @@ extension FileModel{
     /// - Parameter width 宽度,单位是像素
     /// - Parameter height 高度,单位是像素
     func thumbOnlineSource(width: CGFloat, height: CGFloat) -> FileSource{
-        let width = Int(width.rounded(.up))
-        let height = Int(height.rounded(.up))
+
+        //布局计算出来的大小有浮点误差,同一个格子有时是389.0000001,有时是388.9999999,四舍五入才能保证每次都一样,否则缓存对不上会重新加载
+        let width = Int(width.rounded())
+        let height = Int(height.rounded())
         return self.thumbOnlineSource(query: "width=\(width)&height=\(height)", name: "\(width)x\(height)")
     }
 
     /// 在线生成的图片,按比例缩放
     /// - Parameter maxSize 最大边,单位是像素
     func thumbOnlineSource(maxSize: CGFloat) -> FileSource{
-        let maxSize = Int(maxSize.rounded(.up))
+        let maxSize = Int(maxSize.rounded())
         return self.thumbOnlineSource(query: "max_size=\(maxSize)", name: "max\(maxSize)")
     }
 
