@@ -225,6 +225,9 @@ struct FileSource {
     /// 文件名,用来决定缓存文件的扩展名和下载列表显示的名字
     let name: String
     
+    /// 下载优先级,数值越大越先下载
+    var priority: Int32 = 0
+    
     /// SDK访问参数
     func options(_ cache: CacheMode = .cache) -> Options {
         return Options(
@@ -233,6 +236,7 @@ struct FileSource {
             namespace: SettingShared.clusterId,
             cacheKey: self.cacheKey,
             headers: ["Authorization": "Bearer " + SettingShared.token],
+            priority: self.priority,
             name: self.name
         )
     }
@@ -258,7 +262,10 @@ struct FileSource {
             url: SettingShared.domainNotNull + "/api/files/thumb/\(id)",
             cacheKey: "/api/files/extra/\(id)/thumb",
             group: "thumb",
-            name: "\(id)-thumb.jpg"
+            name: "\(id)-thumb.jpg",
+            
+            //SDK同时下载的文件数有限,缩略图很小,不能排在在线生成的图片后面,否则在线生成很慢时,列表里一张图片也看不到
+            priority: 1
         )
     }
     

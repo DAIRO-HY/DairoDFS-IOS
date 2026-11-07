@@ -22,6 +22,7 @@ struct AlbumOptionView: View {
                 HStack{
                     OptionButton("刷新", icon: SFSymbol.name("arrow.trianglehead.2.clockwise", fallback: "arrow.triangle.2.circlepath")){
                         self.vm.loadData()
+                        DfsImage.retryFailed()
                     }
                     OptionButton("删除", icon: "trash", disabled: self.vm.selectedCount == 0){
                         self.showDeleteAlert = true

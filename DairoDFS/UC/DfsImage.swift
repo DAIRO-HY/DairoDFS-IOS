@@ -24,6 +24,25 @@ struct DfsImage: View {
         return cache
     }()
     
+    /// 请求的都是SDK的本机服务,真正的下载并发由SDK控制
+    /// URLSession.shared在iOS上同一个地址最多同时4个连接,在线生成的图片很慢时,已经缓存好的缩略图也要排在后面等待
+    private static let session: URLSession = {
+        let config = URLSessionConfiguration.default
+        config.httpMaximumConnectionsPerHost = 64
+        
+        //SDK已经缓存了图片,这里不用再缓存
+        config.urlCache = nil
+        return URLSession(configuration: config)
+    }()
+    
+    /// 重新加载失败图片的通知
+    private static let RETRY = Notification.Name("DfsImage.RETRY")
+    
+    /// 重新加载所有加载失败的图片,比如服务器刚上传完文件还在生成缩略图时,超时失败的图片
+    static func retryFailed(){
+        NotificationCenter.default.post(name: DfsImage.RETRY, object: nil)
+    }
+    
     private let source: FileSource
     
     ///图片加载中或加载失败时显示的图片
@@ -36,6 +55,9 @@ struct DfsImage: View {
     
     ///图片是否加载失败
     @State private var isFail = false
+    
+    ///重试次数,改变时重新加载
+    @State private var retryCount = 0
     
     init(_ source: FileSource, fallback: FileSource? = nil, contentMode: ContentMode = .fill) {
         self.source = source
@@ -61,8 +83,15 @@ struct DfsImage: View {
                 Color.clear
             }
         }
-        .task(id: self.source.cacheKey){
+        .task(id: "\(self.source.cacheKey)#\(self.retryCount)"){
             await self.load()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: DfsImage.RETRY)){ _ in
+            
+            //正在加载的不用重试,否则会取消之后重新排队
+            if self.isFail{
+                self.retryCount += 1
+            }
         }
     }
     
@@ -81,7 +110,7 @@ struct DfsImage: View {
             return
         }
         do {
-            let (data, response) = try await URLSession.shared.data(from: url)
+            let (data, response) = try await DfsImage.session.data(from: url)
             let uiImage = await Task.detached{
                 return UIImage(data: data)?.preparingForDisplay()
             }.value
