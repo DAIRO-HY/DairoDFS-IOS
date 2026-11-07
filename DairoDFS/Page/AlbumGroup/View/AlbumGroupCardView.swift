@@ -86,15 +86,12 @@ struct AlbumGroupCardView: View {
                 if photo.fm.hasThumb{
                     
                     //按实际像素请求在线生成的图片,这样不会模糊也不会有锯齿,生成期间先显示缩略图
-                    DfsImage(photo.fm.thumbOnlineSource(width: width * self.displayScale, height: height * self.displayScale), fallback: photo.fm.thumbSource)
+                    DfsImage(photo.fm.thumbOnlineSource(width: width * self.displayScale, height: height * self.displayScale), fallback: photo.fm.thumbSource, placeholder: photo.fm.placeholderIcon)
                         .frame(width: width, height: height)
                         .clipped()
-                } else {
-                    Image(systemName: "doc.fill")
-                        .font(.largeTitle)
-                        .foregroundColor(.secondary)
+                } else {//服务器还没有生成缩略图
+                    ImagePlaceholder(photo.fm.placeholderIcon)
                         .frame(width: width, height: height)
-                        .background(Color(uiColor: .tertiarySystemBackground))
                 }
                 Text(photo.dateLabel)
                     .font(.subheadline)

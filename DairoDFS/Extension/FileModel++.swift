@@ -118,6 +118,11 @@ extension FileModel{
         )
     }
     
+    /// 图片显示出来之前的占位图标
+    var placeholderIcon: String{
+        return self.isVideo ? "video" : "photo"
+    }
+    
     ///这是否是一个视频文件
     var isVideo: Bool{
         let lowerName = self.name.lowercased()

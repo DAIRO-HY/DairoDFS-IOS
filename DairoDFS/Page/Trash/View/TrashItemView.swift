@@ -50,7 +50,7 @@ struct TrashItemView: View {
     private var thumb: some View{
         Section{
             if self.entity.fm.hasThumb{//如果有缩略图
-                DfsImage(FileSource.thumb(id: self.entity.fm.id))
+                DfsImage(FileSource.thumb(id: self.entity.fm.id), placeholder: "photo")
                     .frame(width: 44, height: 44)
                     .clipped()
                     .cornerRadius(6)

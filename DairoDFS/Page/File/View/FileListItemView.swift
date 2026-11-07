@@ -57,7 +57,7 @@ struct FileListItemView: View {
                 if self.dfsFile.fm.hasThumb{//如果有缩略图
                     let width = 44
                     //和查看页面用同一张缩略图,这样打开图片时不用走网络就能先显示缩略图
-                    DfsImage(self.dfsFile.fm.thumbSource)
+                    DfsImage(self.dfsFile.fm.thumbSource, placeholder: self.dfsFile.fm.placeholderIcon)
                         .frame(width: CGFloat(width), height: CGFloat(width))
                         .clipped()
                         .cornerRadius(6)

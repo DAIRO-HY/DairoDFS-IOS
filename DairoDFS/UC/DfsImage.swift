@@ -48,6 +48,9 @@ struct DfsImage: View {
     ///图片加载中或加载失败时显示的图片
     private let fallback: FileSource?
     
+    ///图片显示出来之前的占位图标,不指定时加载中显示空白
+    private let placeholder: String?
+    
     //填充模式
     private let contentMode: ContentMode
     
@@ -59,9 +62,10 @@ struct DfsImage: View {
     ///重试次数,改变时重新加载
     @State private var retryCount = 0
     
-    init(_ source: FileSource, fallback: FileSource? = nil, contentMode: ContentMode = .fill) {
+    init(_ source: FileSource, fallback: FileSource? = nil, placeholder: String? = nil, contentMode: ContentMode = .fill) {
         self.source = source
         self.fallback = fallback
+        self.placeholder = placeholder
         self.contentMode = contentMode
     }
     
@@ -72,7 +76,9 @@ struct DfsImage: View {
                     .resizable()
                     .aspectRatio(contentMode: self.contentMode)
             } else if let fallback = self.fallback{
-                DfsImage(fallback, contentMode: self.contentMode)
+                DfsImage(fallback, placeholder: self.placeholder, contentMode: self.contentMode)
+            } else if let placeholder = self.placeholder{
+                ImagePlaceholder(placeholder)
             } else if self.isFail{
                 Image(systemName: "photo")
                     .resizable()
