@@ -54,6 +54,13 @@ struct LoginPage: View {
                 }
             }
         }
+
+        //小屏手机上键盘会挡住登录按钮,信息都填好时按键盘上的回车直接登录
+        .onSubmit {
+            if !self.loginInfo.domain.isEmpty && !self.loginInfo.name.isEmpty && !self.loginInfo.pwd.isEmpty{
+                self.onLoginClick()
+            }
+        }
     }
     
     /**
