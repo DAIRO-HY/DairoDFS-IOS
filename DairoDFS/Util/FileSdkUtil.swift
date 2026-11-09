@@ -111,13 +111,11 @@ enum FileSdkUtil {
     }
     
     /**
-     获取无状态的本机地址,适合列表里大量的图片,连接断开时SDK会自动取消下载
+     获取图片的访问方式,适合列表里大量的图片
+     已经下载完成的返回文件路径,否则返回无状态的本机地址,连接断开时SDK会自动取消下载
      */
-    static func localUrl(_ source: FileSource) -> URL? {
-        guard let url = try? FileSdkUtil.get().localUrl(url: source.url, options: source.options()) else{
-            return nil
-        }
-        return URL(string: url)
+    static func localSource(_ source: FileSource) -> LocalSource? {
+        return try? FileSdkUtil.get().localSource(url: source.url, options: source.options())
     }
     
     /**

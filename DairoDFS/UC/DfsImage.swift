@@ -111,29 +111,43 @@ struct DfsImage: View {
         }
         self.uiImage = nil
         self.isFail = false
-        guard let url = FileSdkUtil.localUrl(self.source) else{
+        let uiImage = await self.loadImage()
+        if Task.isCancelled{
+            return
+        }
+        guard let uiImage else{
             self.isFail = true
             return
         }
-        do {
-            let (data, response) = try await DfsImage.session.data(from: url)
+        let cost = Int(uiImage.size.width * uiImage.size.height * uiImage.scale * uiImage.scale * 4)
+        DfsImage.memoryCache.setObject(uiImage, forKey: key, cost: cost)
+        self.uiImage = uiImage
+    }
+    
+    /// 已经下载完成的图片直接读文件,否则通过SDK的本机服务加载
+    /// App挂起或锁屏后iOS会收回本机服务的端口,已经缓存的图片直接读文件不受影响
+    private func loadImage() async -> UIImage? {
+        var local = FileSdkUtil.localSource(self.source)
+        if case .file(let path) = local{
             let uiImage = await Task.detached{
-                return UIImage(data: data)?.preparingForDisplay()
+                return UIImage(contentsOfFile: path)?.preparingForDisplay()
             }.value
-            if Task.isCancelled{
-                return
+            if let uiImage{
+                return uiImage
             }
-            guard (response as? HTTPURLResponse)?.statusCode == 200, let uiImage else{
-                self.isFail = true
-                return
-            }
-            let cost = Int(uiImage.size.width * uiImage.size.height * uiImage.scale * uiImage.scale * 4)
-            DfsImage.memoryCache.setObject(uiImage, forKey: key, cost: cost)
-            self.uiImage = uiImage
-        } catch {
-            if !Task.isCancelled{
-                self.isFail = true
-            }
+            
+            //拿到路径之后文件正好被清理掉了,再获取一次,这时会返回本机地址
+            local = FileSdkUtil.localSource(self.source)
         }
+        guard case .http(let urlStr) = local, let url = URL(string: urlStr) else{
+            return nil
+        }
+        guard let (data, response) = try? await DfsImage.session.data(from: url),
+              (response as? HTTPURLResponse)?.statusCode == 200 else{
+            return nil
+        }
+        return await Task.detached{
+            return UIImage(data: data)?.preparingForDisplay()
+        }.value
     }
 }
