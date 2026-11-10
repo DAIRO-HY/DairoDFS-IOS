@@ -116,6 +116,9 @@ class AlbumViewerViewModel: ObservableObject{
     /// 图片加载失败的错误信息
     @Published var errorMsg = ""
 
+    /// 图片是否因为网络问题加载失败,在右上角显示联网失败的图标,不显示错误信息
+    @Published var isNetworkFail = false
+
     /// 大图、原图加载中的进度,比如:35%,还没有进度时是空字符串,没有加载时为nil
     @Published private var loadingTip: String?
 
@@ -335,6 +338,7 @@ class AlbumViewerViewModel: ObservableObject{
         //停止实况视频播放
         self.dliveVm.clear()
         self.errorMsg = ""
+        self.isNetworkFail = false
         
         //图片和已下载的视频不依赖文件属性,不用等它加载完成,否则网络较差时要一直等待
         if !self.isVideo{
@@ -546,11 +550,14 @@ class AlbumViewerViewModel: ObservableObject{
         }, finish: { path, error in
             self.fetchTask = nil
             self.errorMsg = ""
+            self.isNetworkFail = false
             self.loadingTip = nil
             if let path{
                 success(path)
             } else if let notFound, case .NotFound = error as? SdkError{
                 notFound()
+            } else if case .Network = error as? SdkError{//网络错误信息里有请求地址,不适合显示给用户
+                self.isNetworkFail = true
             } else {
                 self.errorMsg = error?.fileSdkMessage ?? ""
             }
@@ -596,6 +603,7 @@ class AlbumViewerViewModel: ObservableObject{
     /// - Paramter uiImage 图片数据
     private func initImage(_ uiImage: UIImage){
         self.errorMsg = ""
+        self.isNetworkFail = false
         self.uiImage = uiImage
         
         //图片宽高比
@@ -759,6 +767,10 @@ class AlbumViewerViewModel: ObservableObject{
            if let item = videoPlayer.currentItem{
                 currentTime = item.currentTime()
            }
+
+            //切换清晰度时先停掉之前的播放器,否则之前的视频会继续播放,出现多个声音
+            videoPlayer.pause()
+            videoPlayer.replaceCurrentItem(with: nil)
         }
         if let path = FileSdkUtil.cachedPath(self.fm.downloadSource){//如果该视频文件已经被下载,直接播放已经下载的文件
             self.videoPlayer = AVPlayer(url: URL(fileURLWithPath:  path))
@@ -786,20 +798,29 @@ class AlbumViewerViewModel: ObservableObject{
         }
         self.videoIsLoading = true
         Task.detached{ //网络视频应该通过异步任务加载,否则可能导致UI卡顿
-            self.videoPlayer = AVPlayer(playerItem: AVPlayerItem(asset: asset))
-            self.videoPlayer?.currentItem?.asset.loadValuesAsynchronously(forKeys: ["duration"]){
+            let player = AVPlayer(playerItem: AVPlayerItem(asset: asset))
+            self.videoPlayer = player
+            asset.loadValuesAsynchronously(forKeys: ["duration"]){
                 var error: NSError?
-                let status = self.videoPlayer?.currentItem?.asset.statusOfValue(forKey: "duration", error: &error)
+                let status = asset.statusOfValue(forKey: "duration", error: &error)
                 if status == .loaded {//视频缓冲完成
                     Task{ @MainActor in
+                        
+                        //加载期间又切换了清晰度或停止了播放,这个播放器已经不用了
+                        guard player === self.videoPlayer else{
+                            return
+                        }
                         self.videoIsLoading = false
                         self.videoIsPlaying = true
-                        self.videoPlayer?.seek(to: currentTime)
-                        self.videoPlayer?.play()
+                        player.seek(to: currentTime)
+                        player.play()
                         self.startVideoTimer()
                     }
                 } else if status == .failed {
                     Task{ @MainActor in
+                        guard player === self.videoPlayer else{
+                            return
+                        }
                         self.videoIsLoading = false
                         self.isVideoReplay = true//再次点击播放时重新加载
                         self.videoIsPlayed = false//恢复显示缩略图
