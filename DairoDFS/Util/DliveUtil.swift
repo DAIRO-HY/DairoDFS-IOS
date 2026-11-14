@@ -27,7 +27,7 @@ class DliveUtil {
     
     // 获取实况照片信息
     static func getInfo(_ path: String) -> DliveInfo {
-        let data = FileUtil.readAll(path)
+        let data = FileUtil.readData(path)
         return getInfo(data!)
     }
     

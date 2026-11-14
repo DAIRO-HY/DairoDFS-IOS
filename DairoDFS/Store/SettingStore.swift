@@ -181,7 +181,7 @@ enum SettingStore {
             return nil
         }
         let folder = "account_cache/" + account.replacingOccurrences(of: ":", with: "_")
-        FileUtil.mkdirs(LocalObjectUtil.mFolder + "/" + folder)
+        FileUtil.createDirectory(LocalObjectUtil.resolvedFolder + "/" + folder)
         return folder + "/" + name
     }
     

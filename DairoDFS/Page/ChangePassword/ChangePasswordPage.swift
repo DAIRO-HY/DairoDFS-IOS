@@ -26,9 +26,9 @@ struct ChangePasswordPage: View {
                     }.frame(maxWidth: .infinity)
                 }
                 SettingGroup{
-                    SettingTextField(title: "旧密码", text: self.$vm.oldPwd, placeholder: "请输入当前密码", type: .password)
-                    SettingTextField(title: "新密码", text: self.$vm.pwd, placeholder: "请输入新密码", type: .password)
-                    SettingTextField(title: "确认密码", text: self.$vm.repwd, placeholder: "请确认新密码", type: .password)
+                    SettingTextField(title: "旧密码", text: self.$vm.oldPwd, placeholder: "请输入当前密码", type: .password, keyboardType: .emailAddress)
+                    SettingTextField(title: "新密码", text: self.$vm.pwd, placeholder: "请输入新密码", type: .password, keyboardType: .emailAddress)
+                    SettingTextField(title: "确认密码", text: self.$vm.repwd, placeholder: "请确认新密码", type: .password, keyboardType: .emailAddress)
                 }
                 SettingGroup{
                     SettingButtonSingle("修改",action: self.vm.onModifyClick)

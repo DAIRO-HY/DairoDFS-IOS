@@ -30,9 +30,9 @@ struct LoginPage: View {
                     }.frame(maxWidth: .infinity)
                 }
                 SettingGroup{
-                    SettingTextField(title: "服务器", text: $loginInfo.domain, placeholder: "例 192.168.1.100:8031")
-                    SettingTextField(title: "用户名", text: $loginInfo.name, placeholder: "请输入用户名")
-                    SettingTextField(title: "密码", text: $loginInfo.pwd, placeholder: "请输入密码", type: .password)
+                    SettingTextField(title: "服务器", text: $loginInfo.domain, placeholder: "例 192.168.1.100:8031", keyboardType: .URL)
+                    SettingTextField(title: "用户名", text: $loginInfo.name, placeholder: "请输入用户名", keyboardType: .emailAddress)
+                    SettingTextField(title: "密码", text: $loginInfo.pwd, placeholder: "请输入密码", type: .password, keyboardType: .emailAddress)
                 }
                 SettingGroup{
                     SettingButtonSingle(self.loginInfo.editAccountIndex == nil ? "登录" : "保存",action: self.onLoginClick)
@@ -67,7 +67,7 @@ struct LoginPage: View {
      登录/保存按钮点击事件
      */
     private func onLoginClick(){
-        var domain = self.loginInfo.domain.trim()
+        var domain = self.loginInfo.domain.trimmingCharacters(in: .whitespacesAndNewlines)
         if domain.isEmpty {
             Toast.show("服务器必填")
             return

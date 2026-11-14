@@ -347,7 +347,7 @@ class AlbumViewerViewModel: ObservableObject{
             self.onVideoPlayClick()
         }
         if let path = FileSdkUtil.cachedPath(self.fm.propertySource),
-           let data = FileUtil.readAll(path),
+           let data = FileUtil.readData(path),
            let fileProperty = try? JSONDecoder().decode(FilePropertyModel.self, from: data){//如果属性文件已经存在,解析失败时重新获取
             self.fileProperty = fileProperty
             self.initView()
@@ -1169,7 +1169,7 @@ class AlbumViewerViewModel: ObservableObject{
                         return
                     }
                     options.shouldMoveFile = false // 是否移动文件,而不是复制
-                    let data = FileUtil.readAll(path)!
+                    let data = FileUtil.readData(path)!
                     request.addResource(with: .photo, data: data, options: options)
                 }) { success, error in
                     if success {

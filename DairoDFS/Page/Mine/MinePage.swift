@@ -12,7 +12,7 @@ import DairoFileSDK
 struct MinePage: View {
     
     ///主题选择数据
-    private let themeData = [SettingPickerData("跟随系统",0),SettingPickerData("明亮模式",1),SettingPickerData("黑暗模式",2)]
+    private let themeData = [SettingPickerData("跟随系统",ThemeMode.system.rawValue),SettingPickerData("明亮模式",ThemeMode.light.rawValue),SettingPickerData("黑暗模式",ThemeMode.dark.rawValue)]
     
     ///功能模式数据
     private let functionData = [SettingPickerData<Int>("文件模式",0),SettingPickerData<Int>("相册模式",1)]
@@ -21,7 +21,7 @@ struct MinePage: View {
     @StateObject private var vm = MineViewModel()
     
     //主题设置值
-    @AppStorage("theme") private var theme = 0
+    @AppStorage(ThemeMode.storageKey) private var theme = ThemeMode.system.rawValue
     
     //功能模式
     @AppStorage("FUNCTION_MODE") private var functionMode = 0
