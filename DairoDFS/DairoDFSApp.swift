@@ -12,7 +12,7 @@ import DairoUI_IOS
 struct DairoDFSApp: App {
     
     //功能模式
-    @AppStorage("functionType") private var functionType = 0
+    @AppStorage("FUNCTION_MODE") private var functionMode = 0
     
     //App前后台状态
     @Environment(\.scenePhase) private var scenePhase
@@ -31,10 +31,10 @@ struct DairoDFSApp: App {
     var body: some Scene {
         WindowGroup {
             RootView{
-                if SettingShared.isLogin{
-                    if functionType == FunctionModel.FILE{
+                if SettingStore.isLogin{
+                    if functionMode == FunctionMode.FILE{
                         FilePage()
-                    } else if functionType == FunctionModel.ALBUM{
+                    } else if functionMode == FunctionMode.ALBUM{
                         AlbumPage()
                     } else {
                         

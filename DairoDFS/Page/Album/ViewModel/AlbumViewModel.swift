@@ -1,5 +1,5 @@
 //
-//  FileViewModel.swift
+//  AlbumViewModel.swift
 //  DairoDFS
 //
 //  Created by zhoulq on 2025/04/30.
@@ -19,7 +19,7 @@ class AlbumViewModel : ObservableObject{
     @Published var showViewerPage = false
     
     //跳转相册同步班页面
-    @Published var showAlbunSyncPage = false
+    @Published var showAlbumSyncPage = false
     
     ///记录当前选中的文件数
     @Published var selectedCount = 0
@@ -90,7 +90,7 @@ class AlbumViewModel : ObservableObject{
     
     /// 相册列表数据缓存名
     private static var cacheName: String? {
-        return SettingShared.accountObjectName("albums")
+        return SettingStore.accountObjectName("albums")
     }
     
     /// 删除相册列表数据缓存

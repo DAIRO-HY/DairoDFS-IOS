@@ -1,5 +1,5 @@
 //
-//  ImageViewerPage.swift
+//  AlbumViewerVideoView.swift
 //  DairoDFS
 //
 //  Created by zhoulq on 2025/05/05.
@@ -15,8 +15,6 @@ struct AlbumViewerVideoView: View {
     
     @State private var progress = ""
     
-    ///刷新图标标识
-    @State private var freshImage: UInt64 = 0
     
     @EnvironmentObject var vm: AlbumViewerViewModel
     

@@ -24,7 +24,7 @@ struct MinePage: View {
     @AppStorage("theme") private var theme = 0
     
     //功能模式
-    @AppStorage("functionType") private var functionType = 0
+    @AppStorage("FUNCTION_MODE") private var functionMode = 0
     
     var body: some View {
         NavigationView{
@@ -33,7 +33,7 @@ struct MinePage: View {
                     SettingPage(verticalPadding: 16){
                         SettingGroup{
                             SettingCustomView{
-                                NavigationLink(destination: LoggedPage()){
+                                NavigationLink(destination: AccountListPage()){
                                     self.topLogoView
                                 }
                                 .buttonStyle(.row)
@@ -60,10 +60,10 @@ struct MinePage: View {
                             SettingPicker("切换主题",data: self.themeData, value: self.$theme)
                                 .icon("paintbrush.fill", backgroundColor: Color.red)
                             
-                            SettingPicker("功能模式",data: self.functionData, value: self.$functionType){
-                                if $0 == FunctionModel.FILE{
+                            SettingPicker("功能模式",data: self.functionData, value: self.$functionMode){
+                                if $0 == FunctionMode.FILE{
                                     FilePage().relaunch()
-                                } else if $0 == FunctionModel.ALBUM{
+                                } else if $0 == FunctionMode.ALBUM{
                                     AlbumPage().relaunch()
                                 } else {
                                 }
@@ -77,7 +77,7 @@ struct MinePage: View {
                             }.icon("person.crop.circle.fill", backgroundColor: Color.blue)
                             
                             SettingNavigationLink("修改密码"){
-                                ModifyPwdPage().anyView
+                                ChangePasswordPage().anyView
                             }.icon("lock.rotation.open", backgroundColor: Color.orange)
                             
                             //临时调试入口,用来查App在后台放久之后图片加载失败的原因,找到原因后删掉
@@ -92,7 +92,7 @@ struct MinePage: View {
                             SettingButtonSingle("退出登录"){
                                 //让服务端删除这个票据
                                 LoginApi.logout().hide().send{}
-                                SettingShared.logout()
+                                SettingStore.logout()
                                 LoginPage().relaunch()
                             }
                         }

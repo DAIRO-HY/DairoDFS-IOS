@@ -1,5 +1,5 @@
 //
-//  ImageViewerPage.swift
+//  AlbumViewerPage.swift
 //  DairoDFS
 //
 //  Created by zhoulq on 2025/05/05.
@@ -9,51 +9,6 @@ import SwiftUI
 import DairoUI_IOS
 import AVFoundation
 import AVKit
-
-//class MidleData{
-//    var fileModels = [FileModel]()
-//    var index = 0
-//}
-//
-
-/////由于SwiftUI内部机制,就算页面返回之后,页面的一些特殊数据不会立即被回收
-/////先通过一个页面中转可以解决该问题,暂时没有更好的解决方案
-//struct AlbumViewerPage: View {
-//
-//    private var vm: MidleData
-//
-//    @State var isShow = true
-//
-//    @Environment(\.dismiss) var dismiss
-//
-//
-//
-//    init(_ vm: MidleData) {
-//        self.vm = vm
-//    }
-//
-//    private func getImageViewerViewModel()->ImageViewerViewModel{
-//        let vvm = ImageViewerViewModel()
-//        vvm.initData(self.vm.fileModels, self.vm.index)
-//        return vvm
-//    }
-//
-//    var body: some View {
-//        VStack{
-//
-//            //由于图片浏览需要消耗大量内存,如果不通过中间页面中转一下,图片浏览页面返回时,内存不会被自动回收
-//            //@TODO:暂时无解
-//            NavigationLink(destination: AlbumViewerRecyclePage(getImageViewerViewModel()), isActive: self.$isShow){
-//                EmptyView()
-//            }
-//        }
-//        .onReceive(NotificationCenter.default.publisher(for: Notification.Name("BACK_IMAGE_VIEW"))){ _ in
-//            self.dismiss()
-//        }.onDisappear{
-//            print("-->AlbumViewerPage.onDisappear")
-//        }
-//    }
-//}
 
 struct AlbumViewerPage: View {
     

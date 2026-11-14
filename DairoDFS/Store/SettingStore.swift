@@ -1,5 +1,5 @@
 //
-//  SettingShared.swift
+//  SettingStore.swift
 //  DairoDFS
 //
 //  Created by zhoulq on 2025/04/24.
@@ -9,33 +9,33 @@ import Foundation
 import DairoUI_IOS
 
 /// 用户设置
-enum SettingShared {
+enum SettingStore {
     /*----------------------------------------------------------------------------------*/
     
     /// 会员信息
-    private static let _KEY_USER = "USER"
+    private static let KEY_USER = "user"
     
     /// <summary>
     /// 会员信息
     /// </summary>
     static var user: MineModel?{
         get{
-            return LocalObjectUtil.read(MineModel.self, SettingShared._KEY_USER)
+            return LocalObjectUtil.read(MineModel.self, SettingStore.KEY_USER)
         }
         
         set{
-            _ = LocalObjectUtil.write(newValue, SettingShared._KEY_USER)
+            _ = LocalObjectUtil.write(newValue, SettingStore.KEY_USER)
         }
     }
     
     /// 后台加载会员信息,不弹出加载等待框
     /// [force] 是否强制刷新数据
     static func loadInBackground() {
-        // if (!force && SettingShared.user != null){//非强制刷新的情况下,如果已经加载过,就不需要再加载数据
+        // if (!force && SettingStore.user != null){//非强制刷新的情况下,如果已经加载过,就不需要再加载数据
         //     return;
         // }
         MineApi.info().send{
-            SettingShared.user = $0;
+            SettingStore.user = $0;
         }
     }
     
@@ -50,13 +50,13 @@ enum SettingShared {
     /// </summary>
     static var token: String {
         get{
-            if SettingShared.mToken == nil{
-                SettingShared.mToken = UserDefaults.standard.string(forKey: KEY_TOKEN)
+            if SettingStore.mToken == nil{
+                SettingStore.mToken = UserDefaults.standard.string(forKey: KEY_TOKEN)
             }
-            return SettingShared.mToken ?? ""
+            return SettingStore.mToken ?? ""
         }
         set{
-            SettingShared.mToken = newValue;
+            SettingStore.mToken = newValue;
             if newValue.isEmpty {
                 UserDefaults.standard.removeObject(forKey: KEY_TOKEN)
                 return;
@@ -67,61 +67,17 @@ enum SettingShared {
     
     /*----------------------------------------------------------------------------------*/
     
-    /// 主题模式
-    //    private static let _THEME = "THEME";
-    //
-    //    static var theme: Int {
-    //        get{
-    //            return UserDefaults.standard.integer(forKey: SettingShared._THEME)
-    //        }
-    //        set{
-    //            UserDefaults.standard.set(newValue, forKey: SettingShared._THEME)
-    //        }
-    //
-    //    }
-    
-    /*----------------------------------------------------------------------------------*/
-    
-    /*----------------------------------------------------------------------------------*/
-    
-    /// 功能模式
-    private static let _FUNCTION_MODEL = "FUNCTION_MODEL";
-    
-    static var functionModel: Int{
-        get {
-            return UserDefaults.standard.integer(forKey: SettingShared._FUNCTION_MODEL)
-        }
-        
-        set{
-            UserDefaults.standard.set(newValue, forKey: SettingShared._FUNCTION_MODEL)
-        }
-        
-        ///获取功能试图
-        //      static Widget get functionView {
-        //        switch (SettingShared.functionModel) {
-        //          case FunctionModel.FILE:
-        //            return HomePage();
-        //          case FunctionModel.ALBUM:
-        //            return AlbumPage();
-        //          default:
-        //            return SizedBox();
-        //        }
-        //      }
-        
-    }
-    /*----------------------------------------------------------------------------------*/
-    
     /// 当前服务器域名
-    private static let _DOMAIN = "DOMAIN";
-    static var _domain: String?
+    private static let KEY_DOMAIN = "DOMAIN"
+    private static var mDomain: String?
     
     static var domainNotNull: String{
-        return SettingShared.domain ?? ""
+        return SettingStore.domain ?? ""
     }
     
     /// 当前服务器是否局域网
     static var isLanServer: Bool{
-        return SettingShared.isLanDomain(SettingShared.domainNotNull)
+        return SettingStore.isLanDomain(SettingStore.domainNotNull)
     }
     
     /// 判断服务器地址是否局域网,只看主机名,不区分http和https
@@ -154,33 +110,36 @@ enum SettingShared {
     
     static var domain: String?{
         get {
-            if SettingShared._domain == nil{
-                SettingShared._domain = UserDefaults.standard.string(forKey: SettingShared._DOMAIN)
+            if SettingStore.mDomain == nil{
+                SettingStore.mDomain = UserDefaults.standard.string(forKey: SettingStore.KEY_DOMAIN)
             }
-            return SettingShared._domain;
+            return SettingStore.mDomain;
         }
         
         set{
-            SettingShared._domain = newValue;
+            SettingStore.mDomain = newValue;
             if newValue == nil {
-                UserDefaults.standard.removeObject(forKey: SettingShared._DOMAIN)
+                UserDefaults.standard.removeObject(forKey: SettingStore.KEY_DOMAIN)
                 return;
             }
-            UserDefaults.standard.set(newValue, forKey: SettingShared._DOMAIN)
+            UserDefaults.standard.set(newValue, forKey: SettingStore.KEY_DOMAIN)
         }
         
     }
     /*----------------------------------------------------------------------------------*/
     
-    /// 登录过的用户列表
-    static var loggedUserList: [AccountInfo]{
+    /// 登录过的账号列表,保存的文件名
+    private static let KEY_ACCOUNT_LIST = "account_list"
+    
+    /// 登录过的账号列表
+    static var accountList: [AccountInfo]{
         get{
-            return LocalObjectUtil.read([AccountInfo].self, "loggedUserList") ??  [AccountInfo]()
+            return LocalObjectUtil.read([AccountInfo].self, SettingStore.KEY_ACCOUNT_LIST) ??  [AccountInfo]()
         }
         
         set{
-            _ = LocalObjectUtil.write(newValue, "loggedUserList")
-            SettingShared.mToken = nil
+            _ = LocalObjectUtil.write(newValue, SettingStore.KEY_ACCOUNT_LIST)
+            SettingStore.mToken = nil
         }
     }
     
@@ -200,19 +159,19 @@ enum SettingShared {
     /*----------------------------------------------------------------------------------*/
     
     /// 是否登录
-    static var isLogin: Bool{ !SettingShared.token.isEmpty && !SettingShared.clusterId.isEmpty }
+    static var isLogin: Bool{ !SettingStore.token.isEmpty && !SettingStore.clusterId.isEmpty }
     
     /// 退出登录
     static func logout() {
-        var logined = SettingShared.loggedUserList
-        for i in 0 ..< logined.count{
-            if logined[i].isLogining{
-                logined[i].token = ""
+        var accounts = SettingStore.accountList
+        for i in 0 ..< accounts.count{
+            if accounts[i].isCurrent{
+                accounts[i].token = ""
             }
-            logined[i].isLogining = false
+            accounts[i].isCurrent = false
         }
-        SettingShared.loggedUserList = logined
-        SettingShared.token = ""
+        SettingStore.accountList = accounts
+        SettingStore.token = ""
         FileSdkUtil.syncDfsAccount()
     }
     
@@ -228,8 +187,8 @@ enum SettingShared {
     
     /// 退出登录,并跳转到登录页面,自动填写当前账号的信息
     static func toLoginPage() {
-        let account = SettingShared.loggedUserList.first{$0.isLogining}
-        SettingShared.logout()
+        let account = SettingStore.accountList.first{$0.isCurrent}
+        SettingStore.logout()
         if let account{
             LoginPage(LoginViewModel(domain: account.domain, name: account.name, pwd: "")).relaunch()
         } else {
@@ -243,32 +202,32 @@ enum SettingShared {
     static func login(domain: String, name: String, pwd: String, editIndex: Int? = nil, success: @escaping () -> Void) {
         
         //先记录登录之前的服务器，如果登录失败，则还原之前的服务器
-        let oldDomain = SettingShared.domain
+        let oldDomain = SettingStore.domain
         let onFail = { (msg: String) in
-            SettingShared.domain = oldDomain
+            SettingStore.domain = oldDomain
             Toast.show(msg)
         }
-        SettingShared.domain = domain
+        SettingStore.domain = domain
         CommonApi.global().error(block: onFail).fail{
             onFail($0.msg ?? "获取服务器信息失败")
         }.send{ global in
             LoginApi.doLogin(name: name, pwd: pwd, deviceId: Const.deviceId).error(block: onFail).fail{
                 onFail($0.msg ?? "登录失败")
             }.send{ loginInfo in//登录成功
-                let account = AccountInfo(domain: domain, name: name, token: loginInfo.token, clusterId: global.clusterId, isLogining: true)
-                SettingShared.loggedUserList = SettingShared.addLoggedUser(account, editIndex: editIndex)
-                SettingShared.clusterId = global.clusterId
-                SettingShared.token = loginInfo.token
+                let account = AccountInfo(domain: domain, name: name, token: loginInfo.token, clusterId: global.clusterId, isCurrent: true)
+                SettingStore.accountList = SettingStore.addAccount(account, editIndex: editIndex)
+                SettingStore.clusterId = global.clusterId
+                SettingStore.token = loginInfo.token
                 
                 //加载用户信息,上传任务按用户区分,所以要等用户信息加载完成
                 let onUserFail = { (msg: String) in
-                    SettingShared.logout()
+                    SettingStore.logout()
                     Toast.show(msg)
                 }
                 MineApi.info().error(block: onUserFail).fail{
                     onUserFail($0.msg ?? "获取用户信息失败")
                 }.send{
-                    SettingShared.user = $0
+                    SettingStore.user = $0
                     FileSdkUtil.syncDfsAccount()
                     FileSdkUtil.resumeFailedUploads()
                     success()
@@ -278,9 +237,9 @@ enum SettingShared {
     }
     
     /// 将登录成功的账号保存到已登录列表,同一个服务器的同一个用户只保留一条,编辑时保持账号原来的位置
-    private static func addLoggedUser(_ account: AccountInfo, editIndex: Int?) -> [AccountInfo] {
-        var list = SettingShared.loggedUserList
-        list.indices.forEach{ list[$0].isLogining = false }
+    private static func addAccount(_ account: AccountInfo, editIndex: Int?) -> [AccountInfo] {
+        var list = SettingStore.accountList
+        list.indices.forEach{ list[$0].isCurrent = false }
         let isSameUser = { (it: AccountInfo) in it.domain == account.domain && it.name == account.name }
         guard let editIndex, list.indices.contains(editIndex) else{
             list.removeAll(where: isSameUser)
@@ -293,29 +252,29 @@ enum SettingShared {
     
     /// 切换到已经登录过的账号,票据失效时会跳转到登录页面
     static func switchAccount(_ account: AccountInfo, success: @escaping () -> Void) {
-        let oldDomain = SettingShared.domain
-        let oldToken = SettingShared.token
-        let oldClusterId = SettingShared.clusterId
-        let oldLoggedUserList = SettingShared.loggedUserList
+        let oldDomain = SettingStore.domain
+        let oldToken = SettingStore.token
+        let oldClusterId = SettingStore.clusterId
+        let oldAccountList = SettingStore.accountList
         let onFail = { (msg: String) in
-            SettingShared.domain = oldDomain
-            SettingShared.loggedUserList = oldLoggedUserList
-            SettingShared.clusterId = oldClusterId
-            SettingShared.token = oldToken
+            SettingStore.domain = oldDomain
+            SettingStore.accountList = oldAccountList
+            SettingStore.clusterId = oldClusterId
+            SettingStore.token = oldToken
             Toast.show(msg)
         }
-        var loggedUserList = oldLoggedUserList
-        loggedUserList.indices.forEach{
-            loggedUserList[$0].isLogining = loggedUserList[$0].domain == account.domain && loggedUserList[$0].name == account.name
+        var accountList = oldAccountList
+        accountList.indices.forEach{
+            accountList[$0].isCurrent = accountList[$0].domain == account.domain && accountList[$0].name == account.name
         }
-        SettingShared.domain = account.domain
-        SettingShared.loggedUserList = loggedUserList
-        SettingShared.clusterId = account.clusterId
-        SettingShared.token = account.token
+        SettingStore.domain = account.domain
+        SettingStore.accountList = accountList
+        SettingStore.clusterId = account.clusterId
+        SettingStore.token = account.token
         MineApi.info().error(block: onFail).fail{
             onFail($0.msg ?? "切换账号失败")
         }.send{
-            SettingShared.user = $0
+            SettingStore.user = $0
             FileSdkUtil.syncDfsAccount()
             success()
         }
@@ -354,11 +313,11 @@ enum SettingShared {
     ///记录最后打开的文件夹
     static var lastOpenFolder: String{
         get{
-            return UserDefaults.standard.string(forKey: "CURRENT_PATH") ?? "";
+            return UserDefaults.standard.string(forKey: "LAST_OPEN_FOLDER") ?? "";
         }
         
         set{
-            UserDefaults.standard.set(newValue, forKey: "CURRENT_PATH");
+            UserDefaults.standard.set(newValue, forKey: "LAST_OPEN_FOLDER");
         }
     }
     /*----------------------------------------------------------------------------------*/
@@ -373,22 +332,6 @@ enum SettingShared {
             UserDefaults.standard.set(newValue, forKey: "VIEW_TYPE");
         }
     }
-    
-    /*----------------------------------------------------------------------------------*/
-    
-    /// 文件下载目录
-    //    static var downloadPath: String{
-    //        get {
-    //            let downloadPath = UserDefaults.standard.string(forKey: "DOWNLOAD_PATH")
-    //            if downloadPath != nil {
-    //                return downloadPath;
-    //            }
-    //        }
-    //
-    //        set{
-    //            UserDefaults.standard.set(newValue, forKey: "DOWNLOAD_PATH");
-    //        }
-    //    }
     
     /*----------------------------------------------------------------------------------*/
     

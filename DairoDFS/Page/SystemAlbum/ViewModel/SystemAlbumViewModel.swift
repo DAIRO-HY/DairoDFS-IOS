@@ -1,5 +1,5 @@
 //
-//  FileViewModel.swift
+//  SystemAlbumViewModel.swift
 //  DairoDFS
 //
 //  Created by zhoulq on 2025/04/30.
@@ -26,13 +26,13 @@ class SystemAlbumViewModel : ObservableObject{
     static let NOTIFY_UPLOAD_PROGRESS = "NOTIFY_UPLOAD_PROGRESS"
     
     //相册文件MD5的本地缓存key
-    private static let LOCAL_OBJ_KEY_MD5 = "album-md5"
+    private static let KEY_MD5 = "album_md5"
     
     //已上传的提示文字,“删除已上传”只会删除这个状态的文件
     private static let MSG_UPLOADED = "上传完成"
     
     //当前相册信息列表
-    var albumList = [SystemAlbumBean]()
+    var albumList = [SystemAlbumItem]()
     
     //文件唯一ID对应所在序号
     var identifier2index = [String:Int]()
@@ -69,7 +69,7 @@ class SystemAlbumViewModel : ObservableObject{
     
     init(_ mode: UploadMode){
         self.uploadMode = mode
-        self.md5Map = LocalObjectUtil.read([String:String].self, SystemAlbumViewModel.LOCAL_OBJ_KEY_MD5) ?? [:]
+        self.md5Map = LocalObjectUtil.read([String:String].self, SystemAlbumViewModel.KEY_MD5) ?? [:]
     }
     
     func fetchPhotos() {
@@ -78,14 +78,14 @@ class SystemAlbumViewModel : ObservableObject{
                 let fetchOptions = PHFetchOptions()
                 fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: true)]
                 let fetchResult = PHAsset.fetchAssets(with: fetchOptions)
-                var albumAsset = [SystemAlbumBean]()
+                var albumAsset = [SystemAlbumItem]()
                 
                 let now = Date().timeIntervalSince1970
                 fetchResult.enumerateObjects { asset, _, _ in
                     let index = albumAsset.count
                     self.identifier2index[asset.localIdentifier] = index
                     albumAsset.append(
-                        SystemAlbumBean(
+                        SystemAlbumItem(
                             identifier: asset.localIdentifier,
                             index: index,
                             asset: asset
@@ -144,7 +144,7 @@ class SystemAlbumViewModel : ObservableObject{
     }
     
     //图片点击事件
-    func onItemClick(_ item: SystemAlbumBean){
+    func onItemClick(_ item: SystemAlbumItem){
         self.checkedCount += (item.checked ? -1 : 1)
         self.albumList[item.index].checked = !item.checked
         print(PHAssetResource.assetResources(for: item.asset))
@@ -191,7 +191,7 @@ class SystemAlbumViewModel : ObservableObject{
     /// 添加上传任务
     private func upload(_ assetList: [PHAsset]){
         let isAlbum = self.uploadMode == .album
-        let folder = isAlbum ? "/相册" : SettingShared.lastOpenFolder
+        let folder = isAlbum ? "/相册" : SettingStore.lastOpenFolder
         let time = Int64(Date().timeIntervalSince1970 * 1_000_000)
         let items = assetList.enumerated().map{ index, asset in
             UploadItem(
@@ -364,7 +364,7 @@ class SystemAlbumViewModel : ObservableObject{
     func saveMd5(){
         self.checkTask?.cancel()
         let md5Map = self.md5Map.filter{ self.identifier2index[$0.key] != nil }
-        _ = LocalObjectUtil.write(md5Map, SystemAlbumViewModel.LOCAL_OBJ_KEY_MD5)
+        _ = LocalObjectUtil.write(md5Map, SystemAlbumViewModel.KEY_MD5)
     }
     
     ///删除已经上传的相册文件

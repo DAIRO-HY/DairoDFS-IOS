@@ -49,7 +49,7 @@ class FileViewModel : ObservableObject{
     
     ///重新加载
     func reload(){
-        self.loadSubFile(SettingShared.lastOpenFolder)
+        self.loadSubFile(SettingStore.lastOpenFolder)
     }
     
     ///获取文件列表
@@ -57,9 +57,9 @@ class FileViewModel : ObservableObject{
         let folderPath = folderPath == "/" ? "" : folderPath
         
         //记录最后打开的文件夹
-        SettingShared.lastOpenFolder = folderPath
+        SettingStore.lastOpenFolder = folderPath
         self.currentFolder = folderPath.isEmpty ? "根目录" : folderPath
-        DfsFileShared.getSubList(folderPath, noCache: {
+        DfsFileStore.getSubList(folderPath, noCache: {
             
             //不能继续显示上一个文件夹的内容
             self.entities = []
@@ -102,7 +102,7 @@ class FileViewModel : ObservableObject{
             return
         }
         if item.fm.isFolder{//如果这是一个文件夹
-            self.loadSubFile(SettingShared.lastOpenFolder + "/" + item.fm.name)
+            self.loadSubFile(SettingStore.lastOpenFolder + "/" + item.fm.name)
             return
         }
         if item.fm.isImage || item.fm.isVideo{//这个文件是图片或者视频
@@ -143,9 +143,9 @@ class FileViewModel : ObservableObject{
     func onPasteClick(){
         let http: ApiHttp<EmptyModel>
         if self.clipboardType == 1{
-            http = FilesApi.move(ids: Array(self.clipboardSet), targetFolder: SettingShared.lastOpenFolder, isOverWrite: false)
+            http = FilesApi.move(ids: Array(self.clipboardSet), targetFolder: SettingStore.lastOpenFolder, isOverWrite: false)
         }else{
-            http = FilesApi.copy(ids: Array(self.clipboardSet), targetFolder: SettingShared.lastOpenFolder, isOverWrite: false)
+            http = FilesApi.copy(ids: Array(self.clipboardSet), targetFolder: SettingStore.lastOpenFolder, isOverWrite: false)
         }
         http.send {
             self.clipboardType = 0

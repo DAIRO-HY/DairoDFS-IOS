@@ -1,5 +1,5 @@
 //
-//  FileOptionBarView.swift
+//  TrashOptionView.swift
 //  DairoDFS
 //
 //  Created by zhoulq on 2025/04/30.

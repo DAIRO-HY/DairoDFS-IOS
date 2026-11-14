@@ -1,5 +1,5 @@
 //
-//  ImageViewerPage.swift
+//  AlbumViewerDliveView.swift
 //  DairoDFS
 //
 //  Created by zhoulq on 2025/05/05.

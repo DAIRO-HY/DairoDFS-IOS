@@ -59,10 +59,10 @@ enum FileSdkUtil {
      当前上传账号,上传任务按账号区分
      */
     static var dfsAccount: String? {
-        guard SettingShared.isLogin, let user = SettingShared.user else{
+        guard SettingStore.isLogin, let user = SettingStore.user else{
             return nil
         }
-        return "\(SettingShared.clusterId):\(user.id)"
+        return "\(SettingStore.clusterId):\(user.id)"
     }
     
     /**
@@ -90,7 +90,7 @@ enum FileSdkUtil {
     
     private static func applyDfsAccount(_ sdk: FileSdk) {
         if let account = FileSdkUtil.dfsAccount{
-            sdk.setDfsAccount(account: account, server: SettingShared.domainNotNull, token: SettingShared.token)
+            sdk.setDfsAccount(account: account, server: SettingStore.domainNotNull, token: SettingStore.token)
         } else {
             sdk.clearDfsAccount()
         }
@@ -187,17 +187,17 @@ enum FileSdkUtil {
         sdk.setListener(listener: FileSdkUtil.eventListener)
         
         //SDK不负责保存设置,启动时再设置一次
-        if SettingShared.fileSdkMaxSavingCount > 0{
-            sdk.setMaxSavingCount(count: UInt32(SettingShared.fileSdkMaxSavingCount))
+        if SettingStore.fileSdkMaxSavingCount > 0{
+            sdk.setMaxSavingCount(count: UInt32(SettingStore.fileSdkMaxSavingCount))
         }
-        if SettingShared.fileSdkMaxCachingCount > 0{
-            sdk.setMaxCachingCount(count: UInt32(SettingShared.fileSdkMaxCachingCount))
+        if SettingStore.fileSdkMaxCachingCount > 0{
+            sdk.setMaxCachingCount(count: UInt32(SettingStore.fileSdkMaxCachingCount))
         }
-        if let days = SettingShared.fileSdkCacheExpireDays{
+        if let days = SettingStore.fileSdkCacheExpireDays{
             sdk.setCacheExpireDays(days: UInt32(days))
         }
-        if SettingShared.fileSdkMaxUploadingCount > 0{
-            sdk.setMaxUploadingCount(count: UInt32(SettingShared.fileSdkMaxUploadingCount))
+        if SettingStore.fileSdkMaxUploadingCount > 0{
+            sdk.setMaxUploadingCount(count: UInt32(SettingStore.fileSdkMaxUploadingCount))
         }
         
         //设置上传账号之后,未完成的上传任务会继续,所以要先准备好上传数据
@@ -231,9 +231,9 @@ struct FileSource {
         return Options(
             cache: cache,
             group: self.group,
-            namespace: SettingShared.clusterId,
+            namespace: SettingStore.clusterId,
             cacheKey: self.cacheKey,
-            headers: ["Authorization": "Bearer " + SettingShared.token],
+            headers: ["Authorization": "Bearer " + SettingStore.token],
             priority: self.priority,
             name: self.name
         )
@@ -247,7 +247,7 @@ struct FileSource {
         }
         let cookie = HTTPCookie(properties: [
             .name: "token",
-            .value: SettingShared.token,
+            .value: SettingStore.token,
             .domain: host,
             .path: "/"
         ])
@@ -257,7 +257,7 @@ struct FileSource {
     /// 缩略图
     static func thumb(id: Int64) -> FileSource {
         return FileSource(
-            url: SettingShared.domainNotNull + "/api/files/thumb/\(id)",
+            url: SettingStore.domainNotNull + "/api/files/thumb/\(id)",
             cacheKey: "/api/files/extra/\(id)/thumb",
             group: "thumb",
             name: "\(id)-thumb.jpg",
@@ -273,7 +273,7 @@ struct FileSource {
             return nil
         }
         return FileSource(
-            url: SettingShared.domainNotNull + ApiConst.AVATAR + "/\(user.id)?v=\(avatar)",
+            url: SettingStore.domainNotNull + ApiConst.AVATAR + "/\(user.id)?v=\(avatar)",
             cacheKey: ApiConst.AVATAR + "/\(user.id)/\(avatar)",
             group: "avatar",
             name: "\(user.id)-avatar.jpg"

@@ -1,5 +1,5 @@
 //
-//  AssetImageView.swift
+//  SystemAlbumImageView.swift
 //  DairoDFS
 //
 //  Created by zhoulq on 2025/07/11.
@@ -17,7 +17,6 @@ struct SystemAlbumImageView: View {
     let size: CGFloat
     
     //相册信息Bean
-    //    let albumBean: SystemAlbumBean
     
     //预览图片
     @State private var image: UIImage?
@@ -46,8 +45,8 @@ struct SystemAlbumImageView: View {
                     .scaledToFill()
                     .frame(width: self.size, height: self.size)
                     .clipped()
-                let albumBean = self.vm.albumList[self.index]
-                if !albumBean.locallyAvailable{//图片在iCloud中
+                let item = self.vm.albumList[self.index]
+                if !item.locallyAvailable{//图片在iCloud中
                     ZStack{
                         Color.black.opacity(0.2)
                         Image(systemName: "exclamationmark.icloud")
@@ -58,7 +57,7 @@ struct SystemAlbumImageView: View {
                 }
                 VStack(spacing: 0){
                     HStack{
-                        if albumBean.checked{//如果是选择状态
+                        if item.checked{//如果是选择状态
                             Image(systemName:"checkmark.circle.fill")
                                 .resizable()
                                 .frame(width: 18, height: 18)
@@ -67,7 +66,7 @@ struct SystemAlbumImageView: View {
                                 .shadow(color: .black, radius: 2, x: 1, y: 1)
                         }
                         Spacer()
-                        if albumBean.mediaType == "Live Photo"{
+                        if item.mediaType == "Live Photo"{
                             Image(systemName:"livephoto")
                                 .resizable()
                                 .frame(width: 18, height: 18)
@@ -80,7 +79,7 @@ struct SystemAlbumImageView: View {
                     Spacer()
                     HStack{
                         Spacer()
-                        if let duration = albumBean.duration{
+                        if let duration = item.duration{
                             Text(duration).foregroundColor(.white).font(.footnote).shadow(color: .black, radius: 2, x: 1, y: 1)
                             Spacer().frame(width: 5)
                         }

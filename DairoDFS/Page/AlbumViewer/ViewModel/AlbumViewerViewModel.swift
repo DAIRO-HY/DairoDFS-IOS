@@ -1,5 +1,5 @@
 //
-//  ImageViewerViewModel.swift
+//  AlbumViewerViewModel.swift
 //  DairoDFS
 //
 //  Created by zhoulq on 2025/05/05.
@@ -211,7 +211,7 @@ class AlbumViewerViewModel: ObservableObject{
     private var videoSeekTarget: Double?
     
     ///当前视频质量
-    @Published var videoQualityLabel = SettingShared.videoQualityLabel
+    @Published var videoQualityLabel = SettingStore.videoQualityLabel
 
     /// 是否需要重新播放视频，而不是接着上次播放
     private var isVideoReplay = true
@@ -836,13 +836,13 @@ class AlbumViewerViewModel: ObservableObject{
         guard (self.fileProperty!.extraList.contains{ $0.name == "preview" }) else {//没有预览视频，使用原视频
             return self.fm.downloadSource
         }
-        switch SettingShared.videoQuality{
-        case SettingShared.VIDEO_QUALITY_ORIGINAL://播放原文件视频
+        switch SettingStore.videoQuality{
+        case SettingStore.VIDEO_QUALITY_ORIGINAL://播放原文件视频
             return self.fm.downloadSource
-        case SettingShared.VIDEO_QUALITY_SMOOTH://播放流畅视频
+        case SettingStore.VIDEO_QUALITY_SMOOTH://播放流畅视频
             return self.fm.previewVideoSource
         default://自动
-            if SettingShared.isLanServer{//如果是局域网,则优先原画
+            if SettingStore.isLanServer{//如果是局域网,则优先原画
                 return self.fm.downloadSource
             } else {//播放流畅视频
                 return self.fm.previewVideoSource

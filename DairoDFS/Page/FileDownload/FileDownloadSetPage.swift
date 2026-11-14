@@ -12,13 +12,13 @@ import DairoFileSDK
 struct FileDownloadSetPage: View {
     
     /// 同时下载文件数
-    @State private var maxSavingCount = SettingShared.fileSdkMaxSavingCount > 0 ? SettingShared.fileSdkMaxSavingCount : 3
+    @State private var maxSavingCount = SettingStore.fileSdkMaxSavingCount > 0 ? SettingStore.fileSdkMaxSavingCount : 3
     
     /// 同时缓存文件数
-    @State private var maxCachingCount = SettingShared.fileSdkMaxCachingCount > 0 ? SettingShared.fileSdkMaxCachingCount : 5
+    @State private var maxCachingCount = SettingStore.fileSdkMaxCachingCount > 0 ? SettingStore.fileSdkMaxCachingCount : 5
     
     /// 缓存文件保存天数,0表示永久
-    @State private var cacheExpireDays = SettingShared.fileSdkCacheExpireDays ?? 90
+    @State private var cacheExpireDays = SettingStore.fileSdkCacheExpireDays ?? 90
     
     /// 缓存分组统计
     @State private var stats = [GroupStats]()
@@ -45,13 +45,13 @@ struct FileDownloadSetPage: View {
             SettingPage(navigationTitleDisplayMode:.inline){
                 SettingGroup{
                     SettingPicker("同时下载文件数",data: self.countDemo, value: self.$maxSavingCount){ value in
-                        SettingShared.fileSdkMaxSavingCount = value
+                        SettingStore.fileSdkMaxSavingCount = value
                         (try? FileSdkUtil.get())?.setMaxSavingCount(count: UInt32(value))
                         return true
                     }
                     .icon("square.and.arrow.down.fill", backgroundColor: Color.red)
                     SettingPicker("同时缓存文件数",data: self.countDemo, value: self.$maxCachingCount){ value in
-                        SettingShared.fileSdkMaxCachingCount = value
+                        SettingStore.fileSdkMaxCachingCount = value
                         (try? FileSdkUtil.get())?.setMaxCachingCount(count: UInt32(value))
                         return true
                     }
@@ -59,7 +59,7 @@ struct FileDownloadSetPage: View {
                 }
                 SettingGroup{
                     SettingPicker("缓存文件保存期限",data: self.cacheExpireDayDemo, value: self.$cacheExpireDays){ value in
-                        SettingShared.fileSdkCacheExpireDays = value
+                        SettingStore.fileSdkCacheExpireDays = value
                         (try? FileSdkUtil.get())?.setCacheExpireDays(days: UInt32(value))
                         return true
                     }

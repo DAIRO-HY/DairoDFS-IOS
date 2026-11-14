@@ -1,5 +1,5 @@
 //
-//  FileOptionBarView.swift
+//  AlbumViewerOptionView.swift
 //  DairoDFS
 //
 //  Created by zhoulq on 2025/04/30.
@@ -97,19 +97,19 @@ struct AlbumViewerOptionView: View {
             self.vm.onFileSdkEvent($0.object as! Event)
         }
         .confirmationDialog("视频清晰度", isPresented: self.$showVideoResolutionActionMenu, titleVisibility: .visible) {
-            Button("\(SettingShared.videoQuality == SettingShared.VIDEO_QUALITY_AUTO ? "✓" : "")自动") {
-                SettingShared.videoQuality = SettingShared.VIDEO_QUALITY_AUTO
-                self.vm.videoQualityLabel = SettingShared.videoQualityLabel
+            Button("\(SettingStore.videoQuality == SettingStore.VIDEO_QUALITY_AUTO ? "✓" : "")自动") {
+                SettingStore.videoQuality = SettingStore.VIDEO_QUALITY_AUTO
+                self.vm.videoQualityLabel = SettingStore.videoQualityLabel
                 self.vm.onVideoSelectResolutionClick()
             }
-            Button("\(SettingShared.videoQuality == SettingShared.VIDEO_QUALITY_ORIGINAL ? "✓" : "")原画") {
-                SettingShared.videoQuality = SettingShared.VIDEO_QUALITY_ORIGINAL
-                self.vm.videoQualityLabel = SettingShared.videoQualityLabel
+            Button("\(SettingStore.videoQuality == SettingStore.VIDEO_QUALITY_ORIGINAL ? "✓" : "")原画") {
+                SettingStore.videoQuality = SettingStore.VIDEO_QUALITY_ORIGINAL
+                self.vm.videoQualityLabel = SettingStore.videoQualityLabel
                 self.vm.onVideoSelectResolutionClick()
             }
-            Button("\(SettingShared.videoQuality == SettingShared.VIDEO_QUALITY_SMOOTH ? "✓" : "")流畅") {
-                SettingShared.videoQuality = SettingShared.VIDEO_QUALITY_SMOOTH
-                self.vm.videoQualityLabel = SettingShared.videoQualityLabel
+            Button("\(SettingStore.videoQuality == SettingStore.VIDEO_QUALITY_SMOOTH ? "✓" : "")流畅") {
+                SettingStore.videoQuality = SettingStore.VIDEO_QUALITY_SMOOTH
+                self.vm.videoQualityLabel = SettingStore.videoQualityLabel
                 self.vm.onVideoSelectResolutionClick()
             }
             Button("取消", role: .cancel) {}

@@ -1,5 +1,5 @@
 //
-//  LoginPage.swift
+//  LoginViewModel.swift
 //  DairoDFS
 //
 //  Created by zhoulq on 2025/04/22.
@@ -17,12 +17,12 @@ class LoginViewModel: ObservableObject {
     @Published var pwd: String
     
     //编辑模式时,当前账号所在的索引
-    var editLoggedIndex: Int?
+    var editAccountIndex: Int?
     
-    init(domain: String, name: String, pwd: String, editLoggedIndex: Int? = nil) {
+    init(domain: String, name: String, pwd: String, editAccountIndex: Int? = nil) {
         self.domain = domain
         self.name = name
         self.pwd = pwd
-        self.editLoggedIndex = editLoggedIndex
+        self.editAccountIndex = editAccountIndex
     }
 }

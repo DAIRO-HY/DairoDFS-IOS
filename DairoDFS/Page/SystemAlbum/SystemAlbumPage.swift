@@ -1,5 +1,5 @@
 //
-//  AlbumSync.swift
+//  SystemAlbumPage.swift
 //  DairoDFS
 //
 //  Created by zhoulq on 2025/06/24.

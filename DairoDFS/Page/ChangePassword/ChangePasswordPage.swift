@@ -1,5 +1,5 @@
 //
-//  LoginPage.swift
+//  ChangePasswordPage.swift
 //  DairoDFS
 //
 //  Created by zhoulq on 2025/04/22.
@@ -8,10 +8,10 @@
 import SwiftUI
 import DairoUI_IOS
 
-struct ModifyPwdPage: View {
+struct ChangePasswordPage: View {
     
     //密码信息
-    @StateObject private var vm = ModifyPwdViewModel()
+    @StateObject private var vm = ChangePasswordViewModel()
     
     var body: some View {
         SettingStack(embedInNavigationStack: false) {

@@ -22,5 +22,5 @@ struct AccountInfo : Codable,Hashable{
     var clusterId: String
     
     /// 是否当前登录的账号
-    var isLogining: Bool  = false
+    var isCurrent: Bool  = false
 }

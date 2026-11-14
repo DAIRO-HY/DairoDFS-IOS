@@ -25,7 +25,7 @@ struct AlbumGridView: View {
             ProgressView("加载中")
         } else if self.vm.entityList.isEmpty{
             Button(action:{
-                self.vm.showAlbunSyncPage = true
+                self.vm.showAlbumSyncPage = true
             }){
                 VStack{
                     Image(systemName: "plus.circle.fill")

@@ -60,7 +60,7 @@ struct FileOptionBarView: View {
     private func onBackClick(){
         
         //得到最后打开的文件夹
-        let lastOpenFolder = SettingShared.lastOpenFolder
+        let lastOpenFolder = SettingStore.lastOpenFolder
         if lastOpenFolder.isEmpty{
             return
         }

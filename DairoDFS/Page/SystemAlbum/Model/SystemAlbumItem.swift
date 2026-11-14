@@ -1,5 +1,5 @@
 //
-//  AlbumSyncBean.swift
+//  SystemAlbumItem.swift
 //  DairoDFS
 //
 //  Created by zhoulq on 2025/07/10.
@@ -7,7 +7,7 @@
 
 import Photos
 
-struct SystemAlbumBean{
+struct SystemAlbumItem{
     
     //相册唯一值
     let identifier: String

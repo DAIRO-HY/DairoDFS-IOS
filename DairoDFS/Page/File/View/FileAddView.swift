@@ -1,5 +1,5 @@
 //
-//  FileOptionBarView.swift
+//  FileAddView.swift
 //  DairoDFS
 //
 //  Created by zhoulq on 2025/04/30.
@@ -29,7 +29,7 @@ struct FileAddView: View {
     @State private var showUpload = false
     
     /// 打开相册上传页面
-    @State private var showAlbunSyncPage = false
+    @State private var showAlbumSyncPage = false
     
     @EnvironmentObject var vm: FileViewModel
     
@@ -40,7 +40,7 @@ struct FileAddView: View {
             VStack(spacing: 8){
                     
                 //图片上传页面
-                NavigationLink(destination: SystemAlbumPage(mode: .file), isActive: self.$showAlbunSyncPage){
+                NavigationLink(destination: SystemAlbumPage(mode: .file), isActive: self.$showAlbumSyncPage){
                     EmptyView()
                 }
                 HStack{
@@ -51,7 +51,7 @@ struct FileAddView: View {
                         self.showFolderPicker = true
                     }
                     OptionButton("图片/视频", icon: "rectangle.stack.badge.plus"){
-                        self.showAlbunSyncPage = true
+                        self.showAlbumSyncPage = true
                     }
                     OptionButton("创建文件夹", icon: "folder.badge.plus"){
                         self.showCreateFolderAlter = true
@@ -81,7 +81,7 @@ struct FileAddView: View {
                     
                     //清空输入值,避免下次被显示
                     self.createFolder = ""
-                    FilesApi.createFolder(folder: SettingShared.lastOpenFolder + "/" + name).send {
+                    FilesApi.createFolder(folder: SettingStore.lastOpenFolder + "/" + name).send {
                         self.vm.reload()
                     }
                 }
@@ -95,7 +95,7 @@ struct FileAddView: View {
     /// 添加上传任务
     private func upload(_ urls: [URL]){
         do {
-            let items = try self.makeUploadItems(SettingShared.lastOpenFolder, urls)
+            let items = try self.makeUploadItems(SettingStore.lastOpenFolder, urls)
             _ = try FileSdkUtil.get().addUploads(items: items)
         } catch {
             Toast.show(error.fileSdkMessage)

@@ -1,5 +1,5 @@
 //
-//  LoginPage.swift
+//  ChangePasswordViewModel.swift
 //  DairoDFS
 //
 //  Created by zhoulq on 2025/04/22.
@@ -8,7 +8,7 @@
 import SwiftUI
 import DairoUI_IOS
 
-class ModifyPwdViewModel: ObservableObject {
+class ChangePasswordViewModel: ObservableObject {
     
     /// 旧密码
     @Published var oldPwd = ""
@@ -35,7 +35,7 @@ class ModifyPwdViewModel: ObservableObject {
         }
         ModifyApi.modify(oldPwd: self.oldPwd, pwd: self.pwd).send {
             Toast.show("修改成功,请重新登录")
-            SettingShared.toLoginPage()
+            SettingStore.toLoginPage()
         }
     }
 }

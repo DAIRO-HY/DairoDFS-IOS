@@ -14,10 +14,10 @@ class ProfileViewModel: ObservableObject {
     private static let AVATAR_MAX_SIZE: CGFloat = 1024
     
     /// 当前登录的用户信息
-    @Published var user = SettingShared.user
+    @Published var user = SettingStore.user
     
     /// 昵称
-    @Published var nickname = SettingShared.user?.nickname ?? ""
+    @Published var nickname = SettingStore.user?.nickname ?? ""
     
     /// 是否有头像
     var hasAvatar: Bool {
@@ -54,7 +54,7 @@ class ProfileViewModel: ObservableObject {
     /// 刷新用户信息
     private func loadUser(){
         MineApi.info().send{
-            SettingShared.user = $0
+            SettingStore.user = $0
             self.user = $0
         }
     }

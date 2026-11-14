@@ -1,5 +1,5 @@
 //
-//  FileOptionBarView.swift
+//  AlbumOptionView.swift
 //  DairoDFS
 //
 //  Created by zhoulq on 2025/04/30.
@@ -28,7 +28,7 @@ struct AlbumOptionView: View {
                         self.showDeleteAlert = true
                     }
                     OptionButton("添加", icon: "plus.app"){
-                        self.vm.showAlbunSyncPage = true
+                        self.vm.showAlbumSyncPage = true
                     }
                     .alert("确认删除选中的\(self.vm.selectedCount)个文件吗？", isPresented: $showDeleteAlert) {
                         Button("删除", role: .destructive) {

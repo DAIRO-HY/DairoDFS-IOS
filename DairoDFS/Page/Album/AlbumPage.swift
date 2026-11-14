@@ -20,7 +20,7 @@ struct AlbumPage: View {
             ZStack{
                 
                 //图片上传页面
-                NavigationLink(destination: SystemAlbumPage(mode: .album), isActive: self.$vm.showAlbunSyncPage){
+                NavigationLink(destination: SystemAlbumPage(mode: .album), isActive: self.$vm.showAlbumSyncPage){
                     EmptyView()
                 }
                 
@@ -59,7 +59,7 @@ struct AlbumPage: View {
                     AlbumViewModel.deleteCache()
                     self.vm.loadData()
                 }
-            }.onChange(of: self.vm.showAlbunSyncPage){
+            }.onChange(of: self.vm.showAlbumSyncPage){
                 if $0{
                     self.vm.isNeedReloadData = false
                     return

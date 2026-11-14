@@ -1,5 +1,5 @@
 //
-//  FileModel++.swift
+//  FileModel+Extension.swift
 //  DairoDFS
 //
 //  Created by zhoulq on 2025/07/31.
@@ -14,7 +14,7 @@ extension FileModel{
     /// - Parameter ext 附属文件的扩展名
     private func extraSource(_ extra: String, _ ext: String) -> FileSource{
         return FileSource(
-            url: SettingShared.domainNotNull + "/api/files/extra/\(self.id)/\(extra)",
+            url: SettingStore.domainNotNull + "/api/files/extra/\(self.id)/\(extra)",
             cacheKey: "/api/files/extra/\(self.id)/\(extra)",
             group: extra,
             name: "\(self.id)-\(extra).\(ext)"
@@ -25,7 +25,7 @@ extension FileModel{
     var downloadSource: FileSource{
         let name = self.name.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? self.name
         return FileSource(
-            url: SettingShared.domainNotNull + "/api/files/download/\(self.id)/\(name)",
+            url: SettingStore.domainNotNull + "/api/files/download/\(self.id)/\(name)",
             cacheKey: "/api/files/download/\(self.id)",
             group: "file",
             name: self.name
@@ -59,7 +59,7 @@ extension FileModel{
     private func thumbOnlineSource(query: String, name: String) -> FileSource{
         let path = "/api/files/thumb_online/\(self.id)?\(query)"
         return FileSource(
-            url: SettingShared.domainNotNull + path,
+            url: SettingStore.domainNotNull + path,
             cacheKey: path,
             group: "thumb-online",
             name: "\(self.id)-\(name).jpg"
@@ -69,7 +69,7 @@ extension FileModel{
     /// 文件属性
     var propertySource: FileSource{
         return FileSource(
-            url: SettingShared.domainNotNull + ApiConst.FILES_PROPERTY + "?ids=\(self.id)",
+            url: SettingStore.domainNotNull + ApiConst.FILES_PROPERTY + "?ids=\(self.id)",
             cacheKey: ApiConst.FILES_PROPERTY + "/\(self.id)",
             group: "property",
             name: "\(self.id)-property.json"
@@ -111,7 +111,7 @@ extension FileModel{
     /// - Parameter ext 视频扩展名,只在存入缓存时起作用
     func dliveVideoSource(ext: String = "mov") -> FileSource{
         return FileSource(
-            url: SettingShared.domainNotNull + "/api/files/download/\(self.id)/dlive-video.\(ext)",
+            url: SettingStore.domainNotNull + "/api/files/download/\(self.id)/dlive-video.\(ext)",
             cacheKey: "/dlive-video/\(self.id)",
             group: "dlive",
             name: "\(self.id)-dlive.\(ext)"

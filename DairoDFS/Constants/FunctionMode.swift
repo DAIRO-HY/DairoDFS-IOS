@@ -1,12 +1,12 @@
 //
-//  Untitled.swift
+//  FunctionMode.swift
 //  DairoDFS
 //
 //  Created by zhoulq on 2025/04/24.
 //
 
 ///功能模式
-enum FunctionModel{
+enum FunctionMode{
 
   ///文件模式
   static let FILE = 0

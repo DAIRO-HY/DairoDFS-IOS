@@ -1,5 +1,5 @@
 //
-//  ImageViewerPage.swift
+//  AlbumViewerImageView.swift
 //  DairoDFS
 //
 //  Created by zhoulq on 2025/05/05.
@@ -11,8 +11,6 @@ import _AVKit_SwiftUI
 
 struct AlbumViewerImageView: View {
     
-    ///刷新图标标识
-    @State private var freshImage: UInt64 = 0
     
     @EnvironmentObject var vm: AlbumViewerViewModel
     

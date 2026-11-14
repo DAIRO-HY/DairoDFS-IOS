@@ -1,5 +1,5 @@
 //
-//  LoginPage.swift
+//  AccountListViewModel.swift
 //  DairoDFS
 //
 //  Created by zhoulq on 2025/04/22.
@@ -8,17 +8,17 @@
 import SwiftUI
 import DairoUI_IOS
 
-class LoggedViewModel: ObservableObject {
+class AccountListViewModel: ObservableObject {
     
     /// 记录当前要操作的索引
     var actionIndex = -1
     
     /// 当前已登录的账号列表
-    @Published var loggedUserList = [AccountInfo]()
+    @Published var accountList = [AccountInfo]()
     
     /// 获取当前操作的账号
     var actionItem: AccountInfo{
-        return self.loggedUserList[self.actionIndex]
+        return self.accountList[self.actionIndex]
     }
     
     init() {
@@ -27,19 +27,19 @@ class LoggedViewModel: ObservableObject {
     
     /// 加载数据
     func loadData(){
-        self.loggedUserList = SettingShared.loggedUserList
+        self.accountList = SettingStore.accountList
     }
     
     /// 删除账号点击事件
     func onDeleteClick(){
         let actionItem = self.actionItem
-        for i in self.loggedUserList.indices {
-            let it = self.loggedUserList[i]
+        for i in self.accountList.indices {
+            let it = self.accountList[i]
             if it.domain == actionItem.domain && it.name == actionItem.name {
-                self.loggedUserList.remove(at: i)
+                self.accountList.remove(at: i)
                 break
             }
         }
-        SettingShared.loggedUserList = self.loggedUserList
+        SettingStore.accountList = self.accountList
     }
 }

@@ -1,5 +1,5 @@
 //
-//  DfsFileShared.swift
+//  DfsFileStore.swift
 //  DairoDFS
 //
 //  Created by zhoulq on 2025/04/24.
@@ -8,7 +8,7 @@
 /// <summary>
 /// DFS文件列表缓存
 /// </summary>
-enum DfsFileShared {
+enum DfsFileStore {
     
     ///文件列表加载器
     private static let loader = CachedListLoader()
@@ -26,8 +26,8 @@ enum DfsFileShared {
         }
         
         //缓存文件名,不同账号的缓存互相隔离
-        let cacheName = SettingShared.accountObjectName("file_list_root_\(fileName)")
-        DfsFileShared.loader.load(
+        let cacheName = SettingStore.accountObjectName("file_list_root_\(fileName)")
+        DfsFileStore.loader.load(
             cacheName: cacheName,
             http: FilesApi.getList(folder: folder).hide(),
             failMsg: "加载文件列表失败",
