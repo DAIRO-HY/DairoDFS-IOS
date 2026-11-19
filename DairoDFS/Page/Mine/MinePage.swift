@@ -81,12 +81,17 @@ struct MinePage: View {
                             }.icon("lock.rotation.open", backgroundColor: Color.orange)
                             
                             //临时调试入口,用来查App在后台放久之后图片加载失败的原因,找到原因后删掉
-                            SettingNavigationLink("SDK调试"){
-                                guard let sdk = try? FileSdkUtil.get() else{
-                                    return AnyView(Text("SDK初始化失败"))
-                                }
-                                return AnyView(FileSdkDebugView(sdk: sdk))
-                            }.icon("ladybug.fill", backgroundColor: Color.gray)
+//                             SettingNavigationLink("SDK调试"){
+//                                 guard let sdk = try? FileSdkUtil.get() else{
+//                                     return AnyView(Text("SDK初始化失败"))
+//                                 }
+//                                 return AnyView(FileSdkDebugView(sdk: sdk))
+//                             }.icon("ladybug.fill", backgroundColor: Color.gray)
+                        }
+                        SettingGroup{
+                            SettingNavigationLink("关于"){
+                                AboutPage().anyView
+                            }.icon("info.circle.fill", backgroundColor: Color.gray)
                         }
                         SettingGroup{
                             SettingButtonSingle("退出登录"){
