@@ -157,9 +157,12 @@ struct AlbumViewerPage: View {
     ///获取缩略图
     private func getThumb(_ index: Int) -> some View{
         return Section{
-            if self.vm.fileModels.indices.contains(index){
-                DfsImage(self.vm.fileModels[index].thumbSource, contentMode: .fit).frame(width: self.vm.screenWidth, height: self.vm.screenHeight).edgesIgnoringSafeArea(.all)//忽略安全区域
-            }else{
+            if self.vm.fileModels.indices.contains(index) && self.vm.fileModels[index].canThumbOnline{
+                let fm = self.vm.fileModels[index]
+                
+                //没有缩略图的普通图片用适合屏幕的图片,和切过去之后显示的是同一张,不用重新请求
+                DfsImage(fm.hasThumb ? fm.thumbSource : fm.screenImageSource, contentMode: .fit).frame(width: self.vm.screenWidth, height: self.vm.screenHeight).edgesIgnoringSafeArea(.all)//忽略安全区域
+            }else{//视频、HEIC等没有缩略图时显示黑底
                 Spacer().frame(width: self.vm.screenWidth, height: self.vm.screenHeight)
             }
         }

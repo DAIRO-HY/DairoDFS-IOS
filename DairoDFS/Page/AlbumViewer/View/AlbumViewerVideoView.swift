@@ -33,7 +33,7 @@ struct AlbumViewerVideoView: View {
                     //                Color.red.frame(width: self.vm.screenWidth, height: self.vm.screenHeight).opacity(0.5)
                 }
             }
-            if !self.vm.videoIsPlayed || self.vm.videoIsLoading{//视频还没有开始播放时显示缩略图,否则加载期间是黑屏
+            if self.vm.fm.hasThumb && (!self.vm.videoIsPlayed || self.vm.videoIsLoading){//视频还没有开始播放时显示缩略图,否则加载期间是黑屏
                 DfsImage(self.vm.fm.thumbSource, contentMode: .fit)
                     .frame(width: self.vm.screenWidth, height: self.vm.screenHeight)
             }

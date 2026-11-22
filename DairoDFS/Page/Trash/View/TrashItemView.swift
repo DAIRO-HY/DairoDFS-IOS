@@ -9,6 +9,8 @@ import SwiftUI
 import DairoUI_IOS
 
 struct TrashItemView: View {
+
+    @Environment(\.displayScale) private var displayScale
     
     ///回收站文件信息
     private let entity: TrashEntity
@@ -46,11 +48,22 @@ struct TrashItemView: View {
         }
     }
     
+    /// 转成文件信息,用来生成在线图片的地址
+    private var fileModel: FileModel{
+        let fm = self.entity.fm
+        return FileModel(id: fm.id, name: fm.name, size: fm.size, fileFlag: fm.fileFlag, date: 0, hasThumb: fm.hasThumb)
+    }
+
     ///缩略图
     private var thumb: some View{
         Section{
             if self.entity.fm.hasThumb{//如果有缩略图
                 DfsImage(FileSource.thumb(id: self.entity.fm.id), placeholder: "photo")
+                    .frame(width: 44, height: 44)
+                    .clipped()
+                    .cornerRadius(6)
+            } else if self.fileModel.canThumbOnline{//账号关掉了缩略图,服务器用原图在线生成
+                DfsImage(self.fileModel.thumbOnlineSource(width: 44 * self.displayScale, height: 44 * self.displayScale), placeholder: "photo")
                     .frame(width: 44, height: 44)
                     .clipped()
                     .cornerRadius(6)

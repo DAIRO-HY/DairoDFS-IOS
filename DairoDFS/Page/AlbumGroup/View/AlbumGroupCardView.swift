@@ -83,10 +83,10 @@ struct AlbumGroupCardView: View {
             self.onClick(photo.fm)
         }){
             ZStack(alignment: .topLeading){
-                if photo.fm.hasThumb{
+                if photo.fm.canThumbOnline{
                     
                     //按实际像素请求在线生成的图片,这样不会模糊也不会有锯齿,生成期间先显示缩略图
-                    DfsImage(photo.fm.thumbOnlineSource(width: width * self.displayScale, height: height * self.displayScale), fallback: photo.fm.thumbSource, placeholder: photo.fm.placeholderIcon)
+                    DfsImage(photo.fm.thumbOnlineSource(width: width * self.displayScale, height: height * self.displayScale), fallback: photo.fm.hasThumb ? photo.fm.thumbSource : nil, placeholder: photo.fm.placeholderIcon)
                         .frame(width: width, height: height)
                         .clipped()
                 } else {//服务器还没有生成缩略图

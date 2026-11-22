@@ -167,6 +167,9 @@ class AlbumViewerViewModel: ObservableObject{
     
     /// 下载完成之后是否保存到系统相册
     private var isSaveToAlbum = false
+
+    /// 正在下载的文件,保存视频到相册时可能是兼容版视频
+    private var downloadingSource: FileSource?
     
     /// 是否显示操作按钮
     @Published var showActionView = true
@@ -305,6 +308,7 @@ class AlbumViewerViewModel: ObservableObject{
         self.downloadTip = nil
         self.isShowDownloaded = false
         self.isSaveToAlbum = false
+        self.downloadingSource = nil
         self.currentIndex = index
         self.uiImage = nil
         self.hStackOffset = -CGFloat(self.currentIndex + 1) * self.screenWidth
@@ -343,8 +347,6 @@ class AlbumViewerViewModel: ObservableObject{
         //图片和已下载的视频不依赖文件属性,不用等它加载完成,否则网络较差时要一直等待
         if !self.isVideo{
             self.loadPicture()
-        } else if FileSdkUtil.cachedPath(self.fm.downloadSource) != nil{
-            self.onVideoPlayClick()
         }
         if let path = FileSdkUtil.cachedPath(self.fm.propertySource),
            let data = FileUtil.readData(path),
@@ -352,6 +354,9 @@ class AlbumViewerViewModel: ObservableObject{
             self.fileProperty = fileProperty
             self.initView()
         } else {
+            if self.isVideo && self.downloadedVideoPath != nil{
+                self.onVideoPlayClick()
+            }
             self.loadProperty()
         }
     }
@@ -671,7 +676,7 @@ class AlbumViewerViewModel: ObservableObject{
 
     /// 视频播放按钮点击事件
     func onVideoPlayClick(){
-        if self.fileProperty == nil && FileSdkUtil.cachedPath(self.fm.downloadSource) == nil{//文件属性之前加载失败,重新加载,成功后自动播放
+        if self.fileProperty == nil && self.downloadedVideoPath == nil{//文件属性之前加载失败,重新加载,成功后自动播放
             self.loadProperty()
             return
         }
@@ -772,7 +777,7 @@ class AlbumViewerViewModel: ObservableObject{
             videoPlayer.pause()
             videoPlayer.replaceCurrentItem(with: nil)
         }
-        if let path = FileSdkUtil.cachedPath(self.fm.downloadSource){//如果该视频文件已经被下载,直接播放已经下载的文件
+        if let path = self.downloadedVideoPath{//如果该视频文件已经被下载,直接播放已经下载的文件
             self.videoPlayer = AVPlayer(url: URL(fileURLWithPath:  path))
             self.videoPlayer?.seek(to: currentTime)
             self.videoPlayer?.play()
@@ -791,7 +796,7 @@ class AlbumViewerViewModel: ObservableObject{
         }
 
         let videoSource = self.videoOnlineSource
-        self.videoIsOriginal = videoSource.cacheKey == self.fm.downloadSource.cacheKey
+        self.videoIsOriginal = videoSource.cacheKey == self.fm.downloadSource.cacheKey || videoSource.cacheKey == self.fm.compatVideoSource.cacheKey
         guard let asset = videoSource.directAsset else{
             Toast.show("视频加载失败")
             return
@@ -831,9 +836,37 @@ class AlbumViewerViewModel: ObservableObject{
         }
     }
 
+    /// 服务器是否生成了附属文件
+    private func hasExtra(_ name: String) -> Bool{
+        return self.fileProperty?.extraList.contains{ $0.name == name } ?? false
+    }
+
+    /// 已下载、可以直接播放的视频文件
+    /// 有兼容版视频时说明原文件手机播放不了,只能用下载好的兼容版;文件属性还没加载时按扩展名判断
+    private var downloadedVideoPath: String?{
+        if self.hasExtra("compat"){
+            return FileSdkUtil.cachedPath(self.fm.compatVideoSource)
+        }
+        if self.fileProperty == nil && !self.fm.isNativeVideo{
+            return nil
+        }
+        return FileSdkUtil.cachedPath(self.fm.downloadSource)
+    }
+
     /// 视频在线播放时的文件
     private var videoOnlineSource: FileSource{
-        guard (self.fileProperty!.extraList.contains{ $0.name == "preview" }) else {//没有预览视频，使用原视频
+        if self.hasExtra("compat"){//有兼容版视频时原文件手机播放不了,不能播放原文件
+            let preview = self.hasExtra("preview") ? self.fm.previewVideoSource : self.fm.compatVideoSource
+            switch SettingStore.videoQuality{
+            case SettingStore.VIDEO_QUALITY_ORIGINAL:
+                return self.fm.compatVideoSource
+            case SettingStore.VIDEO_QUALITY_SMOOTH:
+                return preview
+            default://自动,局域网优先原画
+                return SettingStore.isLanServer ? self.fm.compatVideoSource : preview
+            }
+        }
+        guard self.hasExtra("preview") else {//没有预览视频，使用原视频
             return self.fm.downloadSource
         }
         switch SettingStore.videoQuality{
@@ -1101,14 +1134,18 @@ class AlbumViewerViewModel: ObservableObject{
         self.isSaveToAlbum = isSaveToAlbum
         self.downloadTip = ""
 
+        //有兼容版视频时原文件存不进相册,保存到相册时下载兼容版
+        let source = isSaveToAlbum && self.isVideo && self.hasExtra("compat") ? self.fm.compatVideoSource : self.fm.downloadSource
+        self.downloadingSource = source
+
         //添加下载,如果文件在缓存中,则将缓存标记为永久保存
         do {
-            try FileSdkUtil.download(self.fm.downloadSource)
+            try FileSdkUtil.download(source)
         } catch {
             self.downloadFinish(error.fileSdkMessage)
             return
         }
-        if FileSdkUtil.cachedPath(self.fm.downloadSource) != nil{// 文件已经被下载
+        if FileSdkUtil.cachedPath(source) != nil{// 文件已经被下载
             self.downloadFinish()
             return
         }
@@ -1116,7 +1153,7 @@ class AlbumViewerViewModel: ObservableObject{
 
     /// SDK事件,更新当前文件的下载进度
     func onFileSdkEvent(_ event: Event){
-        guard self.isDownloading, let id = FileSdkUtil.cacheId(self.fm.downloadSource) else{
+        guard self.isDownloading, let source = self.downloadingSource, let id = FileSdkUtil.cacheId(source) else{
             return
         }
         switch event{
@@ -1141,7 +1178,7 @@ class AlbumViewerViewModel: ObservableObject{
     /// 文件下载完成后的操作
     /// - Parameter errorMsg: 下载失败时的错误信息
     func downloadFinish(_ errorMsg: String = ""){
-        if let path = FileSdkUtil.cachedPath(self.fm.downloadSource){ //文件不一定下载成功,所以这里要加判断
+        if let source = self.downloadingSource, let path = FileSdkUtil.cachedPath(source){ //文件不一定下载成功,所以这里要加判断
             if self.isSaveToAlbum{// 下载完成之后保存到相册
                 PHPhotoLibrary.shared().performChanges({
                     let options = PHAssetResourceCreationOptions()
@@ -1181,7 +1218,7 @@ class AlbumViewerViewModel: ObservableObject{
             } else {
                 Toast.show("下载完成")
             }
-            if self.isVideo{
+            if self.isVideo && self.downloadedVideoPath != nil{
                 if !self.isShowDownloaded{//当前显示的视频并非已下载版
                     self.isVideoReplay = true
                     if self.videoIsPlaying{//如果当前视频正在播放中,则重新播放已经下载的版本
@@ -1196,6 +1233,7 @@ class AlbumViewerViewModel: ObservableObject{
         //取消下载模式
         self.downloadTip = nil
         self.isSaveToAlbum = false
+        self.downloadingSource = nil
     }
     
     ///  加载原图点击事件

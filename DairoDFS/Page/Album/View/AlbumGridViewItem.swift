@@ -61,9 +61,9 @@ struct AlbumGridViewItem: View {
     
     private var thumb: some View{
         Section{
-            if self.entity.fm.hasThumb{//如果有缩略图
+            if self.entity.fm.canThumbOnline{//如果有缩略图,或者服务器能用原图生成
                 //按实际像素请求在线生成的图片,生成期间先显示缩略图。查看页面用的也是这张缩略图,打开图片时不用走网络就能先显示
-                DfsImage(self.entity.fm.thumbOnlineSource(width: self.size * self.displayScale, height: self.size * self.displayScale), fallback: self.entity.fm.thumbSource, placeholder: self.entity.fm.placeholderIcon)
+                DfsImage(self.entity.fm.thumbOnlineSource(width: self.size * self.displayScale, height: self.size * self.displayScale), fallback: self.entity.fm.hasThumb ? self.entity.fm.thumbSource : nil, placeholder: self.entity.fm.placeholderIcon)
                     .frame(width: self.size, height: self.size)
                     .clipped()
                     .contentShape(Rectangle())//clipped只裁剪显示,不限制点击范围,否则会点到相邻的图片

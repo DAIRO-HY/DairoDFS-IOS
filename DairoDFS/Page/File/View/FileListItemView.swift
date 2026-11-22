@@ -9,6 +9,8 @@ import SwiftUI
 import DairoUI_IOS
 
 struct FileListItemView: View {
+
+    @Environment(\.displayScale) private var displayScale
     
     ///文件信息
     private let dfsFile: FileEntity
@@ -62,12 +64,23 @@ struct FileListItemView: View {
                         .clipped()
                         .cornerRadius(6)
                         .contentShape(Rectangle())//clipped只裁剪显示,不限制点击范围
+                }else if self.dfsFile.fm.canThumbOnline{//账号关掉了缩略图,服务器用原图在线生成
+                    let width: CGFloat = 44
+                    DfsImage(self.dfsFile.fm.thumbOnlineSource(width: width * self.displayScale, height: width * self.displayScale), placeholder: self.dfsFile.fm.placeholderIcon)
+                        .frame(width: width, height: width)
+                        .clipped()
+                        .cornerRadius(6)
+                        .contentShape(Rectangle())//clipped只裁剪显示,不限制点击范围
                 }else if self.dfsFile.fm.isAudio{//音频文件
                     Image(systemName: "music.note")
                         .font(.title2)
                         .foregroundColor(.white)
                         .frame(width: 44, height: 44)
                         .background(Color.pink)
+                        .cornerRadius(6)
+                }else if self.dfsFile.fm.isVideo || self.dfsFile.fm.isImage{//没有缩略图的视频和图片,和相册一样显示占位图标
+                    ImagePlaceholder(self.dfsFile.fm.placeholderIcon)
+                        .frame(width: 44, height: 44)
                         .cornerRadius(6)
                 }else{//没有缩略图
                     Image(systemName: "questionmark.square.fill")

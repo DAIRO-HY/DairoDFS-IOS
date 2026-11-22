@@ -12,12 +12,13 @@ extension FileModel{
     /// 附属文件
     /// - Parameter extra 附属文件名,例如:thumb、preview、preview-dlive
     /// - Parameter ext 附属文件的扩展名
-    private func extraSource(_ extra: String, _ ext: String) -> FileSource{
+    /// - Parameter name 缓存和下载列表里的文件名,不指定时用id和附属文件名
+    private func extraSource(_ extra: String, _ ext: String, name: String? = nil) -> FileSource{
         return FileSource(
             url: SettingStore.domainNotNull + "/api/files/extra/\(self.id)/\(extra)",
             cacheKey: "/api/files/extra/\(self.id)/\(extra)",
             group: extra,
-            name: "\(self.id)-\(extra).\(ext)"
+            name: name ?? "\(self.id)-\(extra).\(ext)"
         )
     }
 
@@ -102,6 +103,12 @@ extension FileModel{
         return self.extraSource("preview", "mp4")
     }
 
+    /// 兼容版视频,手机原生播放不了的视频由服务器转成的mp4,分辨率和原视频一样
+    var compatVideoSource: FileSource{
+        //保存到相册时会下载,下载列表里显示原文件名,扩展名换成mp4
+        return self.extraSource("compat", "mp4", name: (self.name as NSString).deletingPathExtension + ".mp4")
+    }
+
     /// 实况照片预览视频
     var dliveVideoPreviewSource: FileSource{
         return self.extraSource("preview-dlive", "mp4")
@@ -123,11 +130,33 @@ extension FileModel{
         return self.isVideo ? "video" : "photo"
     }
     
+    /// 视频文件的扩展名
+    private static let VIDEO_EXTS: Set<String> = ["mp4", "mov", "avi", "mkv", "flv", "rm", "rmvb", "3gp", "wmv", "webm", "mpg", "mpeg", "m2ts", "mts", "m4v", "asf", "vob", "f4v"]
+
+    /// 手机原生能播放的视频扩展名,文件属性还没加载时,用来判断已下载的原文件能不能直接播放
+    private static let NATIVE_VIDEO_EXTS: Set<String> = ["mp4", "mov", "m4v", "3gp"]
+
+    /// 服务器能直接用原图在线生成小图的图片扩展名,账号关掉缩略图时这些图片也能显示
+    private static let DECODABLE_IMAGE_EXTS: Set<String> = ["jpg", "jpeg", "png", "bmp", "gif", "webp", "tiff", "tga", "jfif", "ico"]
+
+    /// 小写的扩展名
+    private var lowerExt: String{
+        return (self.name as NSString).pathExtension.lowercased()
+    }
+
     ///这是否是一个视频文件
     var isVideo: Bool{
-        let lowerName = self.name.lowercased()
-        return lowerName.hasSuffix(".mov")
-            || lowerName.hasSuffix(".mp4")
+        return FileModel.VIDEO_EXTS.contains(self.lowerExt)
+    }
+
+    /// 没有缩略图时能不能请求在线生成的图片,视频、HEIC、RAW、PSD没有缩略图时服务器也生成不了
+    var canThumbOnline: Bool{
+        return self.hasThumb || FileModel.DECODABLE_IMAGE_EXTS.contains(self.lowerExt)
+    }
+
+    /// 从扩展名看是否手机原生能播放的视频,同样的扩展名里面的编码不一定能播放,以服务器有没有兼容版视频为准
+    var isNativeVideo: Bool{
+        return FileModel.NATIVE_VIDEO_EXTS.contains(self.lowerExt)
     }
 
     ///这是否是一个图片文件
