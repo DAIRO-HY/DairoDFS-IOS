@@ -66,13 +66,14 @@ enum FileSdkUtil {
     }
     
     /**
-     登录状态变化之后调用,只有当前账号的任务会上传
+     登录状态变化之后调用,只有当前账号的任务会上传,同时接收这个账号的分享文件
      */
     static func syncDfsAccount() {
         guard let sdk = try? FileSdkUtil.get() else{
             return
         }
         FileSdkUtil.applyDfsAccount(sdk)
+        ShareUploadReceiver.receive()
     }
     
     /**
@@ -91,8 +92,10 @@ enum FileSdkUtil {
     private static func applyDfsAccount(_ sdk: FileSdk) {
         if let account = FileSdkUtil.dfsAccount{
             sdk.setDfsAccount(account: account, server: SettingStore.domainNotNull, token: SettingStore.token)
+            ShareUploadStore.saveLogin(ShareLogin(domain: SettingStore.domainNotNull, token: SettingStore.token, account: account))
         } else {
             sdk.clearDfsAccount()
+            ShareUploadStore.saveLogin(nil)
         }
     }
     

@@ -74,18 +74,12 @@ struct FileAddView: View {
                     FileUploadPage()
                 }
             }
-            .alert("创建文件夹", isPresented: self.$showCreateFolderAlter) {
-                TextField("文件夹名", text: self.$createFolder)
-                Button("创建", role: .destructive){
-                    let name = self.createFolder
-                    
-                    //清空输入值,避免下次被显示
-                    self.createFolder = ""
-                    FilesApi.createFolder(folder: SettingStore.lastOpenFolder + "/" + name).send {
-                        self.vm.reload()
-                    }
-                }
-                Button("取消", role: .cancel) {
+            .textInputAlert("创建文件夹", isPresented: self.$showCreateFolderAlter, text: self.$createFolder, placeholder: "文件夹名", confirm: "创建", confirmRole: .destructive) { name in
+                
+                //清空输入值,避免下次被显示
+                self.createFolder = ""
+                FilesApi.createFolder(folder: SettingStore.lastOpenFolder + "/" + name).send {
+                    self.vm.reload()
                 }
             }
             //        this.redrawVN.value++;

@@ -9,9 +9,17 @@
 /* Begin PBXBuildFile section */
 		5BBB6A272DA9301C00879EDD /* DairoUI_IOS in Frameworks */ = {isa = PBXBuildFile; productRef = 5BBB6A262DA9301C00879EDD /* DairoUI_IOS */; };
 		5BBB6A322DA9301C00879EDD /* DairoFileSDK in Frameworks */ = {isa = PBXBuildFile; productRef = 5BBB6A312DA9301C00879EDD /* DairoFileSDK */; };
+		5BC1A0012DB0000000000001 /* DairoDFSShare.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 5BC1A0002DB0000000000001 /* DairoDFSShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		5BC1A0022DB0000000000001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 5BED0B202DA654D000CCB9F9 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 5BC1A00B2DB0000000000001;
+			remoteInfo = DairoDFSShare;
+		};
 		5BED0B392DA654D400CCB9F9 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 5BED0B202DA654D000CCB9F9 /* Project object */;
@@ -28,13 +36,35 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		5BC1A0042DB0000000000001 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				5BC1A0012DB0000000000001 /* DairoDFSShare.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		5BC1A0002DB0000000000001 /* DairoDFSShare.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = DairoDFSShare.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		5BED0B282DA654D000CCB9F9 /* DairoDFS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DairoDFS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5BED0B382DA654D400CCB9F9 /* DairoDFSTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DairoDFSTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		5BED0B422DA654D400CCB9F9 /* DairoDFSUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DairoDFSUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		5BC1A0072DB0000000000001 /* Exceptions for "DairoDFSShare" folder in "DairoDFSShare" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 5BC1A00B2DB0000000000001 /* DairoDFSShare */;
+		};
 		5BED0B602DA6596900CCB9F9 /* Exceptions for "DairoDFS" folder in "DairoDFS" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -45,6 +75,19 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		5BC1A0052DB0000000000001 /* DairoDFSShare */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				5BC1A0072DB0000000000001 /* Exceptions for "DairoDFSShare" folder in "DairoDFSShare" target */,
+			);
+			path = DairoDFSShare;
+			sourceTree = "<group>";
+		};
+		5BC1A0062DB0000000000001 /* Shared */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Shared;
+			sourceTree = "<group>";
+		};
 		5BED0B2A2DA654D000CCB9F9 /* DairoDFS */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -66,6 +109,13 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		5BC1A0092DB0000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		5BED0B252DA654D000CCB9F9 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -96,6 +146,8 @@
 			isa = PBXGroup;
 			children = (
 				5BED0B2A2DA654D000CCB9F9 /* DairoDFS */,
+				5BC1A0052DB0000000000001 /* DairoDFSShare */,
+				5BC1A0062DB0000000000001 /* Shared */,
 				5BED0B3B2DA654D400CCB9F9 /* DairoDFSTests */,
 				5BED0B452DA654D400CCB9F9 /* DairoDFSUITests */,
 				5BED0B292DA654D000CCB9F9 /* Products */,
@@ -108,6 +160,7 @@
 				5BED0B282DA654D000CCB9F9 /* DairoDFS.app */,
 				5BED0B382DA654D400CCB9F9 /* DairoDFSTests.xctest */,
 				5BED0B422DA654D400CCB9F9 /* DairoDFSUITests.xctest */,
+				5BC1A0002DB0000000000001 /* DairoDFSShare.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -115,6 +168,29 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		5BC1A00B2DB0000000000001 /* DairoDFSShare */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 5BC1A00C2DB0000000000001 /* Build configuration list for PBXNativeTarget "DairoDFSShare" */;
+			buildPhases = (
+				5BC1A0082DB0000000000001 /* Sources */,
+				5BC1A0092DB0000000000001 /* Frameworks */,
+				5BC1A00A2DB0000000000001 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				5BC1A0052DB0000000000001 /* DairoDFSShare */,
+				5BC1A0062DB0000000000001 /* Shared */,
+			);
+			name = DairoDFSShare;
+			packageProductDependencies = (
+			);
+			productName = DairoDFSShare;
+			productReference = 5BC1A0002DB0000000000001 /* DairoDFSShare.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		5BED0B272DA654D000CCB9F9 /* DairoDFS */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 5BED0B4C2DA654D400CCB9F9 /* Build configuration list for PBXNativeTarget "DairoDFS" */;
@@ -122,12 +198,15 @@
 				5BED0B242DA654D000CCB9F9 /* Sources */,
 				5BED0B252DA654D000CCB9F9 /* Frameworks */,
 				5BED0B262DA654D000CCB9F9 /* Resources */,
+				5BC1A0042DB0000000000001 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				5BC1A0032DB0000000000001 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
+				5BC1A0062DB0000000000001 /* Shared */,
 				5BED0B2A2DA654D000CCB9F9 /* DairoDFS */,
 			);
 			name = DairoDFS;
@@ -195,6 +274,9 @@
 				LastSwiftUpdateCheck = 1620;
 				LastUpgradeCheck = 1620;
 				TargetAttributes = {
+					5BC1A00B2DB0000000000001 = {
+						CreatedOnToolsVersion = 26.0;
+					};
 					5BED0B272DA654D000CCB9F9 = {
 						CreatedOnToolsVersion = 16.2;
 						LastSwiftMigration = 1620;
@@ -230,11 +312,19 @@
 				5BED0B272DA654D000CCB9F9 /* DairoDFS */,
 				5BED0B372DA654D400CCB9F9 /* DairoDFSTests */,
 				5BED0B412DA654D400CCB9F9 /* DairoDFSUITests */,
+				5BC1A00B2DB0000000000001 /* DairoDFSShare */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		5BC1A00A2DB0000000000001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		5BED0B262DA654D000CCB9F9 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -259,6 +349,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		5BC1A0082DB0000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		5BED0B242DA654D000CCB9F9 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -283,6 +380,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		5BC1A0032DB0000000000001 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 5BC1A00B2DB0000000000001 /* DairoDFSShare */;
+			targetProxy = 5BC1A0022DB0000000000001 /* PBXContainerItemProxy */;
+		};
 		5BED0B3A2DA654D400CCB9F9 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 5BED0B272DA654D000CCB9F9 /* DairoDFS */;
@@ -296,6 +398,63 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		5BC1A00D2DB0000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = DairoDFSShare/DairoDFSShare.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = GSH7K3ZYLR;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = DairoDFSShare/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = DairoDFS;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = cn.dairo.dfs.share;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		5BC1A00E2DB0000000000001 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = DairoDFSShare/DairoDFSShare.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = GSH7K3ZYLR;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = DairoDFSShare/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = DairoDFS;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = cn.dairo.dfs.share;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		5BED0B4A2DA654D400CCB9F9 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -330,6 +489,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 3;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -350,6 +510,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 2.0.2;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -393,6 +554,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 3;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -407,6 +569,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 2.0.2;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
@@ -421,8 +584,9 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = DairoDFS/DairoDFS.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_ASSET_PATHS = "\"DairoDFS/Preview Content\"";
 				DEVELOPMENT_TEAM = GSH7K3ZYLR;
 				ENABLE_PREVIEWS = YES;
@@ -440,7 +604,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.0.2;
+				MARKETING_VERSION = 2.0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = cn.dairo.dfs;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -460,8 +624,9 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = DairoDFS/DairoDFS.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_ASSET_PATHS = "\"DairoDFS/Preview Content\"";
 				DEVELOPMENT_TEAM = GSH7K3ZYLR;
 				ENABLE_PREVIEWS = YES;
@@ -479,7 +644,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.0.2;
+				MARKETING_VERSION = 2.0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = cn.dairo.dfs;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -567,6 +732,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		5BC1A00C2DB0000000000001 /* Build configuration list for PBXNativeTarget "DairoDFSShare" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5BC1A00D2DB0000000000001 /* Debug */,
+				5BC1A00E2DB0000000000001 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		5BED0B232DA654D000CCB9F9 /* Build configuration list for PBXProject "DairoDFS" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

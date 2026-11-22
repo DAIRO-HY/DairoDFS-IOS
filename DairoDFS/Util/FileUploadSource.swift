@@ -10,7 +10,7 @@ import Photos
 import CryptoKit
 import DairoFileSDK
 
-/// 给SDK提供上传数据,支持系统相册和文件选择器选择的文件
+/// 给SDK提供上传数据,支持系统相册、文件选择器选择的文件和其他App分享的文件
 /// SDK保存的是上传数据的ID,App重启之后会通过同一个ID重新读取数据,所以ID必须稳定
 /// 所有函数都在SDK的后台线程调用,可以阻塞
 final class FileUploadSource: UploadSourceProvider, @unchecked Sendable {
@@ -188,6 +188,9 @@ final class FileUploadSource: UploadSourceProvider, @unchecked Sendable {
         if let identifier = FileUploadSource.identifier(id: id){
             let url = try FileUploadSource.exportAsset(identifier)
             return (url, { try? FileManager.default.removeItem(at: url) })
+        }
+        if let url = ShareUploadReceiver.fileUrl(id: id){//分享扩展保存的文件,上传完成之后才删除
+            return (url, {})
         }
         guard id.hasPrefix(FileUploadSource.BOOKMARK_PREFIX),
               let bookmark = Data(base64Encoded: String(id.dropFirst(FileUploadSource.BOOKMARK_PREFIX.count))) else{

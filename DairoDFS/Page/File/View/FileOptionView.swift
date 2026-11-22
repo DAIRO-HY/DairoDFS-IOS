@@ -58,17 +58,11 @@ struct FileOptionView: View {
                         self.renameInput = name
                         self.showRenameInput = true
                     }
-                        .alert("重命名", isPresented: self.$showRenameInput) {
-                            TextField("文件名", text: self.$renameInput)
-                            Button("修改", role: .destructive){
-                                let name = self.renameInput
-                                
-                                //清空输入值,避免下次被显示
-                                self.renameInput = ""
-                                self.vm.onRenameClick(name)
-                            }
-                            Button("取消", role: .cancel) {
-                            }
+                        .textInputAlert("重命名", isPresented: self.$showRenameInput, text: self.$renameInput, placeholder: "文件名", confirm: "修改", confirmRole: .destructive) { name in
+                            
+                            //清空输入值,避免下次被显示
+                            self.renameInput = ""
+                            self.vm.onRenameClick(name)
                         }
 //                    OptionButton("属性", icon: "info", disabled: self.vm.selectedCount == 0, action: self.onPropertyClick)
                 }

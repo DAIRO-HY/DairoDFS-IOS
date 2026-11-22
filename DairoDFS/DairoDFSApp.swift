@@ -27,6 +27,9 @@ struct DairoDFSApp: App {
         
         //让上传和下载在App进入后台后尽量继续
         FileBackgroundTransfer.shared.start()
+        
+        //上传完成之后删除其他App分享的文件
+        ShareUploadReceiver.start()
     }
     var body: some Scene {
         WindowGroup {
@@ -48,6 +51,7 @@ struct DairoDFSApp: App {
             switch phase {
             case .active:
                 FileSdkUtil.checkServer()
+                ShareUploadReceiver.receive()
             case .background:
                 FileSdkUtil.flush()
             default:
