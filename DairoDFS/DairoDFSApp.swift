@@ -48,6 +48,7 @@ struct DairoDFSApp: App {
             }
         }
         .onChange(of: self.scenePhase) { phase in
+            print("TMPLOG scenePhase=\(phase)")
             switch phase {
             case .active:
                 FileSdkUtil.checkServer()

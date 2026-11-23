@@ -35,6 +35,7 @@ enum ShareUploadReceiver {
 
     /// 接收当前账号的分享文件,App回到前台和切换账号之后调用
     static func receive() {
+        print("TMPLOG receive account=\(FileSdkUtil.dfsAccount ?? "nil") records=\(ShareUploadStore.listRecords().map{ $0.account + "|" + $0.batch }) folder=\(ShareUploadStore.folder?.path ?? "nil") files=\((try? FileManager.default.contentsOfDirectory(atPath: ShareUploadStore.folder?.path ?? "")) ?? [])")
         guard let account = FileSdkUtil.dfsAccount, let sdk = try? FileSdkUtil.get() else{
             return
         }
